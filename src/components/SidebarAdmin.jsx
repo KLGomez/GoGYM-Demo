@@ -11,9 +11,9 @@ const SidebarAdmin = () => {
 
   const menuItems = [
     {
-      label: "Artículos",
-      icon: ClipboardDocumentListIcon,
-      path: "/articles",
+      label: "Clientes",
+      icon: UsersIcon,
+      path: "/clients",
     },
     {
       label: "Clases",
@@ -26,9 +26,9 @@ const SidebarAdmin = () => {
       path: "/memberships",
     },
     {
-      label: "Clientes",
-      icon: UsersIcon,
-      path: "/clients",
+      label: "Artículos",
+      icon: ClipboardDocumentListIcon,
+      path: "/articles",
     },
   ];
 
