@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   ClipboardDocumentListIcon,
   CalendarDaysIcon,
@@ -7,45 +7,79 @@ import {
 } from "@heroicons/react/24/outline";
 
 const SidebarAdmin = () => {
+  const location = useLocation();
+
   const menuItems = [
     {
       label: "Artículos",
-      icon: <ClipboardDocumentListIcon className="w-5 h-5" />,
+      icon: ClipboardDocumentListIcon,
       path: "/articles",
     },
     {
       label: "Clases",
-      icon: <CalendarDaysIcon className="w-5 h-5" />,
+      icon: CalendarDaysIcon,
       path: "/classes",
     },
     {
       label: "Membresías",
-      icon: <CreditCardIcon className="w-5 h-5" />,
+      icon: CreditCardIcon,
       path: "/memberships",
     },
     {
       label: "Clientes",
-      icon: <UsersIcon className="w-5 h-5" />,
+      icon: UsersIcon,
       path: "/clients",
     },
   ];
 
   return (
-    <aside className="bg-gray-800 text-white w-64 h-screen p-6 flex flex-col shadow-lg">
-      <h1 className="text-3xl font-extrabold text-orange-400 mb-10 text-center">GOGYM</h1>
-      <nav className="flex flex-col gap-4">
-        {menuItems.map((item, index) => (
-          <Link
-            key={index}
-            to={item.path}
-            className="flex items-center gap-3 text-orange-300 hover:text-white hover:bg-orange-500 px-3 py-2 rounded transition duration-200"
-          >
-            {item.icon}
-            <span className="font-medium">{item.label}</span>
-          </Link>
-        ))}
+    <>
+      {/* Sidebar visible solo en md+ */}
+      <aside className="hidden md:flex bg-gray-800 text-white w-64 h-screen p-6 flex-col shadow-lg">
+        <nav className="flex flex-col gap-4">
+          {menuItems.map((item, index) => {
+            const isActive = location.pathname === item.path;
+            const Icon = item.icon;
+            return (
+              <Link
+                key={index}
+                to={item.path}
+                className={`flex items-center gap-3 px-3 py-2 rounded transition duration-200 ${
+                  isActive
+                    ? "bg-orange-500 text-white"
+                    : "text-orange-300 hover:text-white hover:bg-orange-500 cursor-pointer transition-transform transform hover:scale-110"
+                }`}
+              >
+                <Icon className="w-5 h-5" />
+                <span className="font-medium">{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      </aside>
+
+      {/* Bottom nav para mobile */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-gray-800 text-white flex justify-around items-center py-2 shadow z-50">
+        {menuItems.map((item, index) => {
+          const isActive = location.pathname === item.path;
+          const Icon = item.icon;
+          return (
+            <Link
+              key={index}
+              to={item.path}
+              className={`flex flex-col items-center text-xs ${
+                isActive
+                  ? "text-orange-400"
+                  : "text-orange-300 hover:text-white"
+              }`}
+            >
+              <Icon className="w-6 h-6 mb-1" />
+              {item.label.split(" ")[0]} {/* Ej: "Artículos", "Clases"... */}
+            </Link>
+          );
+        })}
       </nav>
-    </aside>
+    </>
   );
 };
 
