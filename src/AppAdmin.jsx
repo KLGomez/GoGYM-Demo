@@ -1,20 +1,23 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Sidebar from "./components/SidebarAdmin"; // Asegurate que este archivo exista
+import Sidebar from "./components/SidebarAdmin";
+import HeaderAdmin from "./components/HeaderAdmin";
+import FooterAdmin from "./components/Footer";
 import ArticlesAdmin from "./pages/ArticlesAdmin";
 import ClassesAdmin from "./pages/ClassesAdmin";
 import MembershipsAdmin from "./pages/MembershipsAdmin";
 import ClientsAdmin from "./pages/ClientesAdmin";
-import HeaderAdmin from "./components/HeaderAdmin";
-import FooterAdmin from "./components/Footer";
 
 function AppAdmin() {
   return (
     <Router>
-      <div className="flex flex-col min-h-screen">
+      <div className="flex flex-col min-h-screen overflow-hidden">
         <HeaderAdmin />
-        <div className="flex">
+
+        {/* Contenedor de contenido */}
+        <div className="flex flex-1 overflow-hidden">
           <Sidebar />
-          <main className="flex-1 p-8 bg-black text-white min-h-screen">
+
+          <main className="flex-1 bg-black text-white p-6 pb-28 md:pb-6 overflow-y-auto">
             <Routes>
               <Route path="/articles" element={<ArticlesAdmin />} />
               <Route path="/classes" element={<ClassesAdmin />} />
@@ -23,8 +26,9 @@ function AppAdmin() {
             </Routes>
           </main>
         </div>
+
+        <FooterAdmin />
       </div>
-          <FooterAdmin />
     </Router>
   );
 }

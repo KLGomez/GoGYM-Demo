@@ -9,16 +9,16 @@ import {
 const ClientsAdmin = () => {
   const options = [
     {
-      icon: <UserPlusIcon className="w-8 h-8 text-white" />,
-      label: "Alta de cliente",
-    },
-    {
       icon: <QrCodeIcon className="w-8 h-8 text-white" />,
       label: "Generar QR",
     },
     {
       icon: <UsersIcon className="w-8 h-8 text-white" />,
       label: "Lista de clientes",
+    },
+    {
+      icon: <UserPlusIcon className="w-8 h-8 text-white" />,
+      label: "Alta de cliente",
     },
     {
       icon: <UserMinusIcon className="w-8 h-8 text-white" />,
