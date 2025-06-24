@@ -29,7 +29,7 @@ Este proyecto es una plataforma web para la gestión de un gimnasio, permitiendo
 ## 🏗️ Instalación y Configuración
 1. Clona el repositorio:
    ```bash
-   git clone https://github.com/KLGomez/GoGYM
+   git clone https://github.com/KLGomez/GoGYM-Project
    ```
 2. Ingresa al directorio del proyecto:
    ```bash
