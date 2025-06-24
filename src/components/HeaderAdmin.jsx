@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { PowerIcon } from "@heroicons/react/24/outline";
 import Swal from "sweetalert2";
+ import { confirmAction } from "../utils/alerts";
 
 const HeaderAdmin = () => {
   const navigate = useNavigate();
