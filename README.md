@@ -21,7 +21,7 @@ Este proyecto es una plataforma web para la gestión de un gimnasio, permitiendo
 - Reportes y estadísticas sobre el gimnasio.
 
 ## 🛠️ Tecnologías Utilizadas
-- **Frontend:** React, HTML, CSS, JavaScript.
+- **Frontend:** React, TailwindCSS, JavaScript.
 - **Backend:** Node.js, Express.js.
 - **Base de Datos:** MongoDB.
 - **Versionado:** Git, GitHub.
