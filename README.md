@@ -21,10 +21,12 @@ Este proyecto es una plataforma web para la gestión de un gimnasio, permitiendo
 - Reportes y estadísticas sobre el gimnasio.
 
 ## 🛠️ Tecnologías Utilizadas
-- **Frontend:** Angular 13, HTML, CSS, JavaScript.
+- **Frontend:** React, TailwindCSS, JavaScript.
 - **Backend:** Node.js, Express.js.
 - **Base de Datos:** MongoDB.
 - **Versionado:** Git, GitHub.
+- **Deploy:** Firebase
+- **Implementacion de IA:** Vertex AI
 
 ## 🏗️ Instalación y Configuración
 1. Clona el repositorio:
@@ -56,7 +58,7 @@ Inicio
   |
   |-- (Socio) → Elegir Plan → Pago → Reservar Clases → Acceder con QR → Ver Historial
   |
-  |-- (Administrador) → Gestionar Socios → Control de Asistencia → Gestión de Pagos
+  |-- (Administrador) → Gestionar Socios a través de QR → Control de Asistencia → Gestión de Clases
   |
   |-- Generar Reportes y Estadísticas
   |
