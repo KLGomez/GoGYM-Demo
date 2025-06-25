@@ -19,14 +19,12 @@ const ManageClassesView = ({ onBack }) => {
   });
 
   useEffect(() => {
-    setClasses(getGymClassesFromLocalStorage());
-    setTeachers(getTeachersFromLocalStorage()); // Cargar profesores al montar
+    setClasses(getGymClasses()); // Usar la función importada
+    setTeachers(getTeachers()); // Usar la función importada
   }, []);
 
   useEffect(() => {
-    if (classes.length > 0 || localStorage.getItem(GYM_CLASSES_STORAGE_KEY)) {
-        saveGymClassesToLocalStorage(classes);
-    }
+    saveGymClasses(classes); // Usar la función importada
   }, [classes]);
 
   const handleInputChange = (e) => {

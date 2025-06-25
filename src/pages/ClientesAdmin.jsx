@@ -17,7 +17,7 @@ import { calculateMembershipDetails } from "../utils/membershipUtils"; // Import
 
 const ClientsAdmin = () => {
   const [view, setView] = useState("menu");
-  const [clients, setClients] = useState(getClients()); // Usar getClients
+  const [clients, setClients] = useState(getClients());
   const [editingClient, setEditingClient] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -28,7 +28,7 @@ const ClientsAdmin = () => {
   const [selectedClientForQR, setSelectedClientForQR] = useState(null);
 
   useEffect(() => {
-    saveClientsToLocalStorage(clients);
+    saveClients(clients); // Usar saveClients importada
   }, [clients]);
 
   const handleInputChange = (e) => {

@@ -22,9 +22,7 @@ const ManageTeachersView = ({ onBack }) => {
   }, []);
 
   useEffect(() => {
-    if (teachers.length > 0 || localStorage.getItem(GYM_TEACHERS_STORAGE_KEY)) {
-      saveTeachersToLocalStorage(teachers);
-    }
+    saveTeachers(teachers);
   }, [teachers]);
 
   const handleInputChange = (e) => {

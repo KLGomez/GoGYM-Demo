@@ -19,9 +19,7 @@ const EnrollStudentsView = ({ onBack }) => {
   }, []);
 
   useEffect(() => {
-    if (enrollments.length > 0 || localStorage.getItem('classEnrollments')) {
-      saveClassEnrollments(enrollments);
-    }
+    saveClassEnrollments(enrollments);
   }, [enrollments]);
 
   const selectedClassDetails = useMemo(() =>
