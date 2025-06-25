@@ -4,12 +4,18 @@ import {
   CalendarDaysIcon,
   CreditCardIcon,
   UsersIcon,
+  QrCodeIcon, // Para el Check-in
 } from "@heroicons/react/24/outline";
 
 const SidebarAdmin = () => {
   const location = useLocation();
 
   const menuItems = [
+    {
+      label: "Check-In QR", // Nueva opción
+      icon: QrCodeIcon,
+      path: "/check-in",
+    },
     {
       label: "Clientes",
       icon: UsersIcon,
