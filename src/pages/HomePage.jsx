@@ -9,10 +9,10 @@ const HomePage = () => {
   const [scanError, setScanError] = useState('');
 
   const scannerRef = useRef(null);
-  // scannerContainerRef ya no se usará para la condición principal del useEffect
+  const scannerContainerRef = useRef(null); // Restaurar definición
 
   useEffect(() => {
-    if (showCameraScanner && !scannerRef.current) { // Condición simplificada
+    if (showCameraScanner && !scannerRef.current) {
       // Se asume que el div#camera-scanner-container existirá cuando esto se ejecute
       // si showCameraScanner es true, debido al renderizado condicional en JSX.
       // El console.warn problemático se elimina.
