@@ -6,8 +6,8 @@ import ArticlesAdmin from "./pages/ArticlesAdmin";
 import ClassesAdmin from "./pages/ClassesAdmin";
 import MembershipsAdmin from "./pages/MembershipsAdmin";
 import ClientsAdmin from "./pages/ClientesAdmin";
-import DashboardAdmin from "./pages/DashboardAdmin"; // Asegurar que DashboardAdmin esté importado
-import HomePage from "./pages/HomePage"; // Importar HomePage
+// import DashboardAdmin from "./pages/DashboardAdmin"; // Eliminada importación
+import HomePage from "./pages/HomePage";
 
 function AppAdmin() {
   return (
@@ -21,8 +21,8 @@ function AppAdmin() {
 
           <main className="flex-1 bg-black text-white p-6 pb-28 md:pb-6 overflow-y-auto">
             <Routes>
-              <Route path="/" element={<DashboardAdmin />} /> {/* Ruta para el dashboard existente */}
-              <Route path="/check-in" element={<HomePage />} /> {/* Nueva ruta para escaneo QR */}
+              <Route path="/" element={<HomePage />} /> {/* Ruta raíz ahora muestra HomePage */}
+              <Route path="/check-in" element={<HomePage />} />
               <Route path="/articles" element={<ArticlesAdmin />} />
               <Route path="/classes" element={<ClassesAdmin />} />
               <Route path="/memberships" element={<MembershipsAdmin />} />

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CameraIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
-import { Html5QrcodeScanner, Html5QrcodeScanType } from 'html5-qrcode';
+// Html5QrcodeScanner se importará dinámicamente
 
 const HomePage = () => {
   const [qrInput, setQrInput] = useState('');
@@ -8,52 +8,99 @@ const HomePage = () => {
   const [showCameraScanner, setShowCameraScanner] = useState(false);
   const [scanError, setScanError] = useState('');
 
-  const scannerRef = useRef(null); // Ref para el objeto scanner
+  const scannerRef = useRef(null); // Para mantener la instancia del scanner y limpiarla
 
-  // Configuración del scanner
   useEffect(() => {
-    if (showCameraScanner && !scannerRef.current) {
-      const html5QrcodeScanner = new Html5QrcodeScanner(
-        "camera-scanner-container", // ID del div contenedor
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-          supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
-        },
-        false // verbose
-      );
+    // No es necesario limpiar scannerRef.current aquí directamente,
+    // la función de limpieza del useEffect se encargará de ello.
 
-      const qrCodeSuccessCallback = (decodedText, decodedResult) => {
-        processQrData(decodedText, "Cámara");
-        setShowCameraScanner(false);
-      };
+    if (showCameraScanner) {
+      // Asegurarse de que el contenedor exista en el DOM antes de intentar renderizar.
+      // Este cheque puede ser útil si el div se renderiza condicionalmente de forma compleja.
+      const scannerContainerElement = document.getElementById("camera-scanner-container");
+      if (!scannerContainerElement) {
+        console.warn("Contenedor del escáner no encontrado en el DOM.");
+        // Opcionalmente, reintentar después de un breve delay o mostrar error
+        // setTimeout(() => setShowCameraScanner(true), 100); // Podría causar bucles si no se maneja bien
+        return;
+      }
 
-      const qrCodeErrorCallback = (errorMessage) => {
-        // No hacer nada con errores comunes como "QR code not found."
-        // setScanError(`Error de cámara: ${errorMessage}`);
-        // console.warn(`QR Error: ${errorMessage}`);
-      };
+      import('html5-qrcode')
+        .then(Html5QrcodeModule => {
+          // Verificar que el componente no se haya desmontado o showCameraScanner cambiado mientras se cargaba
+          if (!showCameraScanner) { // Chequeo importante para evitar condición de carrera
+            return;
+          }
 
-      html5QrcodeScanner.render(qrCodeSuccessCallback, qrCodeErrorCallback);
-      scannerRef.current = html5QrcodeScanner;
-    } else if (!showCameraScanner && scannerRef.current) {
-      // Detener y limpiar el scanner si se oculta
-      scannerRef.current.clear().then(() => {
-        scannerRef.current = null;
-      }).catch(err => {
-        console.error("Error al limpiar el scanner: ", err);
-      });
-    }
+          const Html5QrcodeScanner = Html5QrcodeModule.Html5QrcodeScanner;
+          // const Html5QrcodeScanType = Html5QrcodeModule.Html5QrcodeScanType; // Si se necesita
 
-    // Limpieza al desmontar el componente
-    return () => {
+          // Si ya hay un scanner, limpiarlo primero (aunque la limpieza del return debería manejarlo)
+          if (scannerRef.current) {
+            scannerRef.current.clear().catch(err => console.error("Error limpiando scanner previo:", err));
+            scannerRef.current = null;
+          }
+
+          const html5QrcodeScannerInstance = new Html5QrcodeScanner(
+            "camera-scanner-container",
+            {
+              fps: 10,
+              qrbox: { width: 250, height: 250 },
+              // supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA] // Opcional
+            },
+            false // verbose
+          );
+
+          const qrCodeSuccessCallback = (decodedText, decodedResult) => {
+            processQrData(decodedText, "Cámara");
+            setShowCameraScanner(false); // Ocultar después de escanear
+          };
+
+          const qrCodeErrorCallback = (errorMessage) => {
+            // console.warn(`QR Scan Error: ${errorMessage}`);
+            // No se suelen manejar errores como "QR code not found." para no spamear la UI.
+            // Si se quiere mostrar un error persistente de la cámara, se podría hacer aquí.
+          };
+
+          html5QrcodeScannerInstance.render(qrCodeSuccessCallback, qrCodeErrorCallback)
+            .then(() => {
+                scannerRef.current = html5QrcodeScannerInstance; // Guardar instancia en el ref
+            })
+            .catch(renderError => {
+                console.error("Error al renderizar Html5QrcodeScanner:", renderError);
+                setScanError("No se pudo iniciar el escáner de cámara. Verifique los permisos y la cámara.");
+                setShowCameraScanner(false);
+            });
+
+        })
+        .catch(error => {
+          console.error("Error al cargar html5-qrcode dinámicamente:", error);
+          setScanError("Error al cargar el componente de escaneo. Intente de nuevo.");
+          setShowCameraScanner(false);
+        });
+    } else {
+      // Si showCameraScanner es false y hay una instancia, limpiarla
       if (scannerRef.current) {
-        scannerRef.current.clear().catch(err => {
-          console.error("Error al limpiar el scanner al desmontar: ", err);
+        scannerRef.current.clear().then(() => {
+          scannerRef.current = null;
+        }).catch(err => {
+          console.error("Error al limpiar el scanner (al ocultar): ", err);
+          scannerRef.current = null;
         });
       }
+    }
+
+    // Función de limpieza para el useEffect
+    return () => {
+      if (scannerRef.current) {
+        // console.log("Limpiando scanner en desmontaje de useEffect/componente");
+        scannerRef.current.clear().catch(err => {
+          // console.error("Error al limpiar el scanner (desmontaje useEffect): ", err);
+        });
+        scannerRef.current = null;
+      }
     };
-  }, [showCameraScanner]);
+  }, [showCameraScanner]); // Dependencia principal
 
 
   const handleExternalScan = (e) => {
@@ -172,8 +219,8 @@ const HomePage = () => {
         </form>
 
         {showCameraScanner && (
-          <div id="camera-scanner-container" className="w-full h-auto min-h-[250px] bg-gray-700 rounded-md flex items-center justify-center my-4 overflow-hidden">
-            {/* El visor de html5-qrcode se renderizará aquí */}
+          <div id="camera-scanner-container-placeholder" className="w-full h-auto min-h-[250px] bg-gray-700 rounded-md flex items-center justify-center my-4 overflow-hidden">
+            <p className="text-gray-400">El visor de la cámara (deshabilitado temporalmente) aparecería aquí.</p>
           </div>
         )}
 
