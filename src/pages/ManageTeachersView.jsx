@@ -18,7 +18,7 @@ const ManageTeachersView = ({ onBack }) => {
   });
 
   useEffect(() => {
-    setTeachers(getTeachersFromLocalStorage());
+    setTeachers(getTeachers()); // Usar la función importada de utils/storage.js
   }, []);
 
   useEffect(() => {
