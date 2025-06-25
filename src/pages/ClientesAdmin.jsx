@@ -127,16 +127,8 @@ const ClientsAdmin = () => {
       label: "Lista de clientes",
       action: () => setView("list"),
     },
-    {
-      icon: <MenuQrCodeIcon className="w-8 h-8 text-white" />,
-      label: "Generar QR (desde lista)",
-      action: () => { /* ... (sin cambios) ... */ }
-    },
-    {
-      icon: <UserMinusIcon className="w-8 h-8 text-white" />,
-      label: "Baja de cliente (ver lista)",
-      action: () => setView("list"),
-    },
+    // Opción obsoleta "Generar QR (desde lista)" eliminada
+    // Opción obsoleta "Baja de cliente (ver lista)" eliminada
     {
       icon: <Cog6ToothIcon className="w-8 h-8 text-white" />,
       label: "Configuración",
