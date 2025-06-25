@@ -8,9 +8,10 @@ import {
   ClockIcon,
   ArrowLeftIcon,
 } from "@heroicons/react/24/outline";
-import ManageClassesView from "./ManageClassesView"; // Importar el nuevo componente
+import ManageClassesView from "./ManageClassesView";
+import ScheduleView from "./ScheduleView"; // Importar ScheduleView
 
-// Placeholder para las futuras vistas de subsección (excepto ManageClassesView)
+// Placeholder para las futuras vistas de subsección
 const PlaceholderView = ({ title, onBack }) => (
   <div>
     <button
@@ -42,7 +43,6 @@ const ClassesAdmin = () => {
     setCurrentView(viewName);
   };
 
-  // Función para volver al menú, pasada como prop a las subvistas
   const navigateToMenu = () => setCurrentView("menu");
 
   if (currentView === "menu") {
@@ -70,7 +70,11 @@ const ClassesAdmin = () => {
     return <ManageClassesView onBack={navigateToMenu} />;
   }
 
-  // Para otras vistas, seguimos usando PlaceholderView por ahora
+  if (currentView === "schedule") {
+    return <ScheduleView onBack={navigateToMenu} />;
+  }
+
+  // Para otras vistas, seguimos usando PlaceholderView
   const selectedOption = menuOptions.find(opt => opt.viewName === currentView);
   const viewTitle = selectedOption ? selectedOption.label : "Subsección de Clases";
 
