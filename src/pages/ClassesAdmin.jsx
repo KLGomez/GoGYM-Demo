@@ -10,7 +10,8 @@ import {
 } from "@heroicons/react/24/outline";
 import ManageClassesView from "./ManageClassesView";
 import ScheduleView from "./ScheduleView";
-import ManageTeachersView from "./ManageTeachersView"; // Importar ManageTeachersView
+import ManageTeachersView from "./ManageTeachersView";
+import AttendanceView from "./AttendanceView"; // Importar AttendanceView
 
 // Placeholder para las futuras vistas de subsección
 const PlaceholderView = ({ title, onBack }) => (
@@ -77,6 +78,10 @@ const ClassesAdmin = () => {
 
   if (currentView === "teachers") {
     return <ManageTeachersView onBack={navigateToMenu} />;
+  }
+
+  if (currentView === "attendance") {
+    return <AttendanceView onBack={navigateToMenu} />;
   }
 
   // Para otras vistas, seguimos usando PlaceholderView
