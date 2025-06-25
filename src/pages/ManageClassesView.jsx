@@ -3,8 +3,9 @@ import { ArrowLeftIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { showSuccess, showError, confirmAction } from '../utils/alerts';
 
 const GYM_CLASSES_STORAGE_KEY = 'gymClasses';
+const GYM_TEACHERS_STORAGE_KEY = 'gymTeachers'; // Para leer los profesores
 
-// LocalStorage helper functions
+// LocalStorage helper functions for classes
 const getGymClassesFromLocalStorage = () => {
   const classesJson = localStorage.getItem(GYM_CLASSES_STORAGE_KEY);
   return classesJson ? JSON.parse(classesJson) : [];
@@ -14,12 +15,20 @@ const saveGymClassesToLocalStorage = (classes) => {
   localStorage.setItem(GYM_CLASSES_STORAGE_KEY, JSON.stringify(classes));
 };
 
+// LocalStorage helper function for teachers
+const getTeachersFromLocalStorage = () => {
+  const teachersJson = localStorage.getItem(GYM_TEACHERS_STORAGE_KEY);
+  return teachersJson ? JSON.parse(teachersJson) : [];
+};
+
+
 const ManageClassesView = ({ onBack }) => {
   const [classes, setClasses] = useState([]);
+  const [teachers, setTeachers] = useState([]); // Estado para la lista de profesores
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    instructor: '',
+    instructorId: '', // Cambiado de instructor a instructorId
     dayOfWeek: 'Lunes',
     startTime: '',
     endTime: '',
@@ -29,12 +38,10 @@ const ManageClassesView = ({ onBack }) => {
 
   useEffect(() => {
     setClasses(getGymClassesFromLocalStorage());
+    setTeachers(getTeachersFromLocalStorage()); // Cargar profesores al montar
   }, []);
 
   useEffect(() => {
-    // Only save if classes is not the initial empty array on mount
-    // This avoids overwriting LocalStorage with an empty array if it was populated
-    // This check might be more robust depending on how initial state is handled
     if (classes.length > 0 || localStorage.getItem(GYM_CLASSES_STORAGE_KEY)) {
         saveGymClassesToLocalStorage(classes);
     }
@@ -42,7 +49,7 @@ const ManageClassesView = ({ onBack }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    const val = name === 'capacity' ? parseInt(value, 10) : value; // Ensure capacity is a number
+    const val = name === 'capacity' ? parseInt(value, 10) : value;
     setFormData(prev => ({ ...prev, [name]: val }));
   };
 
@@ -51,17 +58,17 @@ const ManageClassesView = ({ onBack }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Validations
-    if (!formData.name.trim() || !formData.instructor.trim()) {
+    if (!formData.name.trim() || !formData.instructorId) { // Validar instructorId
       showError('Campos Incompletos', 'El nombre de la clase y el instructor son obligatorios.');
       return;
     }
+    // ... (otras validaciones existentes) ...
     if (!validateTime(formData.startTime) || !validateTime(formData.endTime)) {
       showError('Formato de Hora Inválido', 'Por favor, ingrese la hora en formato HH:MM (ej: 09:00).');
       return;
     }
     if (formData.startTime >= formData.endTime) {
-      showError('Horario Inválido', 'La hora de fin debe ser posterior dapostserior a la hora de inicio.');
+      showError('Horario Inválido', 'La hora de fin debe ser posterior a la hora de inicio.');
       return;
     }
     if (isNaN(formData.capacity) || formData.capacity <= 0) {
@@ -72,13 +79,13 @@ const ManageClassesView = ({ onBack }) => {
     const newClass = {
       id: Date.now().toString(),
       ...formData,
-      capacity: Number(formData.capacity) // Ensure capacity is stored as number
+      capacity: Number(formData.capacity)
     };
 
     setClasses(prevClasses => [...prevClasses, newClass]);
     showSuccess('Clase Agregada', `${newClass.name} ha sido agregada exitosamente.`);
     setIsFormVisible(false);
-    setFormData({ name: '', instructor: '', dayOfWeek: 'Lunes', startTime: '', endTime: '', capacity: '', description: '' });
+    setFormData({ name: '', instructorId: '', dayOfWeek: 'Lunes', startTime: '', endTime: '', capacity: '', description: '' });
   };
 
   const handleDeleteClass = (classId, className) => {
@@ -86,6 +93,12 @@ const ManageClassesView = ({ onBack }) => {
       setClasses(prevClasses => prevClasses.filter(cls => cls.id !== classId));
       showSuccess('Clase Eliminada', `La clase ${className} ha sido eliminada.`);
     });
+  };
+
+  // Helper para obtener el nombre del instructor a partir de su ID
+  const getInstructorName = (instructorId) => {
+    const teacher = teachers.find(t => t.id === instructorId);
+    return teacher ? teacher.name : 'Desconocido';
   };
 
   return (
@@ -117,9 +130,14 @@ const ManageClassesView = ({ onBack }) => {
                    className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
           </div>
           <div>
-            <label htmlFor="instructor" className="block text-sm font-medium text-gray-200">Instructor</label>
-            <input type="text" name="instructor" id="instructor" value={formData.instructor} onChange={handleInputChange}
-                   className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
+            <label htmlFor="instructorId" className="block text-sm font-medium text-gray-200">Instructor</label>
+            <select name="instructorId" id="instructorId" value={formData.instructorId} onChange={handleInputChange}
+                    className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500">
+              <option value="">Seleccione un instructor</option>
+              {teachers.map(teacher => (
+                <option key={teacher.id} value={teacher.id}>{teacher.name} ({teacher.specialty})</option>
+              ))}
+            </select>
           </div>
           <div>
             <label htmlFor="dayOfWeek" className="block text-sm font-medium text-gray-200">Día de la Semana</label>
@@ -130,6 +148,7 @@ const ManageClassesView = ({ onBack }) => {
               ))}
             </select>
           </div>
+          {/* ... (resto de los campos del formulario: startTime, endTime, capacity, description sin cambios) ... */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="startTime" className="block text-sm font-medium text-gray-200">Hora Inicio (HH:MM)</label>
@@ -168,7 +187,7 @@ const ManageClassesView = ({ onBack }) => {
             <li key={cls.id} className="bg-gray-800 p-4 rounded-lg shadow flex justify-between items-center">
               <div>
                 <p className="font-semibold text-white">{cls.name} <span className="text-sm text-gray-400">({cls.dayOfWeek}, {cls.startTime}-{cls.endTime})</span></p>
-                <p className="text-sm text-gray-300">Instructor: {cls.instructor} - Capacidad: {cls.capacity}</p>
+                <p className="text-sm text-gray-300">Instructor: {getInstructorName(cls.instructorId)} - Capacidad: {cls.capacity}</p>
                 {cls.description && <p className="text-xs text-gray-400 mt-1">Descripción: {cls.description}</p>}
               </div>
               <button

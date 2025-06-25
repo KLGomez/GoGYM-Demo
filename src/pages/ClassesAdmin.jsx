@@ -9,7 +9,8 @@ import {
   ArrowLeftIcon,
 } from "@heroicons/react/24/outline";
 import ManageClassesView from "./ManageClassesView";
-import ScheduleView from "./ScheduleView"; // Importar ScheduleView
+import ScheduleView from "./ScheduleView";
+import ManageTeachersView from "./ManageTeachersView"; // Importar ManageTeachersView
 
 // Placeholder para las futuras vistas de subsección
 const PlaceholderView = ({ title, onBack }) => (
@@ -33,8 +34,8 @@ const ClassesAdmin = () => {
   const menuOptions = [
     { icon: <CalendarDaysIcon className="w-8 h-8 text-white" />, label: "Cronograma de Clase", viewName: "schedule" },
     { icon: <PlusCircleIcon className="w-8 h-8 text-white" />, label: "Añadir/Eliminar Clase", viewName: "manageClasses" },
-    { icon: <UserGroupIcon className="w-8 h-8 text-white" />, label: "Asistencia", viewName: "attendance" },
     { icon: <AcademicCapIcon className="w-8 h-8 text-white" />, label: "Profesores", viewName: "teachers" },
+    { icon: <UserGroupIcon className="w-8 h-8 text-white" />, label: "Asistencia", viewName: "attendance" },
     { icon: <IdentificationIcon className="w-8 h-8 text-white" />, label: "Alumnos", viewName: "students" },
     { icon: <ClockIcon className="w-8 h-8 text-white" />, label: "Historial", viewName: "history" },
   ];
@@ -72,6 +73,10 @@ const ClassesAdmin = () => {
 
   if (currentView === "schedule") {
     return <ScheduleView onBack={navigateToMenu} />;
+  }
+
+  if (currentView === "teachers") {
+    return <ManageTeachersView onBack={navigateToMenu} />;
   }
 
   // Para otras vistas, seguimos usando PlaceholderView
