@@ -1,29 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeftIcon, PlusIcon, TrashIcon, PencilIcon } from '@heroicons/react/24/outline';
-// Asumimos que las alertas ya están creadas y son importables
-// import { showSuccess, showError, confirmAction } from '../utils/alerts';
+import { getTeachers, saveTeachers } from '../utils/storage'; // Importar desde utils
+// Suponiendo que las alertas reales se importarán de utils/alerts
+import { showSuccess, showError, confirmAction } from '../utils/alerts';
 
-// Placeholder para simular alertas si no están disponibles globalmente para este testeo aislado
-const showSuccess = (title, msg) => console.log("SUCCESS:", title, msg);
-const showError = (title, msg) => console.error("ERROR:", title, msg);
-const confirmAction = (title, msg, btnText, callback) => { if(window.confirm(`${title}\n${msg}`)) callback(); };
-
-
-const GYM_TEACHERS_STORAGE_KEY = 'gymTeachers';
-
-const getTeachersFromLocalStorage = () => {
-  const teachersJson = localStorage.getItem(GYM_TEACHERS_STORAGE_KEY);
-  return teachersJson ? JSON.parse(teachersJson) : [];
-};
-
-const saveTeachersToLocalStorage = (teachers) => {
-  localStorage.setItem(GYM_TEACHERS_STORAGE_KEY, JSON.stringify(teachers));
-};
 
 const ManageTeachersView = ({ onBack }) => {
   const [teachers, setTeachers] = useState([]);
   const [isFormVisible, setIsFormVisible] = useState(false);
-  const [editingTeacher, setEditingTeacher] = useState(null); // Para modo edición
+  const [editingTeacher, setEditingTeacher] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     specialty: '',

@@ -1,34 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeftIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { showSuccess, showError, confirmAction } from '../utils/alerts';
-
-const GYM_CLASSES_STORAGE_KEY = 'gymClasses';
-const GYM_TEACHERS_STORAGE_KEY = 'gymTeachers'; // Para leer los profesores
-
-// LocalStorage helper functions for classes
-const getGymClassesFromLocalStorage = () => {
-  const classesJson = localStorage.getItem(GYM_CLASSES_STORAGE_KEY);
-  return classesJson ? JSON.parse(classesJson) : [];
-};
-
-const saveGymClassesToLocalStorage = (classes) => {
-  localStorage.setItem(GYM_CLASSES_STORAGE_KEY, JSON.stringify(classes));
-};
-
-// LocalStorage helper function for teachers
-const getTeachersFromLocalStorage = () => {
-  const teachersJson = localStorage.getItem(GYM_TEACHERS_STORAGE_KEY);
-  return teachersJson ? JSON.parse(teachersJson) : [];
-};
+import { getGymClasses, saveGymClasses, getTeachers } from '../utils/storage'; // Importar desde utils
 
 
 const ManageClassesView = ({ onBack }) => {
   const [classes, setClasses] = useState([]);
-  const [teachers, setTeachers] = useState([]); // Estado para la lista de profesores
+  const [teachers, setTeachers] = useState([]);
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    instructorId: '', // Cambiado de instructor a instructorId
+    instructorId: '',
     dayOfWeek: 'Lunes',
     startTime: '',
     endTime: '',

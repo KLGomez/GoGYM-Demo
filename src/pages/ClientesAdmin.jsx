@@ -7,46 +7,18 @@ import {
   Cog6ToothIcon,
   TrashIcon,
   XMarkIcon,
-  PencilIcon, // Icono para editar
+  PencilIcon,
 } from "@heroicons/react/24/outline";
 import { QRCodeCanvas } from 'qrcode.react';
 import { showSuccess, showError, confirmAction } from "../utils/alerts";
-
-const getClientsFromLocalStorage = () => {
-  const clients = localStorage.getItem("clients");
-  return clients ? JSON.parse(clients) : [];
-};
-
-const saveClientsToLocalStorage = (clients) => {
-  localStorage.setItem("clients", JSON.stringify(clients));
-};
-
-const calculateMembershipDetails = (startDate, durationDays) => {
-  const start = new Date(startDate);
-  const endDate = new Date(start);
-  endDate.setDate(start.getDate() + durationDays);
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const endOfDayEndDate = new Date(endDate);
-  endOfDayEndDate.setHours(23, 59, 59, 999);
-
-  const timeDiff = endOfDayEndDate.getTime() - today.getTime();
-  const daysRemaining = Math.ceil(timeDiff / (1000 * 3600 * 24));
-
-  return {
-    membershipEndDate: endDate.toISOString(),
-    daysRemaining: daysRemaining < 0 ? 0 : daysRemaining,
-    status: daysRemaining > 0 ? "Active" : "Expired",
-  };
-};
+import { getClients, saveClients } from "../utils/storage"; // Importar desde utils/storage
+import { calculateMembershipDetails } from "../utils/membershipUtils"; // Importar desde utils/membershipUtils
 
 
 const ClientsAdmin = () => {
   const [view, setView] = useState("menu");
-  const [clients, setClients] = useState(getClientsFromLocalStorage());
-  const [editingClient, setEditingClient] = useState(null); // Para manejar el cliente en edición
+  const [clients, setClients] = useState(getClients()); // Usar getClients
+  const [editingClient, setEditingClient] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",

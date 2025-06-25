@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
-
-const GYM_CLASSES_STORAGE_KEY = 'gymClasses';
-const getGymClassesFromLocalStorage = () => {
-  const classesJson = localStorage.getItem(GYM_CLASSES_STORAGE_KEY);
-  return classesJson ? JSON.parse(classesJson) : [];
-};
+import { getGymClasses } from '../utils/storage'; // Importar desde utils
 
 const daysOrder = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
@@ -13,7 +8,7 @@ const ScheduleView = ({ onBack }) => {
   const [scheduledClasses, setScheduledClasses] = useState({});
 
   useEffect(() => {
-    const allClasses = getGymClassesFromLocalStorage();
+    const allClasses = getGymClasses(); // Usar getGymClasses
     const groupedClasses = allClasses.reduce((acc, cls) => {
       const day = cls.dayOfWeek;
       if (!acc[day]) {
