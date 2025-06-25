@@ -5,7 +5,7 @@ import FooterAdmin from "./components/Footer";
 import ArticlesAdmin from "./pages/ArticlesAdmin";
 import ClassesAdmin from "./pages/ClassesAdmin";
 import MembershipsAdmin from "./pages/MembershipsAdmin";
-import ClientsAdmin from "./pages/ClientesAdmin";
+import ClientsAdmin from "./pages/clients/ClientesAdmin";
 
 function AppAdmin() {
   return (

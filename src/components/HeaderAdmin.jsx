@@ -1,25 +1,30 @@
 import { Link, useNavigate } from "react-router-dom";
 import { PowerIcon } from "@heroicons/react/24/outline";
-// import Swal from "sweetalert2"; // ELIMINAR ESTA LÍNEA, ya no se usa directamente aquí
-import { confirmAction } from "../utils/alerts"; // Asegúrate que la ruta sea correcta
+import Swal from "sweetalert2";
+ import { confirmAction } from "../utils/alerts";
 
 const HeaderAdmin = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    // Se llama a la función confirmAction de nuestro módulo de alertas
-    confirmAction(
-      "¿Cerrar sesión?", // Título de la alerta
-      "Tu sesión se cerrará y deberás volver a iniciar.", // Texto descriptivo
-      () => { // Esta es la función callback que se ejecuta si el usuario confirma
+    Swal.fire({
+      title: "¿Cerrar sesión?",
+      text: "Tu sesión se cerrará y deberás volver a iniciar.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#F26419",
+      cancelButtonColor: "#6b7280", // gray-500
+      confirmButtonText: "Sí, cerrar sesión",
+      cancelButtonText: "Cancelar",
+      background: "#1f2937", // gray-800
+      color: "#fff",
+    }).then((result) => {
+      if (result.isConfirmed) {
         console.log("Sesión cerrada.");
-        // Aquí puedes agregar lógica para limpiar datos de sesión si es necesario
-        // (ej. localStorage.removeItem('userData'))
-        navigate("/login"); // Redirige al login
-      },
-      "Sí, cerrar sesión", // Texto para el botón de confirmación
-      "Cancelar" // Texto para el botón de cancelar
-    );
+        // Acá se podría limpiar los datos de sesión que podriamos usar localstorage
+        navigate("/login");
+      }
+    });
   };
 
   return (
