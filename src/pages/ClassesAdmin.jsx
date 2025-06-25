@@ -2,16 +2,17 @@ import { useState } from "react";
 import {
   CalendarDaysIcon,
   PlusCircleIcon,
-  UserGroupIcon,
+  UserGroupIcon, // Icono para Asistencia y ahora para Alumnos (Inscripciones)
   AcademicCapIcon,
-  IdentificationIcon,
+  // IdentificationIcon, // Reemplazado por UserGroupIcon para Alumnos
   ClockIcon,
   ArrowLeftIcon,
 } from "@heroicons/react/24/outline";
 import ManageClassesView from "./ManageClassesView";
 import ScheduleView from "./ScheduleView";
 import ManageTeachersView from "./ManageTeachersView";
-import AttendanceView from "./AttendanceView"; // Importar AttendanceView
+import AttendanceView from "./AttendanceView";
+import EnrollStudentsView from "./EnrollStudentsView"; // Importar EnrollStudentsView
 
 // Placeholder para las futuras vistas de subsección
 const PlaceholderView = ({ title, onBack }) => (
@@ -36,8 +37,8 @@ const ClassesAdmin = () => {
     { icon: <CalendarDaysIcon className="w-8 h-8 text-white" />, label: "Cronograma de Clase", viewName: "schedule" },
     { icon: <PlusCircleIcon className="w-8 h-8 text-white" />, label: "Añadir/Eliminar Clase", viewName: "manageClasses" },
     { icon: <AcademicCapIcon className="w-8 h-8 text-white" />, label: "Profesores", viewName: "teachers" },
-    { icon: <UserGroupIcon className="w-8 h-8 text-white" />, label: "Asistencia", viewName: "attendance" },
-    { icon: <IdentificationIcon className="w-8 h-8 text-white" />, label: "Alumnos", viewName: "students" },
+    { icon: <UserGroupIcon className="w-8 h-8 text-white" />, label: "Inscribir Alumnos", viewName: "students" }, // Etiqueta actualizada
+    { icon: <UserGroupIcon className="w-8 h-8 text-white" />, label: "Asistencia", viewName: "attendance" }, // Icono UserGroupIcon también para Asistencia
     { icon: <ClockIcon className="w-8 h-8 text-white" />, label: "Historial", viewName: "history" },
   ];
 
@@ -82,6 +83,10 @@ const ClassesAdmin = () => {
 
   if (currentView === "attendance") {
     return <AttendanceView onBack={navigateToMenu} />;
+  }
+
+  if (currentView === "students") {
+    return <EnrollStudentsView onBack={navigateToMenu} />;
   }
 
   // Para otras vistas, seguimos usando PlaceholderView
