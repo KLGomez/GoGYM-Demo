@@ -80,9 +80,9 @@ const HomePage = () => {
       const qrText = result?.getText();
       if (qrText) {
         processQrData(qrText, "Cámara");
-        if (codeReaderRef.current) { // Usar la ref que ya guardó el codeReader
-          codeReaderRef.current.stopStreams();
-          // console.log("Cámara detenida explícitamente en handleCameraScan");
+        if (codeReaderRef.current) {
+          codeReaderRef.current.reset(); // Usar reset()
+          // console.log("Lector QR reseteado explícitamente en handleCameraScan");
         }
         setShowCameraScanner(false);
       }
@@ -108,9 +108,9 @@ const HomePage = () => {
   // useEffect para detener la cámara si se oculta manualmente
   useEffect(() => {
     if (!showCameraScanner && codeReaderRef.current) {
-      // console.log("Ocultando cámara manualmente, deteniendo streams...");
-      codeReaderRef.current.stopStreams();
-      codeReaderRef.current = null; // Limpiar la referencia
+      // console.log("Ocultando cámara manualmente, reseteando lector...");
+      codeReaderRef.current.reset(); // Usar reset()
+      codeReaderRef.current = null;
     }
     // No es necesario añadir codeReaderRef.current a las dependencias aquí,
     // ya que solo queremos actuar cuando showCameraScanner cambia a false.
