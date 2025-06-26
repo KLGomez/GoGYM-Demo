@@ -1,7 +1,7 @@
-import React, { useState, /* useEffect, useRef */ } from 'react'; // Comentado useEffect, useRef
+import React, { useState } from 'react'; // useEffect y useRef eliminados de la importación
 import { CameraIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
-// import { Html5QrcodeScanner, Html5QrcodeScanType } from 'html5-qrcode'; // Comentado
-import { showError } from '../utils/alerts'; // Asegurar que showError esté importado
+// import { Html5QrcodeScanner, Html5QrcodeScanType } from 'html5-qrcode'; // Comentado y no necesario
+import { showError } from '../utils/alerts';
 
 const HomePage = () => {
   const [qrInput, setQrInput] = useState('');
