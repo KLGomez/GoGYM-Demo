@@ -1,16 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, /* useEffect, useRef */ } from 'react'; // Comentado useEffect, useRef
 import { CameraIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
-// Html5QrcodeScanner se importará dinámicamente
+// import { Html5QrcodeScanner, Html5QrcodeScanType } from 'html5-qrcode'; // Comentado
+import { showError } from '../utils/alerts'; // Asegurar que showError esté importado
 
 const HomePage = () => {
   const [qrInput, setQrInput] = useState('');
   const [scanResult, setScanResult] = useState('');
-  const [showCameraScanner, setShowCameraScanner] = useState(false);
+  // const [showCameraScanner, setShowCameraScanner] = useState(false); // Comentado
   const [scanError, setScanError] = useState('');
 
-  const scannerRef = useRef(null);
-  const scannerContainerRef = useRef(null); // Restaurar definición
+  // const scannerRef = useRef(null); // Comentado
+  // const scannerContainerRef = useRef(null); // Comentado
 
+  // useEffect para html5-qrcode completamente comentado
+  /*
   useEffect(() => {
     if (showCameraScanner && !scannerRef.current) {
       // Se asume que el div#camera-scanner-container existirá cuando esto se ejecute
@@ -197,7 +200,7 @@ const HomePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen text-white flex flex-col items-center justify-center p-4"> {/* bg-gray-900 eliminado */}
       <div className="w-full max-w-md p-8 bg-gray-800 rounded-xl shadow-2xl space-y-6">
         <h1 className="text-4xl font-bold text-orange-400 text-center mb-8">
           GoGYM - Control de Acceso
@@ -205,14 +208,15 @@ const HomePage = () => {
 
         <button
           onClick={() => {
-            setShowCameraScanner(prev => !prev);
-            setScanResult('');
-            setScanError('');
+            // setShowCameraScanner(prev => !prev); // Comentado
+            setScanResult(''); // Limpiar resultados anteriores
+            setScanError('');  // Limpiar errores anteriores
+            showError("Función Deshabilitada", "El escaneo con cámara no está disponible temporalmente.");
           }}
           className="w-full flex items-center justify-center gap-3 px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-orange-500 transition-transform transform hover:scale-105"
         >
           <CameraIcon className="h-6 w-6" aria-hidden="true" />
-          {showCameraScanner ? "Ocultar Cámara" : "Escanear con Cámara"}
+          Escanear con Cámara {/* El texto ya no cambia, el estado showCameraScanner no se usa */}
         </button>
 
         <form onSubmit={handleExternalScan} className="space-y-4">
@@ -239,11 +243,11 @@ const HomePage = () => {
           </button>
         </form>
 
-        {showCameraScanner && (
+        {/* {showCameraScanner && ( // Contenedor del scanner comentado
           <div ref={scannerContainerRef} id="camera-scanner-container" className="w-full h-auto min-h-[250px] bg-gray-700 rounded-md my-4 overflow-hidden">
-            {/* Este div debe estar vacío para que html5-qrcode renderice aquí */}
+
           </div>
-        )}
+        )} */}
 
         {scanError &&
           <div className="mt-6 p-3 bg-red-800 rounded-md text-center">
