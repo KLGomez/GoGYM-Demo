@@ -31,23 +31,26 @@ const HomePage = () => {
             // Por ahora, mantenemos la forma original y vemos qué loguea:
             // const Html5QrcodeScanner = Html5QrcodeModule.Html5QrcodeScanner;
 
-            // Intento más flexible de acceder a la clase constructora:
-            const Html5QrcodeScanner = Html5QrcodeModule.Html5QrcodeScanner ||
-                                     Html5QrcodeModule.default?.Html5QrcodeScanner ||
-                                     Html5QrcodeModule.default ||
-                                     Html5QrcodeModule;
+            console.log('Inspeccionando Html5QrcodeModule:', Html5QrcodeModule); // Debugging line
 
+            const ScannerClass = Html5QrcodeModule.Html5QrcodeScanner ||
+                               Html5QrcodeModule.default?.Html5QrcodeScanner ||
+                               Html5QrcodeModule.default ||
+                               Html5QrcodeModule;
 
-            if (!Html5QrcodeScanner || typeof Html5QrcodeScanner !== 'function') {
-              console.error("CLASE Html5QrcodeScanner no encontrada o no es una función en el módulo:", Html5QrcodeModule);
-              setScanError("Error crítico: Fallo al cargar la librería de escaneo (constructor no encontrado).");
+            console.log('Intentando usar ScannerClass:', typeof ScannerClass, ScannerClass); // Debugging line
+
+            if (typeof ScannerClass !== 'function') {
+              console.error("ScannerClass no es una función constructora:", ScannerClass, "Módulo original:", Html5QrcodeModule);
+              setScanError("Error crítico: Fallo al cargar la librería de escaneo (constructor inválido).");
               setShowCameraScanner(false);
               return;
             }
 
             // Verificar existencia del div ANTES de instanciar
-            if (!document.getElementById("camera-scanner-container")) {
-                console.error("Error: El div #camera-scanner-container NO está en el DOM antes de new Html5QrcodeScanner().");
+            const scannerContainerId = "camera-scanner-container";
+            if (!document.getElementById(scannerContainerId)) {
+                console.error(`Error: El div #${scannerContainerId} NO está en el DOM antes de new ScannerClass().`);
                 setScanError("Error de UI: No se pudo preparar el visor de la cámara.");
                 setShowCameraScanner(false);
                 return;
@@ -55,20 +58,20 @@ const HomePage = () => {
 
             let html5QrcodeScannerInstance;
             try {
-                html5QrcodeScannerInstance = new Html5QrcodeScanner(
-                "camera-scanner-container",
+                html5QrcodeScannerInstance = new ScannerClass( // Usar ScannerClass
+                scannerContainerId, // Usar la variable del ID
                 { fps: 10, qrbox: { width: 250, height: 250 } },
                 false // verbose
               );
             } catch (instantiationError) {
-              console.error("Error al instanciar Html5QrcodeScanner:", instantiationError);
+              console.error("Error al instanciar ScannerClass:", instantiationError);
               setScanError("Error al iniciar el escáner. Verifique la consola para más detalles.");
               setShowCameraScanner(false);
               return;
             }
 
-            if (!html5QrcodeScannerInstance) { // Doble chequeo por si el constructor devuelve undefined
-                console.error("La instanciación de Html5QrcodeScanner devolvió undefined.");
+            if (!html5QrcodeScannerInstance) {
+                console.error("La instanciación de ScannerClass devolvió undefined.");
                 setScanError("Fallo al inicializar el escáner (instancia nula).");
                 setShowCameraScanner(false);
                 return;
