@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react'; // Asegurar useEffect y useRef
+import React, { useState, useRef, useEffect } from 'react';
 import { CameraIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
-import { QrReader } from '@blackbox-vision/react-qr-reader'; // Importar QrReader
+import { QrReader } from '@blackbox-vision/react-qr-reader';
 import { showError } from '../utils/alerts';
 
 const HomePage = () => {
@@ -9,7 +9,7 @@ const HomePage = () => {
   const [scanError, setScanError] = useState('');
   const [showCameraScanner, setShowCameraScanner] = useState(false);
 
-  // const videoRef = useRef(null); // @blackbox-vision/react-qr-reader no necesita ref para el video explícitamente si usamos el componente
+  const codeReaderRef = useRef(null); // Ref para la instancia de codeReader
 
   const handleExternalScan = (e) => {
     e.preventDefault();
@@ -70,13 +70,21 @@ const HomePage = () => {
   };
 
   const handleCameraScan = (result, error, codeReader) => {
+    // Guardar la instancia del codeReader en la ref para poder usarla externamente si es necesario
+    // Por ejemplo, para detenerla explícitamente si el componente QrReader no se desmonta inmediatamente.
+    if (codeReader) {
+        codeReaderRef.current = codeReader;
+    }
+
     if (result) {
       const qrText = result?.getText();
       if (qrText) {
         processQrData(qrText, "Cámara");
+        if (codeReaderRef.current) { // Usar la ref que ya guardó el codeReader
+          codeReaderRef.current.stopStreams();
+          // console.log("Cámara detenida explícitamente en handleCameraScan");
+        }
         setShowCameraScanner(false);
-        // No es necesario llamar a codeReader.stop() explícitamente aquí si el componente se desmonta
-        // al cambiar showCameraScanner a false, ya que el componente QrReader debería manejar su propia limpieza.
       }
     }
     if (error) {
@@ -96,6 +104,20 @@ const HomePage = () => {
       }
     }
   };
+
+  // useEffect para detener la cámara si se oculta manualmente
+  useEffect(() => {
+    if (!showCameraScanner && codeReaderRef.current) {
+      // console.log("Ocultando cámara manualmente, deteniendo streams...");
+      codeReaderRef.current.stopStreams();
+      codeReaderRef.current = null; // Limpiar la referencia
+    }
+    // No es necesario añadir codeReaderRef.current a las dependencias aquí,
+    // ya que solo queremos actuar cuando showCameraScanner cambia a false.
+    // La limpieza principal del stream si el componente HomePage se desmonta
+    // mientras la cámara está activa debería ser manejada por el desmontaje
+    // del componente QrReader mismo.
+  }, [showCameraScanner]);
 
 
   return (
