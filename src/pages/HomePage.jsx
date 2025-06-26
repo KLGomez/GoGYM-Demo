@@ -1,131 +1,15 @@
-import React, { useState } from 'react'; // useEffect y useRef eliminados de la importación
+import React, { useState, useRef, useEffect } from 'react'; // Asegurar useEffect y useRef
 import { CameraIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
-// import { Html5QrcodeScanner, Html5QrcodeScanType } from 'html5-qrcode'; // Comentado y no necesario
+import { QrReader } from '@blackbox-vision/react-qr-reader'; // Importar QrReader
 import { showError } from '../utils/alerts';
 
 const HomePage = () => {
   const [qrInput, setQrInput] = useState('');
   const [scanResult, setScanResult] = useState('');
-  // const [showCameraScanner, setShowCameraScanner] = useState(false); // Comentado
   const [scanError, setScanError] = useState('');
+  const [showCameraScanner, setShowCameraScanner] = useState(false);
 
-  // const scannerRef = useRef(null); // Comentado
-  // const scannerContainerRef = useRef(null); // Comentado
-
-  // useEffect para html5-qrcode completamente comentado
-  /*
-  useEffect(() => {
-    if (showCameraScanner && !scannerRef.current) {
-      // Se asume que el div#camera-scanner-container existirá cuando esto se ejecute
-      // si showCameraScanner es true, debido al renderizado condicional en JSX.
-      // El console.warn problemático se elimina.
-
-      import('html5-qrcode')
-          .then(Html5QrcodeModule => {
-            console.log('Html5QrcodeModule:', Html5QrcodeModule); // Inspeccionar el módulo
-            if (!showCameraScanner) return;
-
-            // Intentar acceder a Html5QrcodeScanner, ajustando según lo que muestre el console.log
-            // Posibles intentos:
-            // const Html5QrcodeScanner = Html5QrcodeModule.Html5QrcodeScanner;
-            // const Html5QrcodeScanner = Html5QrcodeModule.default;
-            // const Html5QrcodeScanner = Html5QrcodeModule; // Si el módulo exporta la clase directamente
-
-            // Por ahora, mantenemos la forma original y vemos qué loguea:
-            // const Html5QrcodeScanner = Html5QrcodeModule.Html5QrcodeScanner;
-
-            console.log('Inspeccionando Html5QrcodeModule:', Html5QrcodeModule); // Debugging line
-
-            const ScannerClass = Html5QrcodeModule.Html5QrcodeScanner ||
-                               Html5QrcodeModule.default?.Html5QrcodeScanner ||
-                               Html5QrcodeModule.default ||
-                               Html5QrcodeModule;
-
-            console.log('Intentando usar ScannerClass:', typeof ScannerClass, ScannerClass); // Debugging line
-
-            if (typeof ScannerClass !== 'function') {
-              console.error("ScannerClass no es una función constructora:", ScannerClass, "Módulo original:", Html5QrcodeModule);
-              setScanError("Error crítico: Fallo al cargar la librería de escaneo (constructor inválido).");
-              setShowCameraScanner(false);
-              return;
-            }
-
-            // Verificar existencia del div ANTES de instanciar
-            const scannerContainerId = "camera-scanner-container";
-            if (!document.getElementById(scannerContainerId)) {
-                console.error(`Error: El div #${scannerContainerId} NO está en el DOM antes de new ScannerClass().`);
-                setScanError("Error de UI: No se pudo preparar el visor de la cámara.");
-                setShowCameraScanner(false);
-                return;
-            }
-
-            let html5QrcodeScannerInstance;
-            try {
-                html5QrcodeScannerInstance = new ScannerClass( // Usar ScannerClass
-                scannerContainerId, // Usar la variable del ID
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                false // verbose
-              );
-            } catch (instantiationError) {
-              console.error("Error al instanciar ScannerClass:", instantiationError);
-              setScanError("Error al iniciar el escáner. Verifique la consola para más detalles.");
-              setShowCameraScanner(false);
-              return;
-            }
-
-            if (!html5QrcodeScannerInstance) {
-                console.error("La instanciación de ScannerClass devolvió undefined.");
-                setScanError("Fallo al inicializar el escáner (instancia nula).");
-                setShowCameraScanner(false);
-                return;
-            }
-
-            const qrCodeSuccessCallback = (decodedText, decodedResult) => {
-              processQrData(decodedText, "Cámara");
-              setShowCameraScanner(false);
-            };
-
-            const qrCodeErrorCallback = (errorMessage) => { /* Silenciado por ahora */ }; // No usar */ aquí si está dentro de /* ... */
-
-            html5QrcodeScannerInstance.render(qrCodeSuccessCallback, qrCodeErrorCallback)
-              .then(() => {
-                  if(showCameraScanner) {
-                      scannerRef.current = html5QrcodeScannerInstance;
-                  } else {
-                      html5QrcodeScannerInstance.clear().catch(e => console.error("Scanner limpiado post-render (estado cambiado)", e));
-                  }
-              })
-              .catch(renderError => {
-                  console.error("Error al renderizar Html5QrcodeScanner:", renderError);
-                  setScanError("No se pudo iniciar el escáner de cámara. Verifique permisos/cámara.");
-                  setShowCameraScanner(false);
-              });
-          })
-          .catch(error => {
-            console.error("Error al cargar html5-qrcode:", error);
-            setScanError("Error al cargar componente de escaneo.");
-            setShowCameraScanner(false);
-          });
-    } else if (!showCameraScanner && scannerRef.current) {
-      // Si showCameraScanner es false y hay una instancia, limpiarla
-      scannerRef.current.clear().then(() => {
-        scannerRef.current = null;
-      }).catch(err => {
-        // console.error("Error al limpiar scanner (al ocultar): ", err);
-        scannerRef.current = null;
-      });
-    }
-
-    // Función de limpieza para el useEffect, se ejecuta cuando showCameraScanner cambia o el componente se desmonta
-    return () => {
-      // clearTimeout(timerId); // No necesitamos timerId si eliminamos el setTimeout
-      if (scannerRef.current) {
-        scannerRef.current.clear().catch(err => { /* console.error("Error al limpiar scanner en cleanup:", err); */ }); // No usar */ aquí
-        scannerRef.current = null;
-      }
-    };
-  }, [showCameraScanner]); // Dependencia simplificada
-
+  // const videoRef = useRef(null); // @blackbox-vision/react-qr-reader no necesita ref para el video explícitamente si usamos el componente
 
   const handleExternalScan = (e) => {
     e.preventDefault();
@@ -142,15 +26,7 @@ const HomePage = () => {
   const processQrData = (qrString, sourceType) => {
     try {
       const parsedData = JSON.parse(qrString);
-      if (parsedData && parsedData.clientId && parsedData.name) { // Verificar campos mínimos
-        // Aquí podríamos buscar el cliente en LocalStorage para obtener más detalles si es necesario
-        // o si el QR solo contuviera el clientId.
-        // Por ahora, asumimos que el QR tiene los datos necesarios o los mostramos tal cual.
-
-        // Para mostrar estado de membresía, necesitamos la función de cálculo y los datos de inicio/duración
-        // Esto asume que el QR contiene membershipStartDate y membershipDurationDays, o que los obtenemos de otra forma.
-        // Si el QR ya tiene membershipEndDate y status (como definimos al generar), es más simple:
-
+      if (parsedData && parsedData.clientId && parsedData.name) {
         let clientDetailsToDisplay = {
             Nombre: parsedData.name,
             Email: parsedData.email || 'N/A',
@@ -174,14 +50,8 @@ const HomePage = () => {
                 "Días Restantes": daysRemaining < 0 ? 0 : daysRemaining,
             };
         } else if (parsedData.membershipStartDate && typeof parsedData.membershipDurationDays === 'number') {
-            // Si el QR tiene estos datos, podemos calcularlo (requiere importar calculateMembershipDetails)
-            // import { calculateMembershipDetails } from "../utils/membershipUtils";
-            // const details = calculateMembershipDetails(parsedData.membershipStartDate, parsedData.membershipDurationDays);
-            // clientDetailsToDisplay = { ...clientDetailsToDisplay, ...details };
-            // Por simplicidad, si no vienen en el QR, no los mostramos ahora.
              clientDetailsToDisplay["Info Membresía"] = "Datos de inicio/duración no en QR, cálculo no realizado.";
         }
-
 
         setScanResult({
           source: sourceType,
@@ -199,8 +69,37 @@ const HomePage = () => {
     }
   };
 
+  const handleCameraScan = (result, error, codeReader) => {
+    if (result) {
+      const qrText = result?.getText();
+      if (qrText) {
+        processQrData(qrText, "Cámara");
+        setShowCameraScanner(false);
+        // No es necesario llamar a codeReader.stop() explícitamente aquí si el componente se desmonta
+        // al cambiar showCameraScanner a false, ya que el componente QrReader debería manejar su propia limpieza.
+      }
+    }
+    if (error) {
+      // Ignorar errores comunes que no son críticos para la UX
+      const ignoredErrorNames = ["NotFoundException", "ChecksumException", "FormatException"];
+      if (error.name && !ignoredErrorNames.includes(error.name) && !error.message?.includes("No QR code found")) {
+          // console.error("Error de QR Scanner (@blackbox-vision/react-qr-reader):", error);
+          // Podríamos querer ser más selectivos con los errores que mostramos al usuario.
+          // Errores como NotAllowedError (permisos) o NotFoundError (cámara no encontrada) son importantes.
+          if (error.name === "NotAllowedError" || error.name === "NotFoundError" || error.name === "OverconstrainedError") {
+              setScanError(`Error de cámara: ${error.message}. Verifique permisos y que no esté en uso.`);
+              setShowCameraScanner(false); // Ocultar si hay un error de cámara fundamental
+          } else {
+              // Para otros errores menos críticos, podríamos solo loguearlos o ignorarlos.
+              // setScanError(`Error de escaneo: ${error.name}`);
+          }
+      }
+    }
+  };
+
+
   return (
-    <div className="min-h-screen text-white flex flex-col items-center justify-center p-4"> {/* bg-gray-900 eliminado */}
+    <div className="min-h-screen text-white flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md p-8 bg-gray-800 rounded-xl shadow-2xl space-y-6">
         <h1 className="text-4xl font-bold text-orange-400 text-center mb-8">
           GoGYM - Control de Acceso
@@ -208,16 +107,29 @@ const HomePage = () => {
 
         <button
           onClick={() => {
-            // setShowCameraScanner(prev => !prev); // Comentado
-            setScanResult(''); // Limpiar resultados anteriores
-            setScanError('');  // Limpiar errores anteriores
-            showError("Función Deshabilitada", "El escaneo con cámara no está disponible temporalmente.");
+            setShowCameraScanner(prev => !prev);
+            setScanResult('');
+            setScanError('');
           }}
           className="w-full flex items-center justify-center gap-3 px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-orange-500 transition-transform transform hover:scale-105"
         >
           <CameraIcon className="h-6 w-6" aria-hidden="true" />
-          Escanear con Cámara {/* El texto ya no cambia, el estado showCameraScanner no se usa */}
+          {showCameraScanner ? "Ocultar Cámara" : "Escanear con Cámara"}
         </button>
+
+        {showCameraScanner && (
+          <div className="my-4 p-4 bg-gray-700 rounded-md">
+            <QrReader
+              onResult={handleCameraScan}
+              constraints={{ facingMode: 'environment' }}
+              scanDelay={300} // algunas versiones usan 'delay'
+              className="w-full h-auto" // Asegúrate de que el componente tenga un tamaño visible
+              videoStyle={{ width: '100%', height: 'auto' }} // Estilo para el video interno
+              // videoContainerStyle={{ paddingTop: '0' }} // Ajustes si es necesario
+            />
+            <p className="text-center text-sm text-gray-400 mt-2">Apunte la cámara al código QR.</p>
+          </div>
+        )}
 
         <form onSubmit={handleExternalScan} className="space-y-4">
           <div>
@@ -242,12 +154,6 @@ const HomePage = () => {
             Procesar Entrada
           </button>
         </form>
-
-        {/* {showCameraScanner && ( // Contenedor del scanner comentado
-          <div ref={scannerContainerRef} id="camera-scanner-container" className="w-full h-auto min-h-[250px] bg-gray-700 rounded-md my-4 overflow-hidden">
-
-          </div>
-        )} */}
 
         {scanError &&
           <div className="mt-6 p-3 bg-red-800 rounded-md text-center">
