@@ -19,9 +19,24 @@ const HomePage = () => {
 
       import('html5-qrcode')
           .then(Html5QrcodeModule => {
+            console.log('Html5QrcodeModule:', Html5QrcodeModule); // Inspeccionar el módulo
             if (!showCameraScanner) return;
 
+            // Intentar acceder a Html5QrcodeScanner, ajustando según lo que muestre el console.log
+            // Posibles intentos:
+            // const Html5QrcodeScanner = Html5QrcodeModule.Html5QrcodeScanner;
+            // const Html5QrcodeScanner = Html5QrcodeModule.default;
+            // const Html5QrcodeScanner = Html5QrcodeModule; // Si el módulo exporta la clase directamente
+
+            // Por ahora, mantenemos la forma original y vemos qué loguea:
             const Html5QrcodeScanner = Html5QrcodeModule.Html5QrcodeScanner;
+
+            if (!Html5QrcodeScanner) {
+              console.error("Html5QrcodeScanner no se encontró en el módulo importado.", Html5QrcodeModule);
+              setScanError("Error crítico: No se pudo encontrar el componente escáner en la librería.");
+              setShowCameraScanner(false);
+              return;
+            }
 
             const html5QrcodeScannerInstance = new Html5QrcodeScanner(
               "camera-scanner-container",
