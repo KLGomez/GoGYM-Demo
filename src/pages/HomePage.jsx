@@ -85,7 +85,7 @@ const HomePage = () => {
               setShowCameraScanner(false);
             };
 
-            const qrCodeErrorCallback = (errorMessage) => { /* Silenciado por ahora */ };
+            const qrCodeErrorCallback = (errorMessage) => { /* Silenciado por ahora */ }; // No usar */ aquí si está dentro de /* ... */
 
             html5QrcodeScannerInstance.render(qrCodeSuccessCallback, qrCodeErrorCallback)
               .then(() => {
@@ -120,7 +120,7 @@ const HomePage = () => {
     return () => {
       // clearTimeout(timerId); // No necesitamos timerId si eliminamos el setTimeout
       if (scannerRef.current) {
-        scannerRef.current.clear().catch(err => { /* console.error("Error al limpiar scanner en cleanup:", err); */ });
+        scannerRef.current.clear().catch(err => { /* console.error("Error al limpiar scanner en cleanup:", err); */ }); // No usar */ aquí
         scannerRef.current = null;
       }
     };
