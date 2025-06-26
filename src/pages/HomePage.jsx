@@ -9,7 +9,8 @@ const HomePage = () => {
   const [scanError, setScanError] = useState('');
   const [showCameraScanner, setShowCameraScanner] = useState(false);
 
-  const codeReaderRef = useRef(null); // Ref para la instancia de codeReader
+  // codeReaderRef ya no es necesario si confiamos en el desmontaje del componente.
+  // const codeReaderRef = useRef(null);
 
   const handleExternalScan = (e) => {
     e.preventDefault();
@@ -69,22 +70,21 @@ const HomePage = () => {
     }
   };
 
-  const handleCameraScan = (result, error, codeReader) => {
-    // Guardar la instancia del codeReader en la ref para poder usarla externamente si es necesario
-    // Por ejemplo, para detenerla explícitamente si el componente QrReader no se desmonta inmediatamente.
-    if (codeReader) {
-        codeReaderRef.current = codeReader;
-    }
+  const handleCameraScan = (result, error /*, codeReader */) => { // codeReader ya no se usa aquí directamente
+    // Ya no se guarda codeReader en una ref.
+    // if (codeReader) {
+    //     codeReaderRef.current = codeReader;
+    // }
 
     if (result) {
       const qrText = result?.getText();
       if (qrText) {
         processQrData(qrText, "Cámara");
-        if (codeReaderRef.current) {
-          codeReaderRef.current.reset(); // Usar reset()
-          // console.log("Lector QR reseteado explícitamente en handleCameraScan");
-        }
-        setShowCameraScanner(false);
+        // La llamada explícita a reset() se elimina.
+        // if (codeReaderRef.current) {
+        //   codeReaderRef.current.reset();
+        // }
+        setShowCameraScanner(false); // Esto desmontará <QrReader /> y debería detener la cámara.
       }
     }
     if (error) {
@@ -106,19 +106,16 @@ const HomePage = () => {
   };
 
   // useEffect para detener la cámara si se oculta manualmente
+  // Este useEffect ya no es necesario si confiamos en el desmontaje del QrReader.
+  /*
   useEffect(() => {
     if (!showCameraScanner && codeReaderRef.current) {
       // console.log("Ocultando cámara manualmente, reseteando lector...");
-      codeReaderRef.current.reset(); // Usar reset()
+      codeReaderRef.current.reset();
       codeReaderRef.current = null;
     }
-    // No es necesario añadir codeReaderRef.current a las dependencias aquí,
-    // ya que solo queremos actuar cuando showCameraScanner cambia a false.
-    // La limpieza principal del stream si el componente HomePage se desmonta
-    // mientras la cámara está activa debería ser manejada por el desmontaje
-    // del componente QrReader mismo.
   }, [showCameraScanner]);
-
+  */
 
   return (
     <div className="min-h-screen text-white flex flex-col items-center justify-center p-4">
