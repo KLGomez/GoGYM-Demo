@@ -1,6 +1,27 @@
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import LoginForm from "../components/LoginForm";
 
+
 export default function Login() {
+
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const storedUser = localStorage.getItem("loggedUser");
+
+        if (storedUser) {
+            const user = JSON.parse(storedUser);
+            if (user.role === "admin") {
+                navigate("/admin");
+            } else {
+                navigate("/user");
+            }
+        }
+    }, []);
+
+
+
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-black px-4">
 
