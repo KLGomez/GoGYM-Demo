@@ -1,11 +1,15 @@
-import React from 'react'
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Login from "./pages/Login";
 
-const GoGYM = () => {
+function App() {
   return (
-    <>
-      <h1>GoGYM</h1>
-    </>
-  )
+    <Router>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        {/* Acá agregás otras rutas más adelante */}
+      </Routes>
+    </Router>
+  );
 }
 
-export default GoGYM
+export default App;
