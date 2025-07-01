@@ -107,15 +107,19 @@ const ClientsAdmin = () => {
   };
 
   const handleDeleteClient = (clientId, clientFirstName, clientLastName) => {
+    const fullName = `${clientFirstName || ''} ${clientLastName || ''}`.trim();
     confirmAction(
-      `¿Eliminar Cliente "${clientName}"?`,
+      `¿Eliminar Cliente "${fullName}"?`,
       `Esta acción es irreversible.`,
       "Sí, eliminar",
       () => {
         setClients((prevClients) => prevClients.filter((client) => client.id !== clientId));
-        showSuccess("Cliente Eliminado", `${clientName} ha sido eliminado.`);
-        if (editingClient && editingClient.id === clientId) { // Si se elimina el cliente que se está editando
-          resetFormAndState();
+        showSuccess("Cliente Eliminado", `El cliente "${fullName}" ha sido eliminado.`);
+        if (editingClient && editingClient.id === clientId) {
+          setEditingClient(null); // Limpiar el estado de edición
+          // No es necesario llamar a resetForm() de Formik aquí,
+          // ya que al cambiar de vista o al cambiar editingClient (con enableReinitialize)
+          // el formulario se limpiará/reinicializará si es necesario.
         }
       }
     );
