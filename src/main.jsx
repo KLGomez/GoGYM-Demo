@@ -7,7 +7,7 @@ import AppUser from './AppUser.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    {/* <AppAdmin /> */}
-    <AppUser />
+    <AppAdmin />
+    {/* <AppUser /> */}
   </StrictMode>,
 )

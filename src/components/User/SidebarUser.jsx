@@ -21,7 +21,7 @@ const SidebarUser = () => {
     <>
       {/* Sidebar Desktop */}
       <aside className="hidden md:flex flex-col w-64 bg-gray-800 text-white p-6 shadow-lg min-h-screen">
-        <h2 className="text-2xl font-bold text-orange-400 mb-6 text-center">GoGYM</h2>
+        <h2 className="text-2xl font-bold text-orange-400 mb-6 text-left">GoGYM</h2>
         <nav className="flex flex-col gap-4">
           {navLinks.map((link) => (
             <NavLink
