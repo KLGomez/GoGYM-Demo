@@ -1,7 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react'; // Asegurar useEffect y useRef
 import { CameraIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 import { QrReader } from '@blackbox-vision/react-qr-reader';
 import { showError } from '../utils/alerts';
+// Asumimos que getClients y calculateMembershipDetails están en utils y funcionan
+// import { getClients } from '../utils/storage';
+// import { calculateMembershipDetails } from '../utils/membershipUtils';
 
 const HomePage = () => {
   const [qrInput, setQrInput] = useState('');
@@ -9,8 +12,7 @@ const HomePage = () => {
   const [scanError, setScanError] = useState('');
   const [showCameraScanner, setShowCameraScanner] = useState(false);
 
-  // codeReaderRef ya no es necesario si confiamos en el desmontaje del componente.
-  // const codeReaderRef = useRef(null);
+  // const codeReaderRef = useRef(null); // No se usa si confiamos en el desmontaje del componente
 
   const handleExternalScan = (e) => {
     e.preventDefault();
@@ -28,6 +30,8 @@ const HomePage = () => {
     try {
       const parsedData = JSON.parse(qrString);
       if (parsedData && parsedData.clientId && parsedData.name) {
+        // Simulación de búsqueda de cliente y cálculo de membresía
+        // En una app real, aquí se buscaría en `clients` y se usaría `calculateMembershipDetails`
         let clientDetailsToDisplay = {
             Nombre: parsedData.name,
             Email: parsedData.email || 'N/A',
@@ -51,7 +55,10 @@ const HomePage = () => {
                 "Días Restantes": daysRemaining < 0 ? 0 : daysRemaining,
             };
         } else if (parsedData.membershipStartDate && typeof parsedData.membershipDurationDays === 'number') {
-             clientDetailsToDisplay["Info Membresía"] = "Datos de inicio/duración no en QR, cálculo no realizado.";
+             // Esta lógica requeriría importar y usar calculateMembershipDetails
+             // y tener acceso a la lista completa de clientes si el QR solo trae el ID.
+             // Por ahora, lo dejamos así para simplificar.
+             clientDetailsToDisplay["Info Membresía"] = "Datos de membresía completos no en QR (se requiere cálculo).";
         }
 
         setScanResult({
@@ -70,55 +77,29 @@ const HomePage = () => {
     }
   };
 
-  const handleCameraScan = (result, error /*, codeReader */) => { // codeReader ya no se usa aquí directamente
-    // Ya no se guarda codeReader en una ref.
-    // if (codeReader) {
-    //     codeReaderRef.current = codeReader;
-    // }
-
+  const handleCameraScan = (result, error /*, codeReader */) => { // codeReader no se usa explicitamente aquí
     if (result) {
-      const qrText = result?.getText();
+      const qrText = result?.getText(); // Algunas versiones usan result.text
       if (qrText) {
         processQrData(qrText, "Cámara");
-        // La llamada explícita a reset() se elimina.
-        // if (codeReaderRef.current) {
-        //   codeReaderRef.current.reset();
-        // }
-        setShowCameraScanner(false); // Esto desmontará <QrReader /> y debería detener la cámara.
+        setShowCameraScanner(false); // Esto debería desmontar <QrReader /> y detener la cámara.
       }
     }
     if (error) {
-      // Ignorar errores comunes que no son críticos para la UX
-      const ignoredErrorNames = ["NotFoundException", "ChecksumException", "FormatException"];
-      if (error.name && !ignoredErrorNames.includes(error.name) && !error.message?.includes("No QR code found")) {
-          // console.error("Error de QR Scanner (@blackbox-vision/react-qr-reader):", error);
-          // Podríamos querer ser más selectivos con los errores que mostramos al usuario.
-          // Errores como NotAllowedError (permisos) o NotFoundError (cámara no encontrada) son importantes.
+      const ignoredErrorNames = ["NotFoundException", "ChecksumException", "FormatException", "ReaderException"];
+      if (error.name && !ignoredErrorNames.includes(error.name) && !error.message?.includes("No QR code found") && !error.message?.includes("service unavailable")) {
           if (error.name === "NotAllowedError" || error.name === "NotFoundError" || error.name === "OverconstrainedError") {
               setScanError(`Error de cámara: ${error.message}. Verifique permisos y que no esté en uso.`);
-              setShowCameraScanner(false); // Ocultar si hay un error de cámara fundamental
+              setShowCameraScanner(false);
           } else {
-              // Para otros errores menos críticos, podríamos solo loguearlos o ignorarlos.
-              // setScanError(`Error de escaneo: ${error.name}`);
+              // console.info("Error de escaneo QR no crítico:", error.name, error.message);
           }
       }
     }
   };
 
-  // useEffect para detener la cámara si se oculta manualmente
-  // Este useEffect ya no es necesario si confiamos en el desmontaje del QrReader.
-  /*
-  useEffect(() => {
-    if (!showCameraScanner && codeReaderRef.current) {
-      // console.log("Ocultando cámara manualmente, reseteando lector...");
-      codeReaderRef.current.reset();
-      codeReaderRef.current = null;
-    }
-  }, [showCameraScanner]);
-  */
-
   return (
-    <div className="min-h-screen text-white flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen text-white flex flex-col items-center justify-center p-4"> {/* bg-gray-900 eliminado */}
       <div className="w-full max-w-md p-8 bg-gray-800 rounded-xl shadow-2xl space-y-6">
         <h1 className="text-4xl font-bold text-orange-400 text-center mb-8">
           GoGYM - Control de Acceso
@@ -141,10 +122,9 @@ const HomePage = () => {
             <QrReader
               onResult={handleCameraScan}
               constraints={{ facingMode: 'environment' }}
-              scanDelay={300} // algunas versiones usan 'delay'
-              className="w-full h-auto" // Asegúrate de que el componente tenga un tamaño visible
-              videoStyle={{ width: '100%', height: 'auto' }} // Estilo para el video interno
-              // videoContainerStyle={{ paddingTop: '0' }} // Ajustes si es necesario
+              scanDelay={300}
+              className="w-full h-auto"
+              videoStyle={{ width: '100%', height: 'auto' }}
             />
             <p className="text-center text-sm text-gray-400 mt-2">Apunte la cámara al código QR.</p>
           </div>
