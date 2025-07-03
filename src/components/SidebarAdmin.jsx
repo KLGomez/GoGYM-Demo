@@ -41,7 +41,8 @@ const SidebarAdmin = () => {
   return (
     <>
       {/* Sidebar visible solo en md+ */}
-      <aside className="hidden md:flex bg-gray-800 text-white w-64 h-screen p-6 flex-col shadow-lg">
+      <aside className="hidden md:flex flex-col w-64 bg-gray-800 text-white p-6 shadow-lg min-h-screen">
+        <h2 className="text-2xl font-bold text-orange-400 mb-6 text-center">GoGYM</h2>
         <nav className="flex flex-col gap-4">
           {menuItems.map((item, index) => {
             const isActive = location.pathname === item.path;

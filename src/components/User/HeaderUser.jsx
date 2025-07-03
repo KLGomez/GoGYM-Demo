@@ -1,46 +1,57 @@
-// Contenido inicial para HeaderUser.jsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserCircleIcon, ArrowLeftOnRectangleIcon } from '@heroicons/react/24/outline';
+import { PowerIcon, UserCircleIcon } from '@heroicons/react/24/outline';
+import Swal from 'sweetalert2';
 
 const HeaderUser = () => {
   const navigate = useNavigate();
-  // Lógica para obtener nombre de usuario y logout aquí
-  // En una aplicación real, el nombre de usuario podría venir de un contexto o estado global post-login.
-  const userDataString = localStorage.getItem('currentUser'); // Asumiendo que el objeto de usuario se guarda como 'currentUser'
+
+  // Obtener datos del usuario
+  const userDataString = localStorage.getItem('currentUser');
   let userName = 'Usuario';
   if (userDataString) {
     try {
       const userData = JSON.parse(userDataString);
-      userName = userData.name || userData.email || 'Usuario'; // Priorizar nombre, luego email
+      userName = userData.name || userData.email || 'Usuario';
     } catch (error) {
-      console.error("Error parsing user data from localStorage:", error);
+      console.error("Error al leer usuario del localStorage:", error);
     }
   }
 
-
   const handleLogout = () => {
-    console.log('Logout');
-    // Limpiar datos de sesión del usuario
-    localStorage.removeItem('currentUser'); // O cualquier otra key que se use para la sesión
-    localStorage.removeItem('userToken'); // Si se usa un token
-    localStorage.removeItem('userRole'); // Si se guarda el rol
-    // Redirigir al login
-    navigate('/login');
+    Swal.fire({
+      title: "¿Cerrar sesión?",
+      text: "Tu sesión se cerrará y deberás volver a iniciar.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#F26419",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Sí, cerrar sesión",
+      cancelButtonText: "Cancelar",
+      background: "#1f2937",
+      color: "#fff",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        localStorage.removeItem("currentUser");
+        localStorage.removeItem("userToken");
+        localStorage.removeItem("userRole");
+        navigate("/login");
+      }
+    });
   };
 
   return (
-    <header className="bg-gray-800 text-white p-4 flex justify-between items-center">
-      <div className="flex items-center">
-        <UserCircleIcon className="h-8 w-8 mr-2 text-orange-400" />
-        <span className="text-xl font-semibold">{userName}</span>
+    <header className="bg-gray-900 text-white flex justify-between items-center px-6 py-4 shadow z-50">
+      <div className="flex items-center gap-3">
+        <UserCircleIcon className="h-7 w-7 text-orange-400" />
+        <span className="text-lg font-medium">{userName}</span>
       </div>
       <button
         onClick={handleLogout}
-        className="flex items-center text-orange-400 hover:text-orange-500"
+        className="hover:text-orange-300 cursor-pointer transition-transform transform hover:scale-110"
+        title="Cerrar sesión"
       >
-        <ArrowLeftOnRectangleIcon className="h-6 w-6 mr-1" />
-        Salir
+        <PowerIcon className="w-6 h-6 text-orange-400" />
       </button>
     </header>
   );
