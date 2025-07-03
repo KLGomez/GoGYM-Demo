@@ -46,7 +46,7 @@ const UserClasses = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-semibold text-gray-800 mb-6">Clases Disponibles</h1>
+      <h1 className="text-3xl font-semibold text-white mb-6">Clases Disponibles</h1>
 
       {/* Filtros */}
       <div className="mb-8 p-4 bg-white shadow rounded-lg">

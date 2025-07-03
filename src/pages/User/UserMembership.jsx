@@ -60,7 +60,7 @@ const UserMembership = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-semibold text-gray-800 mb-8">Detalles de Mi Membresía</h1>
+      <h1 className="text-3xl font-semibold text-white mb-8">Detalles de Mi Membresía</h1>
 
       <div className="bg-white shadow-xl rounded-lg overflow-hidden">
         <div className={`p-6 ${getStatusColor(membershipData.status).split(' ')[1].replace('bg-', 'border-b-4 border-')}`}>

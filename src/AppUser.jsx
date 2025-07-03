@@ -17,7 +17,7 @@ const UserLayout = () => {
       <HeaderUser />
       <div className="flex flex-1">
         <SidebarUser />
-        <main className="flex-1 p-6 bg-gray-100">
+        <main className="flex-1 bg-black text-white p-6 pb-28 md:pb-6 overflow-y-auto">
           <Outlet /> {/* Content of the current route will be rendered here */}
         </main>
       </div>
