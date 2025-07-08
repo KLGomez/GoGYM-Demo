@@ -1,35 +1,29 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Outlet } from "react-router-dom"; // Import Outlet
 import Sidebar from "./components/SidebarAdmin";
 import HeaderAdmin from "./components/HeaderAdmin";
 import FooterAdmin from "./components/Footer";
-import ArticlesAdmin from "./pages/ArticlesAdmin";
-import ClassesAdmin from "./pages/ClassesAdmin";
-import MembershipsAdmin from "./pages/MembershipsAdmin";
-import ClientsAdmin from "./pages/ClientesAdmin";
+// Page imports are no longer needed here as they are handled by adminRoutes.jsx
 
 function AppAdmin() {
   return (
-    <Router>
-      <div className="flex flex-col min-h-screen overflow-hidden">
-        <HeaderAdmin />
+    // <Router> component is removed, as routing is handled by createBrowserRouter in main.jsx
+    <div className="flex flex-col min-h-screen overflow-hidden">
+      <HeaderAdmin />
 
-        {/* Contenedor de contenido */}
-        <div className="flex flex-1 overflow-hidden">
-          <Sidebar />
+      {/* Contenedor de contenido */}
+      <div className="flex flex-1 overflow-hidden">
+        <Sidebar />
 
-          <main className="flex-1 bg-black text-white p-6 pb-28 md:pb-6 overflow-y-auto">
-            <Routes>
-              <Route path="/articles" element={<ArticlesAdmin />} />
-              <Route path="/classes" element={<ClassesAdmin />} />
-              <Route path="/memberships" element={<MembershipsAdmin />} />
-              <Route path="/clients" element={<ClientsAdmin />} />
-            </Routes>
-          </main>
-        </div>
-
-        <FooterAdmin />
+        <main className="flex-1 bg-black text-white p-6 pb-28 md:pb-6 overflow-y-auto">
+          {/* <Routes> and <Route> components are removed */}
+          {/* Outlet will render the matched child route from adminRoutes.jsx */}
+          <Outlet />
+        </main>
       </div>
-    </Router>
+
+      <FooterAdmin />
+    </div>
+    // </Router>
   );
 }
 

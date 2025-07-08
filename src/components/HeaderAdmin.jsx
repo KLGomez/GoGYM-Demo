@@ -1,10 +1,21 @@
 import { Link, useNavigate } from "react-router-dom";
-import { PowerIcon } from "@heroicons/react/24/outline";
+import { PowerIcon, UserCircleIcon } from "@heroicons/react/24/outline";
 import Swal from "sweetalert2";
-
 
 const HeaderAdmin = () => {
   const navigate = useNavigate();
+
+  // Obtener nombre del admin desde localStorage
+  const adminDataString = localStorage.getItem("currentUser");
+  let adminName = "Admin";
+  if (adminDataString) {
+    try {
+      const adminData = JSON.parse(adminDataString);
+      adminName = adminData.name || adminData.email || "Admin";
+    } catch (error) {
+      console.error("Error al obtener el nombre del admin:", error);
+    }
+  }
 
   const handleLogout = () => {
     Swal.fire({
@@ -13,15 +24,16 @@ const HeaderAdmin = () => {
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#F26419",
-      cancelButtonColor: "#6b7280", // gray-500
+      cancelButtonColor: "#6b7280",
       confirmButtonText: "Sí, cerrar sesión",
       cancelButtonText: "Cancelar",
-      background: "#1f2937", // gray-800
+      background: "#1f2937",
       color: "#fff",
     }).then((result) => {
       if (result.isConfirmed) {
-        console.log("Sesión cerrada.");
-        // Acá se podría limpiar los datos de sesión que podriamos usar localstorage
+        localStorage.removeItem("currentUser");
+        localStorage.removeItem("userToken");
+        localStorage.removeItem("userRole");
         navigate("/login");
       }
     });
@@ -29,20 +41,19 @@ const HeaderAdmin = () => {
 
   return (
     <header className="bg-gray-900 text-white flex justify-between items-center px-6 py-4 shadow z-50">
-      <Link to="/" className="text-2xl font-bold text-orange-400 hover:text-orange-500">
-        GOGYM
-      </Link>
-
-      <div className="flex items-center gap-2 text-sm text-gray-200">
-        <span>ADMIN</span>
-        <button
-          onClick={handleLogout}
-          className="hover:text-orange-300 cursor-pointer transition-transform transform hover:scale-110"
-          title="Cerrar sesión"
-        >
-          <PowerIcon className="w-6 h-6 text-orange-400" />
-        </button>
+      {/* Reemplazamos el logo por el nombre del admin */}
+      <div className="flex items-center gap-3">
+        <UserCircleIcon className="h-7 w-7 text-orange-400" />
+        <span className="text-lg font-semibold text-orange-300">{adminName}</span>
       </div>
+
+      <button
+        onClick={handleLogout}
+        className="hover:text-orange-300 cursor-pointer transition-transform transform hover:scale-110"
+        title="Cerrar sesión"
+      >
+        <PowerIcon className="w-6 h-6 text-orange-400" />
+      </button>
     </header>
   );
 };
