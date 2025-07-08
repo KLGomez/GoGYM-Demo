@@ -12,8 +12,14 @@ import AppUser from '../AppUser.jsx';
 // Import route configurations
 import adminRoutes from './adminRoutes';
 import userRoutes from './userRoutes';
+import HomePage from '../pages/HomePage'; // Ensure HomePage is imported if not already
 
 const router = createBrowserRouter([
+  {
+    path: '/', // Root path now renders AppAdmin
+    element: <AppAdmin />,
+    children: adminRoutes, // AppAdmin's Outlet will render HomePage from adminRoutes (index: true)
+  },
   {
     path: '/login',
     element: <LoginPage />,
@@ -23,24 +29,19 @@ const router = createBrowserRouter([
     element: <CheckInPage />,
   },
   {
-    path: '/admin',
+    path: '/admin', // This path remains, effectively an alias to '/' for AppAdmin content
     element: <AppAdmin />,
-    children: adminRoutes, // Nested admin routes
+    children: adminRoutes,
   },
   {
     path: '/user',
     element: <AppUser />,
-    children: userRoutes, // Nested user routes
+    children: userRoutes,
   },
   {
     path: '*', // Catch-all for not found routes
     element: <NotFoundPage />,
   },
-  // TODO: Add a root path '/' if needed, for example, redirecting to login or a landing page.
-  // {
-  //   path: '/',
-  //   element: <HomePage />, // Or redirect to /login
-  // }
 ]);
 
 export default router;
