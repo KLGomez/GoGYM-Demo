@@ -14,27 +14,27 @@ const SidebarAdmin = () => {
     {
       label: "Check-In QR", // Nueva opción
       icon: QrCodeIcon,
-      path: "/check-in",
+      path: "check-in", // Relativo: se resolverá a /admin/check-in
     },
     {
       label: "Clientes",
       icon: UsersIcon,
-      path: "/clients",
+      path: "clients", // Relativo: se resolverá a /admin/clients
     },
     {
       label: "Clases",
       icon: CalendarDaysIcon,
-      path: "/classes",
+      path: "classes", // Relativo: se resolverá a /admin/classes
     },
     {
       label: "Membresías",
       icon: CreditCardIcon,
-      path: "/memberships",
+      path: "memberships", // Relativo: se resolverá a /admin/memberships
     },
     {
       label: "Artículos",
       icon: ClipboardDocumentListIcon,
-      path: "/articles",
+      path: "articles", // Relativo: se resolverá a /admin/articles
     },
   ];
 
