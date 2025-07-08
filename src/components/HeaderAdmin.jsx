@@ -31,10 +31,12 @@ const HeaderAdmin = () => {
       color: "#fff",
     }).then((result) => {
       if (result.isConfirmed) {
-        localStorage.removeItem("currentUser");
+        localStorage.removeItem("loggedUser"); // Changed from currentUser to loggedUser
+        // Kept these in case they are used elsewhere, or for future use.
+        // If they are definitively not used, they can be removed.
         localStorage.removeItem("userToken");
         localStorage.removeItem("userRole");
-        navigate("/login");
+        navigate("/login"); // Navigate to /login, which shows the Login page
       }
     });
   };
