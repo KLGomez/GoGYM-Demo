@@ -10,11 +10,13 @@ import {
 
 const SidebarUser = () => {
   const navLinks = [
-    { to: '/', text: 'Dashboard', icon: HomeIcon },
-    { to: '/clases', text: 'Clases', icon: RectangleStackIcon },
-    { to: '/mis-clases', text: 'Mis Clases', icon: UserGroupIcon },
-    { to: '/mi-membresia', text: 'Membresía', icon: CreditCardIcon },
-    { to: '/feedback', text: 'Feedback', icon: ChatBubbleLeftRightIcon },
+    // For the index route of the parent (/user), use "." or an empty string.
+    // NavLink's "end" prop is important here if you use "" or "." to avoid partial matching.
+    { to: '.', text: 'Dashboard', icon: HomeIcon },
+    { to: 'clases', text: 'Clases', icon: RectangleStackIcon },
+    { to: 'mis-clases', text: 'Mis Clases', icon: UserGroupIcon },
+    { to: 'mi-membresia', text: 'Membresía', icon: CreditCardIcon },
+    { to: 'feedback', text: 'Feedback', icon: ChatBubbleLeftRightIcon },
   ];
 
   return (
