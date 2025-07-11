@@ -52,10 +52,44 @@ export const SharedDataProvider = ({ children }) => {
     setTeachers(storedTeachers);
     setEnrollments(storedEnrollments.length > 0 ? storedEnrollments : initialSimulatedEnrollments);
     setAttendanceRecords(storedAttendance);
-    setArticles(storedArticles); // Usar la variable que leyó con getArticles
+    setArticles(storedArticles);
+
+    // Asegurar usuarios por defecto si no existen
+    let finalClients = [...storedClients];
+    const adminExists = finalClients.some(c => c.role === 'admin' && c.email === 'admin@gogym.com');
+    if (!adminExists) {
+      const adminUser = {
+        id: 'admin_default_001',
+        firstName: 'Admin', lastName: 'GoGym', email: 'admin@gogym.com', password: 'adminpass', role: 'admin',
+        dni: '00000000', alphanumericCode: generateClientCode('Admin', 'GoGym', '00000000'),
+        membership: { planName: 'Premium', membershipStartDate: new Date().toISOString(), membershipDurationDays: 365, autoRenew: true }
+      };
+      finalClients.push(adminUser);
+    }
+
+    const testUserExists = finalClients.some(c => c.email === 'user@gogym.com');
+    if (!testUserExists) {
+      const testUser = {
+        id: 'user_default_001',
+        firstName: 'Test', lastName: 'User', email: 'user@gogym.com', password: 'userpass', role: 'user',
+        dni: '11111111', alphanumericCode: generateClientCode('Test', 'User', '11111111'),
+        membership: { planName: 'Básico', membershipStartDate: new Date().toISOString(), membershipDurationDays: 30, autoRenew: false }
+      };
+      finalClients.push(testUser);
+    }
+
+    // Si se añadieron usuarios por defecto, actualizar el estado y localStorage
+    // Esta comparación es importante para no disparar un save innecesario si no hubo cambios.
+    if (finalClients.length > storedClients.length) {
+        setClients(finalClients);
+        // La persistencia se manejará por el useEffect de `clients`
+    } else {
+        setClients(storedClients); // Si no hubo cambios, usar los originales de localStorage
+    }
 
     if (storedCurrentUser) {
-      const liveClientData = storedClients.find(c => c.id === storedCurrentUser.id);
+      // Buscar en finalClients que podría tener los usuarios por defecto recién añadidos
+      const liveClientData = finalClients.find(c => c.id === storedCurrentUser.id);
       if (liveClientData) {
         setCurrentUser(liveClientData);
         localStorage.setItem('currentUserSession', JSON.stringify(liveClientData));
