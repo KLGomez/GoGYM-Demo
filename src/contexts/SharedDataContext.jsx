@@ -4,8 +4,8 @@ import {
     getTeachers, saveTeachers,
     getGymClasses, saveGymClasses,
     getClassEnrollments, saveClassEnrollments,
-    getAttendanceRecords, saveAttendanceRecords, // Asegurar que esté importada
-    getFromLocalStorage, saveToLocalStorage // Para artículos
+    getAttendanceRecords, saveAttendanceRecords,
+    getArticles, saveArticles // Importar getArticles y saveArticles
 } from '../utils/storage';
 import { showSuccess, showError } from '../utils/alerts';
 import { generateClientCode } from '../utils/codeUtils';
@@ -44,7 +44,7 @@ export const SharedDataProvider = ({ children }) => {
     const storedTeachers = getTeachers();
     const storedEnrollments = getClassEnrollments();
     const storedAttendance = getAttendanceRecords();
-    const storedArticles = getFromLocalStorage('articles', []); // Cargar artículos
+    const storedArticles = getArticles(); // Usar getArticles
     const storedCurrentUser = JSON.parse(localStorage.getItem('currentUserSession'));
 
     setClients(storedClients);
@@ -52,7 +52,7 @@ export const SharedDataProvider = ({ children }) => {
     setTeachers(storedTeachers);
     setEnrollments(storedEnrollments.length > 0 ? storedEnrollments : initialSimulatedEnrollments);
     setAttendanceRecords(storedAttendance);
-    setArticles(storedArticles); // Establecer artículos
+    setArticles(storedArticles); // Usar la variable que leyó con getArticles
 
     if (storedCurrentUser) {
       const liveClientData = storedClients.find(c => c.id === storedCurrentUser.id);
@@ -75,7 +75,7 @@ export const SharedDataProvider = ({ children }) => {
   useEffect(() => { if (!isLoading) saveTeachers(teachers); }, [teachers, isLoading]);
   useEffect(() => { if (!isLoading) saveClassEnrollments(enrollments); }, [enrollments, isLoading]);
   useEffect(() => { if (!isLoading) saveAttendanceRecords(attendanceRecords); }, [attendanceRecords, isLoading]);
-  useEffect(() => { if (!isLoading) saveToLocalStorage('articles', articles); }, [articles, isLoading]); // Persistir artículos
+  useEffect(() => { if (!isLoading) saveArticles(articles); }, [articles, isLoading]); // Usar saveArticles
 
 
   // --- MANEJO DE CURRENTUSER (LOGIN/LOGOUT) ---
