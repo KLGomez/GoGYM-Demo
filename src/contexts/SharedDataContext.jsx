@@ -1,9 +1,14 @@
 import React, { createContext, useState, useEffect, useCallback } from 'react';
-import { getClients, saveClients, getTeachers, saveTeachers } from '../utils/storage'; // Importar get/saveTeachers
-import { getGymClasses, saveGymClasses } from '../utils/storage';
-import { getClassEnrollments, saveClassEnrollments } from '../utils/storage';
+import {
+    getClients, saveClients,
+    getTeachers, saveTeachers,
+    getGymClasses, saveGymClasses,
+    getClassEnrollments, saveClassEnrollments,
+    getAttendanceRecords, saveAttendanceRecords, // Asegurar que esté importada
+    getFromLocalStorage, saveToLocalStorage // Para artículos
+} from '../utils/storage';
 import { showSuccess, showError } from '../utils/alerts';
-import { generateClientCode } from '../utils/codeUtils'; // Importar generateClientCode
+import { generateClientCode } from '../utils/codeUtils';
 
 export const SharedDataContext = createContext(null);
 
