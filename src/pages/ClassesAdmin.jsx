@@ -1,20 +1,21 @@
-import { useState } from "react";
+import React, { useState, useContext } from "react"; // Importar useContext
 import {
   CalendarDaysIcon,
   PlusCircleIcon,
-  UserGroupIcon, // Icono para Asistencia y ahora para Alumnos (Inscripciones)
+  UserGroupIcon,
   AcademicCapIcon,
-  // IdentificationIcon, // Reemplazado por UserGroupIcon para Alumnos
   ClockIcon,
   ArrowLeftIcon,
 } from "@heroicons/react/24/outline";
-import ManageClassesView from "./ManageClassesView";
-import ScheduleView from "./ScheduleView";
-import ManageTeachersView from "./ManageTeachersView";
-import AttendanceView from "./AttendanceView";
-import EnrollStudentsView from "./EnrollStudentsView"; // Importar EnrollStudentsView
+import ManageClassesView from "./ManageClassesView"; // Ya usa el contexto
+import ScheduleView from "./ScheduleView"; // Necesitará refactor para usar el contexto
+import ManageTeachersView from "./ManageTeachersView"; // Necesitará refactor
+import AttendanceView from "./AttendanceView"; // Necesitará refactor
+import EnrollStudentsView from "./EnrollStudentsView"; // Necesitará refactor
+import { SharedDataContext } from "../contexts/SharedDataContext"; // Importar contexto
+import { showError } from "../utils/alerts"; // Para placeholders
 
-// Placeholder para las futuras vistas de subsección
+// PlaceholderView no cambia, solo muestra un mensaje.
 const PlaceholderView = ({ title, onBack }) => (
   <div>
     <button
@@ -26,23 +27,33 @@ const PlaceholderView = ({ title, onBack }) => (
     </button>
     <h2 className="text-2xl font-bold text-orange-400 mb-6">{title}</h2>
     <p className="text-gray-300">Contenido de la sección "{title}" próximamente...</p>
+    <p className="text-sm text-yellow-500 mt-2">Esta sección aún no ha sido conectada al sistema de datos centralizado.</p>
   </div>
 );
 
 
 const ClassesAdmin = () => {
   const [currentView, setCurrentView] = useState("menu");
+  // Opcional: consumir algo del contexto aquí si ClassesAdmin lo necesitara directamente.
+  // const { currentUser } = useContext(SharedDataContext);
 
   const menuOptions = [
-    { icon: <CalendarDaysIcon className="w-8 h-8 text-white" />, label: "Cronograma de Clase", viewName: "schedule" },
-    { icon: <PlusCircleIcon className="w-8 h-8 text-white" />, label: "Añadir/Eliminar Clase", viewName: "manageClasses" },
-    { icon: <AcademicCapIcon className="w-8 h-8 text-white" />, label: "Profesores", viewName: "teachers" },
-    { icon: <UserGroupIcon className="w-8 h-8 text-white" />, label: "Inscribir Alumnos", viewName: "students" }, // Etiqueta actualizada
-    { icon: <UserGroupIcon className="w-8 h-8 text-white" />, label: "Asistencia", viewName: "attendance" }, // Icono UserGroupIcon también para Asistencia
-    { icon: <ClockIcon className="w-8 h-8 text-white" />, label: "Historial", viewName: "history" },
+    { icon: <CalendarDaysIcon className="w-8 h-8 text-white" />, label: "Cronograma de Clases", viewName: "schedule" },
+    { icon: <PlusCircleIcon className="w-8 h-8 text-white" />, label: "Gestionar Clases", viewName: "manageClasses" }, // Cambiado
+    { icon: <AcademicCapIcon className="w-8 h-8 text-white" />, label: "Gestionar Profesores", viewName: "teachers" }, // Cambiado
+    { icon: <UserGroupIcon className="w-8 h-8 text-white" />, label: "Inscribir Alumnos", viewName: "students" },
+    { icon: <UserGroupIcon className="w-8 h-8 text-white" />, label: "Registrar Asistencia", viewName: "attendance" }, // Cambiado
+    { icon: <ClockIcon className="w-8 h-8 text-white" />, label: "Historial de Clases", viewName: "history" }, // Cambiado
   ];
 
   const handleMenuClick = (viewName) => {
+    // Para las vistas no refactorizadas aún, podemos mostrar un mensaje temporal.
+    const nonRefactoredViews = ["schedule", "teachers", "students", "attendance", "history"];
+    if (nonRefactoredViews.includes(viewName) && viewName !== "manageClasses") {
+        showError("En Desarrollo", `La sección "${menuOptions.find(opt => opt.viewName === viewName)?.label}" está en desarrollo y aún no utiliza el nuevo sistema de datos.`);
+        // Opcionalmente, podríamos no cambiar la vista:
+        // return;
+    }
     setCurrentView(viewName);
   };
 
@@ -69,30 +80,37 @@ const ClassesAdmin = () => {
   }
 
   // Renderizar la vista de subsección seleccionada
-  if (currentView === "manageClasses") {
+  if (currentView === "manageClasses") { // Esta ya está refactorizada
     return <ManageClassesView onBack={navigateToMenu} />;
   }
 
+  // Para las otras vistas, temporalmente usamos PlaceholderView o sus componentes originales
+  // si queremos ver su UI actual (aunque no estén conectadas al contexto).
+  // Por simplicidad y para indicar el trabajo pendiente, usaré PlaceholderView para las no refactorizadas.
+
   if (currentView === "schedule") {
-    return <ScheduleView onBack={navigateToMenu} />;
+    // return <ScheduleView onBack={navigateToMenu} />; // Si se quiere ver la UI vieja
+    return <PlaceholderView title="Cronograma de Clase" onBack={navigateToMenu} />;
   }
-
   if (currentView === "teachers") {
-    return <ManageTeachersView onBack={navigateToMenu} />;
+    // return <ManageTeachersView onBack={navigateToMenu} />;
+     return <PlaceholderView title="Gestionar Profesores" onBack={navigateToMenu} />;
   }
-
   if (currentView === "attendance") {
-    return <AttendanceView onBack={navigateToMenu} />;
+    // return <AttendanceView onBack={navigateToMenu} />;
+    return <PlaceholderView title="Registrar Asistencia" onBack={navigateToMenu} />;
   }
-
   if (currentView === "students") {
-    return <EnrollStudentsView onBack={navigateToMenu} />;
+    // return <EnrollStudentsView onBack={navigateToMenu} />;
+    return <PlaceholderView title="Inscribir Alumnos" onBack={navigateToMenu} />;
+  }
+   if (currentView === "history") {
+    return <PlaceholderView title="Historial de Clases" onBack={navigateToMenu} />;
   }
 
-  // Para otras vistas, seguimos usando PlaceholderView
+  // Fallback por si acaso
   const selectedOption = menuOptions.find(opt => opt.viewName === currentView);
   const viewTitle = selectedOption ? selectedOption.label : "Subsección de Clases";
-
   return <PlaceholderView title={viewTitle} onBack={navigateToMenu} />;
 };
 

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react"; // Importar useContext
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
+import { SharedDataContext } from "../contexts/SharedDataContext"; // Importar el contexto
 import {
   UserPlusIcon,
   QrCodeIcon as MenuQrCodeIcon,
@@ -12,13 +13,16 @@ import {
 } from "@heroicons/react/24/outline";
 import { QRCodeCanvas } from 'qrcode.react';
 import { showSuccess, showError, confirmAction } from "../utils/alerts";
-import { getClients, saveClients } from "../utils/storage";
+// getClients y saveClients ya no se usan directamente, se accede vía contexto.
+// import { getClients, saveClients } from "../utils/storage";
 import { calculateMembershipDetails } from "../utils/membershipUtils";
-import { generateAlphanumericCode } from "../utils/codeUtils"; // Importar el generador de código
+import { generateAlphanumericCode } from "../utils/codeUtils";
 
 // Esquema de validación con Yup
 const ClientSchema = Yup.object().shape({
   firstName: Yup.string().required('El nombre es obligatorio'),
+  // Añadir 'role' al esquema si se va a gestionar desde aquí.
+  // role: Yup.string().oneOf(['user', 'admin']).required('El rol es obligatorio'),
   lastName: Yup.string().required('El apellido es obligatorio'),
   dni: Yup.string().required('El DNI es obligatorio').matches(/^[0-9]+$/, "DNI debe contener solo números"), // Ajustar regex según formato DNI local
   email: Yup.string().email('Email inválido').required('El email es obligatorio'),
@@ -40,18 +44,29 @@ const ClientSchema = Yup.object().shape({
 
 
 const ClientsAdmin = () => {
+  const {
+    clients: contextClients,
+    addClient: contextAddClient,
+    updateClient: contextUpdateClient,
+    deleteClient: contextDeleteClient,
+    isLoading
+  } = useContext(SharedDataContext);
+
   const [view, setView] = useState("menu");
-  const [clients, setClients] = useState(getClients());
+  // El estado local de 'clients' ya no es necesario, se usa contextClients.
+  // const [clients, setClients] = useState(getClients());
   const [editingClient, setEditingClient] = useState(null);
   const [selectedClientForQR, setSelectedClientForQR] = useState(null);
 
-  useEffect(() => {
-    saveClients(clients);
-  }, [clients]);
+  // La persistencia ahora la maneja el SharedDataContext.
+  // useEffect(() => {
+  //   saveClients(clients);
+  // }, [clients]);
 
   const initialFormValues = {
-    id: '', // Se usa para saber si estamos editando
+    id: '',
     firstName: '',
+    // role: 'user', // Añadir rol por defecto
     lastName: '',
     dni: '',
     email: '',
@@ -62,37 +77,45 @@ const ClientsAdmin = () => {
   };
 
   const handleSubmitClient = (values, { setSubmitting, resetForm }) => {
-    const clientData = { ...values }; // Copiar valores de Formik
+    const clientValues = { ...values };
+
+    // Preparar datos de membresía para anidar
+    const membershipDetails = {
+        planName: clientValues.plan,
+        // Mantener startDate si se está editando y existe, sino, nueva fecha.
+        membershipStartDate: editingClient?.membership?.membershipStartDate || new Date().toISOString(),
+        membershipDurationDays: Number(clientValues.membershipDurationDays),
+        // El 'status' y 'endDate' se calcularán o se podrían añadir campos al form si se quiere control manual.
+        // 'autoRenew' también podría ser un campo del formulario.
+        autoRenew: editingClient?.membership?.autoRenew || false, // Valor por defecto o mantener existente
+    };
 
     if (editingClient) {
-      // Actualizar cliente
       const updatedClient = {
-        ...editingClient, // Mantener id, alphanumericCode, membershipStartDate originales
-        ...clientData,    // Aplicar campos actualizados del formulario
-        membershipDurationDays: Number(clientData.membershipDurationDays),
+        ...editingClient,
+        ...clientValues, // Aplicar campos del formulario (firstName, lastName, email, etc.)
+        password: clientValues.password ? clientValues.password : editingClient.password, // Actualizar pass solo si se provee uno nuevo
+        membership: { // Anidar/actualizar detalles de membresía
+            ...(editingClient.membership || {}), // Mantener otros datos de membresía si existen
+            ...membershipDetails
+        },
+        // El rol se actualizaría aquí si se gestiona en este formulario
+        // role: clientValues.role || editingClient.role,
       };
-      // No actualizar contraseña si el campo password está vacío en edición
-      if (!clientData.password) {
-        delete updatedClient.password; // No enviar la contraseña si está vacía
-      } else {
-        // Si se ingresó una nueva contraseña, usarla. En un caso real, aquí se haría el hash.
-        updatedClient.password = clientData.password;
+      if (!clientValues.password) { // Si el campo de contraseña en el form está vacío, no se actualiza
+        delete updatedClient.password;
       }
-
-      setClients(clients.map(c => c.id === editingClient.id ? updatedClient : c));
-      showSuccess("Cliente Actualizado", `${updatedClient.firstName} ${updatedClient.lastName} ha sido actualizado.`);
+      contextUpdateClient(updatedClient); // Usar función del contexto
     } else {
       // Crear nuevo cliente
-      const newClient = {
-        ...clientData,
+      const newClientBase = {
+        ...clientValues,
         id: `client_${Date.now().toString()}`,
-        alphanumericCode: generateAlphanumericCode(),
-        membershipStartDate: new Date().toISOString(),
-        membershipDurationDays: Number(clientData.membershipDurationDays),
-        // La contraseña ya viene en clientData.password
+        // alphanumericCode se generará en el contexto al llamar a contextAddClient
+        membership: membershipDetails,
+        role: clientValues.role || 'user',
       };
-      setClients(prevClients => [...prevClients, newClient]);
-      showSuccess("Cliente Agregado", `${newClient.firstName} ${newClient.lastName} ha sido agregado exitosamente.`);
+      contextAddClient(newClientBase); // La función del contexto se encargará de añadir el alphanumericCode
     }
 
     resetForm();
@@ -113,13 +136,10 @@ const ClientsAdmin = () => {
       `Esta acción es irreversible.`,
       "Sí, eliminar",
       () => {
-        setClients((prevClients) => prevClients.filter((client) => client.id !== clientId));
-        showSuccess("Cliente Eliminado", `El cliente "${fullName}" ha sido eliminado.`);
+        contextDeleteClient(clientId); // Usar función del contexto
+        // El SweetAlert de éxito ya lo da contextDeleteClient
         if (editingClient && editingClient.id === clientId) {
-          setEditingClient(null); // Limpiar el estado de edición
-          // No es necesario llamar a resetForm() de Formik aquí,
-          // ya que al cambiar de vista o al cambiar editingClient (con enableReinitialize)
-          // el formulario se limpiará/reinicializará si es necesario.
+          setEditingClient(null);
         }
       }
     );
@@ -255,22 +275,29 @@ const ClientsAdmin = () => {
           &larr; Volver al menú
         </button>
         <h2 className="text-2xl font-bold text-orange-400 mb-6">Lista de Clientes</h2>
-        {clients.length === 0 ? (
+        {isLoading && <p className="text-gray-400">Cargando clientes...</p>}
+        {!isLoading && contextClients.length === 0 ? (
           <p className="text-gray-400">No hay clientes registrados.</p>
         ) : (
           <div className="space-y-3">
-            {clients.map((client) => {
-              const { daysRemaining, status } = calculateMembershipDetails(client.membershipStartDate, client.membershipDurationDays);
-              const clientNameForDisplay = `${client.firstName || ''} ${client.lastName || ''}`.trim() || client.name; // Adaptar para mostrar nombre nuevo o viejo
+            {contextClients.map((client) => {
+              // Usar client.membership.membershipStartDate y client.membership.membershipDurationDays
+              const { daysRemaining, status } = calculateMembershipDetails(
+                client.membership?.membershipStartDate,
+                client.membership?.membershipDurationDays
+              );
+              const clientNameForDisplay = `${client.firstName || ''} ${client.lastName || ''}`.trim();
               return (
                 <div key={client.id} className="bg-gray-800 p-4 rounded-lg shadow ">
                   <div className="flex justify-between items-start">
                     <div className="flex-grow">
-                      <p className="font-semibold text-white">{clientNameForDisplay}</p>
+                      <p className="font-semibold text-white">{clientNameForDisplay} <span className="text-xs text-gray-500">({client.role || 'user'})</span></p>
                       <p className="text-sm text-gray-300">DNI: {client.dni || 'N/A'} - Email: {client.email}</p>
-                      <p className="text-sm text-gray-300">Plan: {client.plan} - Código: {client.alphanumericCode || 'N/A'}</p>
+                      <p className="text-sm text-gray-300">
+                        Plan: {client.membership?.planName || 'N/A'} - Código: {client.alphanumericCode || 'N/A'}
+                      </p>
                       <p className={`text-sm ${status === "Active" ? 'text-green-400' : 'text-red-400'}`}>
-                        Estado: {status} ({daysRemaining} días restantes)
+                        Estado Membresía: {status} ({daysRemaining} días restantes)
                       </p>
                     </div>
                     <div className="flex space-x-2 flex-shrink-0">

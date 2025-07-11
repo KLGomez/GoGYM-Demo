@@ -1,12 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react'; // Importar useContext
 import { ArrowLeftIcon, PlusIcon, TrashIcon, PencilIcon } from '@heroicons/react/24/outline';
-import { getTeachers, saveTeachers } from '../utils/storage'; // Importar desde utils
-// Suponiendo que las alertas reales se importarán de utils/alerts
-import { showSuccess, showError, confirmAction } from '../utils/alerts';
+// Ya no se usa getTeachers/saveTeachers directamente
+// import { getTeachers, saveTeachers } from '../utils/storage';
+import { showSuccess, showError, confirmAction } from '../utils/alerts'; // Se usan para validaciones locales
+import { SharedDataContext } from '../contexts/SharedDataContext'; // Importar el contexto
 
 
 const ManageTeachersView = ({ onBack }) => {
-  const [teachers, setTeachers] = useState([]);
+  const {
+    teachers: contextTeachers,
+    // Asumimos que existirán estas funciones en el contexto:
+    addTeacher: contextAddTeacher,
+    updateTeacher: contextUpdateTeacher,
+    deleteTeacher: contextDeleteTeacher,
+    isLoading
+  } = useContext(SharedDataContext);
+
+  // const [teachers, setTeachers] = useState([]); // Se usará contextTeachers
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState(null);
   const [formData, setFormData] = useState({
@@ -17,13 +27,13 @@ const ManageTeachersView = ({ onBack }) => {
     bio: ''
   });
 
-  useEffect(() => {
-    setTeachers(getTeachers()); // Usar la función importada de utils/storage.js
-  }, []);
-
-  useEffect(() => {
-    saveTeachers(teachers);
-  }, [teachers]);
+  // Carga inicial y persistencia ya manejadas por el contexto.
+  // useEffect(() => {
+  //   setTeachers(getTeachers());
+  // }, []);
+  // useEffect(() => {
+  //   saveTeachers(teachers);
+  // }, [teachers]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -33,7 +43,7 @@ const ManageTeachersView = ({ onBack }) => {
   const resetForm = () => {
     setFormData({ name: '', specialty: '', email: '', phone: '', bio: '' });
     setEditingTeacher(null);
-    setIsFormVisible(false);
+    setIsFormVisible(false); // Opcional: decidir si cerrar el form al resetear
   };
 
   const handleSubmit = (e) => {
@@ -42,23 +52,23 @@ const ManageTeachersView = ({ onBack }) => {
       showError('Campos Obligatorios', 'Nombre y Especialidad son campos obligatorios.');
       return;
     }
-    // Simple email validation
     if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
         showError('Email Inválido', 'Por favor, ingrese un email válido.');
         return;
     }
 
+    const teacherData = {
+      ...formData,
+      id: editingTeacher ? editingTeacher.id : `teach_${Date.now().toString()}`
+    };
+
     if (editingTeacher) {
-      // Lógica de actualización
-      setTeachers(teachers.map(t => t.id === editingTeacher.id ? { ...editingTeacher, ...formData } : t));
-      showSuccess('Profesor Actualizado', `${formData.name} ha sido actualizado exitosamente.`);
+      contextUpdateTeacher(teacherData); // SweetAlert de éxito ya está en el contexto
     } else {
-      // Lógica de creación
-      const newTeacher = { id: `teach_${Date.now().toString()}`, ...formData };
-      setTeachers(prevTeachers => [...prevTeachers, newTeacher]);
-      showSuccess('Profesor Añadido', `${formData.name} ha sido añadido exitosamente.`);
+      contextAddTeacher(teacherData); // SweetAlert de éxito ya está en el contexto
     }
     resetForm();
+    setIsFormVisible(false); // Siempre cerrar el form después de submit exitoso
   };
 
   const handleEditTeacher = (teacher) => {
@@ -74,14 +84,22 @@ const ManageTeachersView = ({ onBack }) => {
   };
 
   const handleDeleteTeacher = (teacherId, teacherName) => {
-    confirmAction(`¿Eliminar Profesor "${teacherName}"?`, `Esta acción es irreversible.`, "Sí, eliminar", () => {
-      setTeachers(prevTeachers => prevTeachers.filter(t => t.id !== teacherId));
-      showSuccess('Profesor Eliminado', `El profesor ${teacherName} ha sido eliminado.`);
-      if(editingTeacher && editingTeacher.id === teacherId) { // Si se elimina el profesor que se está editando
-        resetForm();
+    confirmAction(
+      `¿Eliminar Profesor "${teacherName}"?`,
+      `Esta acción es irreversible. Si este profesor está asignado a clases, deberá reasignarlas.`, // Mensaje actualizado
+      "Sí, eliminar",
+      () => {
+        contextDeleteTeacher(teacherId); // SweetAlert de éxito ya está en el contexto
+        if(editingTeacher && editingTeacher.id === teacherId) {
+          resetForm();
+        }
       }
-    });
+    );
   };
+
+  if (isLoading && !contextTeachers) { // Mostrar carga si isLoading y contextTeachers aún no está poblado
+    return <p className="text-gray-300">Cargando datos de profesores...</p>;
+  }
 
   return (
     <div>
@@ -94,9 +112,10 @@ const ManageTeachersView = ({ onBack }) => {
         <h2 className="text-2xl font-bold text-orange-400">Gestión de Profesores</h2>
         <button
           onClick={() => {
+            if (isFormVisible && editingTeacher) resetForm(); // Si estaba editando y presiona cancelar/cerrar form
+            else if (isFormVisible && !editingTeacher) resetForm(); // Si estaba añadiendo y presiona cancelar
             setIsFormVisible(!isFormVisible);
-            if(isFormVisible) resetForm(); // Si se cierra el form, resetearlo
-            else setEditingTeacher(null); // Asegurar que no esté en modo edición al abrir
+            if (!isFormVisible) setEditingTeacher(null); // Al abrir el form para nuevo, asegurar no modo edición
           }}
           className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-md shadow flex items-center gap-2"
         >
@@ -111,12 +130,12 @@ const ManageTeachersView = ({ onBack }) => {
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-200">Nombre Completo</label>
             <input type="text" name="name" id="name" value={formData.name} onChange={handleInputChange}
-                   className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
+                   className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500" required />
           </div>
           <div>
             <label htmlFor="specialty" className="block text-sm font-medium text-gray-200">Especialidad Principal</label>
             <input type="text" name="specialty" id="specialty" value={formData.specialty} onChange={handleInputChange}
-                   className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
+                   className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500" required />
           </div>
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-200">Email (Opcional)</label>
@@ -137,7 +156,7 @@ const ManageTeachersView = ({ onBack }) => {
                   className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md shadow">
             {editingTeacher ? 'Actualizar Profesor' : 'Guardar Profesor'}
           </button>
-           {isFormVisible && editingTeacher && (
+           {isFormVisible && editingTeacher && ( // Botón de cancelar solo visible si se está editando
             <button type="button" onClick={resetForm}
                     className="mt-2 w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-md shadow">
               Cancelar Edición
@@ -147,11 +166,11 @@ const ManageTeachersView = ({ onBack }) => {
       )}
 
       <h3 className="text-xl font-semibold text-orange-400 mb-4">Lista de Profesores</h3>
-      {teachers.length === 0 ? (
+      {(contextTeachers || []).length === 0 && !isLoading ? (
         <p className="text-gray-400">No hay profesores registrados.</p>
       ) : (
         <ul className="space-y-3">
-          {teachers.map(teacher => (
+          {(contextTeachers || []).map(teacher => (
             <li key={teacher.id} className="bg-gray-800 p-4 rounded-lg shadow">
               <div className="flex justify-between items-start">
                 <div>
