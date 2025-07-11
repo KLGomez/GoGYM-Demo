@@ -200,24 +200,26 @@ const ClientsAdmin = () => {
           enableReinitialize
         >
           {({ isSubmitting, dirty, isValid, values, setFieldValue }) => {
-            // Acceder a contextMembershipPlans aquí para el dropdown
             const { membershipPlans: contextMembershipPlans } = useContext(SharedDataContext);
 
-            // Efecto para actualizar membershipDurationDays cuando cambia el plan
             useEffect(() => {
               if (values.plan) {
                 const selectedPlanData = (contextMembershipPlans || []).find(p => p.name === values.plan);
                 if (selectedPlanData && selectedPlanData.durationDays) {
                   setFieldValue('membershipDurationDays', selectedPlanData.durationDays);
+                } else if (!selectedPlanData) { // Si el plan seleccionado no se encuentra o no tiene durationDays
+                  setFieldValue('membershipDurationDays', 0); // Poner 0 o un valor que indique error/manual
                 }
               } else {
                  if (!editingClient) {
                     setFieldValue('membershipDurationDays', initialFormValues.membershipDurationDays);
                  } else if (editingClient && !values.plan) {
-                    setFieldValue('membershipDurationDays', 0);
+                    setFieldValue('membershipDurationDays', editingClient.membership?.membershipDurationDays || 0);
                  }
               }
-            }, [values.plan, setFieldValue, contextMembershipPlans, editingClient, initialFormValues.membershipDurationDays]);
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+            }, [values.plan, setFieldValue, contextMembershipPlans, editingClient]);
+            // Se añade initialFormValues.membershipDurationDays a las dependencias si se usa para el reset
 
             return (
               <Form className="space-y-4 max-w-lg bg-gray-800 p-6 rounded-lg">
