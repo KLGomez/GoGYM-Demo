@@ -229,7 +229,7 @@ const ClientsAdmin = () => {
                  }
               }
             // eslint-disable-next-line react-hooks/exhaustive-deps
-            }, [values.plan, editingClient, setFieldValue, contextMembershipPlans]); // Removido initialFormValues de dependencias, ya que se usa directamente.
+            // }, [values.plan, editingClient, setFieldValue, contextMembershipPlans]); // Comentando el useEffect problemático
 
             return (
               <Form className="space-y-4 max-w-lg bg-gray-800 p-6 rounded-lg">
@@ -314,7 +314,8 @@ const ClientsAdmin = () => {
                 </button>
               )}
             </Form>
-          )}
+            );
+          }}
         </Formik>
       </div>
     );
@@ -399,22 +400,21 @@ const ClientsAdmin = () => {
    // Renderizado del Modal QR
   if (view === "qr" && selectedClientForQR) {
     const clientNameForDisplay = `${selectedClientForQR.firstName || ''} ${selectedClientForQR.lastName || ''}`.trim() || selectedClientForQR.name;
+    // Para el QR, necesitamos los datos de membresía que están DENTRO del objeto cliente
+    const membership = selectedClientForQR.membership || {};
     const { membershipEndDate, daysRemaining, status } = calculateMembershipDetails(
-      selectedClientForQR.membershipStartDate,
-      selectedClientForQR.membershipDurationDays
+      membership.membershipStartDate,
+      membership.membershipDurationDays
     );
-    // El contenido del QR se mantiene igual por ahora, usando el 'name' concatenado si es necesario.
-    // O se puede decidir actualizarlo para incluir DNI o código alfanumérico.
-    // Por ahora, se asume que processQrData en HomePage se adaptará o el QR usa datos existentes.
+
     const qrDataToEncode = {
         clientId: selectedClientForQR.id,
-        name: clientNameForDisplay, // Usar nombre concatenado
+        name: clientNameForDisplay,
         email: selectedClientForQR.email,
-        plan: selectedClientForQR.plan,
-        membershipEndDate: membershipEndDate, // Incluir para el lector QR
-        status: status, // Incluir para el lector QR
-        // dni: selectedClientForQR.dni, // Opcional
-        // alphanumericCode: selectedClientForQR.alphanumericCode // Opcional
+        plan: membership.planName, // Usar el planName desde el objeto membership del cliente
+        membershipEndDate: membershipEndDate,
+        status: status,
+        alphanumericCode: selectedClientForQR.alphanumericCode
     };
     const qrDataString = JSON.stringify(qrDataToEncode);
 
@@ -432,7 +432,7 @@ const ClientsAdmin = () => {
             <div className="text-center text-gray-200">
               <p className="font-semibold text-lg">{clientNameForDisplay}</p>
               <p>{selectedClientForQR.email}</p>
-              <p>Plan: {selectedClientForQR.plan}</p>
+              <p>Plan: {membership.planName || 'N/A'}</p> {/* Usar el planName desde el objeto membership */}
               <p>DNI: {selectedClientForQR.dni || 'N/A'}</p>
               <p>Código: {selectedClientForQR.alphanumericCode || 'N/A'}</p>
               <p>Vence: {new Date(membershipEndDate).toLocaleDateString()}</p>
