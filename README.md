@@ -80,52 +80,32 @@ La aplicación permite una gestión integral del gimnasio con dos roles principa
 ### Funcionalidades del Administrador:
 
 *   **Dashboard Principal (`HomePage.jsx`):**
-    *   Muestra estadísticas clave (clientes activos, clases de hoy, etc.).
-    *   Lista los últimos registros de ingreso.
+    *   Muestra estadísticas clave (clientes activos, clases de hoy, total profesores, total clases) obtenidas del `SharedDataContext`.
+    *   Lista los últimos 5 registros de ingreso (`attendanceRecords`).
     *   Provee accesos rápidos a otras secciones del panel de admin.
 *   **Gestión de Clientes (`ClientesAdmin.jsx`):**
     *   CRUD completo de clientes (nombre, DNI, email, contraseña, rol, etc.).
     *   Asignación y gestión de membresías a clientes:
-        *   Selección de un tipo de plan predefinido (gestionado en "Tipos de Membresía").
+        *   Selección de un tipo de plan predefinido desde `SharedDataContext.membershipPlans`.
         *   La duración de la membresía se autocompleta según el plan seleccionado.
-        *   Fecha de inicio de membresía.
-    *   Generación de códigos QR y códigos alfanuméricos (Iniciales+DNI) para acceso de clientes.
-    *   Actualiza `SharedDataContext` y `localStorage`, con feedback vía SweetAlert2.
-*   **Gestión de Tipos de Membresía (`MembershipsAdmin.jsx` -> Vista "Gestionar Tipos de Plan"):**
-    *   CRUD para definir los diferentes planes de membresía que ofrece el gimnasio (ej. "Plan Básico", "Plan Premium").
-    *   Campos: Nombre del Plan, Precio, Duración en días, Beneficios (texto libre).
-*   **Estado de Membresías de Clientes (`MembershipsAdmin.jsx` -> Vista "Estado de Membresías"):**
-    *   Lista todos los clientes mostrando el estado actual de sus membresías (Activa, Vencida, Próxima a Vencer), calculado dinámicamente.
-    *   Permite filtrar por estado y buscar clientes.
-    *   Enlace para editar la ficha del cliente.
-*   **Gestión de Clases (`ClassesAdmin.jsx` -> `ManageClassesView.jsx`):**
-    *   CRUD completo de clases (nombre, instructor, día, horario, capacidad, ubicación, descripción).
-    *   Instructores seleccionados de la lista de profesores gestionados.
-    *   Actualiza `SharedDataContext` y `localStorage`. La eliminación de una clase notifica a los usuarios inscritos.
-*   **Gestión de Profesores (`ClassesAdmin.jsx` -> `ManageTeachersView.jsx`):**
-    *   CRUD completo de profesores (nombre, especialidad, contacto).
-    *   Actualiza `SharedDataContext` y `localStorage`.
-*   **Inscripción de Alumnos a Clases (`ClassesAdmin.jsx` -> `EnrollStudentsView.jsx`):**
-    *   Permite al administrador inscribir o desinscribir alumnos en clases específicas.
-    *   Verifica capacidad de clase y estado de membresía del alumno.
-    *   Interactúa con `SharedDataContext`.
-*   **Visualización de Cronograma (`ClassesAdmin.jsx` -> `ScheduleView.jsx`):**
-    *   Muestra un cronograma semanal de todas las clases con detalles.
-*   **Registro y Visualización de Asistencia:**
-    *   `CheckInPage.jsx`: Página de check-in general para clientes (QR o código manual).
-    *   `ClassesAdmin.jsx` -> `AttendanceView.jsx`: Permite al admin ver y marcar asistencia para clases específicas.
+    *   Generación de códigos QR y códigos alfanuméricos (Iniciales+DNI) para acceso.
+    *   Todas las acciones actualizan `SharedDataContext` y, por ende, `localStorage`. Feedback vía SweetAlert2.
+*   **Gestión de Membresías (`MembershipsAdmin.jsx`):**
+    *   **Gestionar Tipos de Plan:** Permite al administrador crear, editar y eliminar los diferentes planes de membresía (nombre, precio, duración en días, beneficios). Estos planes se guardan en `localStorage` vía `SharedDataContext.membershipPlans`.
+    *   **Estado de Membresías de Clientes:** Muestra una lista de todos los clientes con el estado actual de su membresía (calculado), permitiendo filtrar y buscar. Enlaza a la edición del cliente.
+*   **Gestión de Clases (`ClassesAdmin.jsx` y subvistas):**
+    *   **`ManageClassesView.jsx`**: CRUD completo de clases (nombre, instructor, día, horario, capacidad, ubicación, descripción). Instructores seleccionados de `SharedDataContext.teachers`.
+    *   **`ManageTeachersView.jsx`**: CRUD completo de profesores.
+    *   **`EnrollStudentsView.jsx`**: Inscripción/desinscripción de alumnos a clases por el admin, validando cupos y (básicamente) estado de membresía.
+    *   **`ScheduleView.jsx`**: Cronograma semanal de clases.
+    *   **`AttendanceView.jsx`**: Registro/visualización de asistencia por clase.
+    *   Todas estas vistas interactúan con `SharedDataContext` para leer y modificar datos.
 *   **Gestión de Artículos/Noticias (`ArticlesAdmin.jsx`):**
-    *   CRUD básico para crear, editar y eliminar artículos (título, contenido, imagen opcional).
-    *   Los artículos se guardan en `localStorage` vía `SharedDataContext`.
-*   **Dashboard Principal (`HomePage.jsx`):**
-    *   Muestra estadísticas clave (clientes activos, clases de hoy, etc.).
-    *   Lista los últimos registros de ingreso.
-    *   Provee accesos rápidos a otras secciones del panel de admin.
-*   **Estado de Membresías (`MembershipsAdmin.jsx`):**
-    *   Presenta una lista filtrable y searchable de todos los clientes y el estado de sus membresías.
+    *   CRUD básico para artículos (título, contenido, URL de imagen opcional).
+    *   Persistencia en `localStorage` vía `SharedDataContext.articles`.
 *   **Panel de Admin General (`AppAdmin.jsx`):**
-    *   Protegido por rol ('admin').
-    *   Muestra notificaciones SweetAlert para acciones del admin.
+    *   Layout principal con protección de ruta (requiere login y rol 'admin').
+    *   Muestra notificaciones del sistema/acciones para el admin.
 
 ### Funcionalidades del Usuario:
 
