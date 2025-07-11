@@ -31,7 +31,8 @@ export const SharedDataProvider = ({ children }) => {
   const [teachers, setTeachers] = useState([]);
   const [enrollments, setEnrollments] = useState([]);
   const [attendanceRecords, setAttendanceRecords] = useState([]);
-  const [articles, setArticles] = useState([]); // Estado para artículos
+  const [articles, setArticles] = useState([]);
+  const [membershipPlans, setMembershipPlans] = useState([]); // Estado para tipos de membresía
   const [currentUser, setCurrentUser] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,7 +45,8 @@ export const SharedDataProvider = ({ children }) => {
     const storedTeachers = getTeachers();
     const storedEnrollments = getClassEnrollments();
     const storedAttendance = getAttendanceRecords();
-    const storedArticles = getArticles(); // Usar getArticles
+    const storedArticles = getArticles();
+    const storedMembershipPlans = getFromLocalStorage('membershipPlans', []); // Cargar tipos de membresía
     const storedCurrentUser = JSON.parse(localStorage.getItem('currentUserSession'));
 
     setClients(storedClients);
@@ -109,7 +111,8 @@ export const SharedDataProvider = ({ children }) => {
   useEffect(() => { if (!isLoading) saveTeachers(teachers); }, [teachers, isLoading]);
   useEffect(() => { if (!isLoading) saveClassEnrollments(enrollments); }, [enrollments, isLoading]);
   useEffect(() => { if (!isLoading) saveAttendanceRecords(attendanceRecords); }, [attendanceRecords, isLoading]);
-  useEffect(() => { if (!isLoading) saveArticles(articles); }, [articles, isLoading]); // Usar saveArticles
+  useEffect(() => { if (!isLoading) saveArticles(articles); }, [articles, isLoading]);
+  useEffect(() => { if (!isLoading) saveToLocalStorage('membershipPlans', membershipPlans); }, [membershipPlans, isLoading]); // Persistir membershipPlans
 
 
   // --- MANEJO DE CURRENTUSER (LOGIN/LOGOUT) ---
@@ -352,7 +355,8 @@ export const SharedDataProvider = ({ children }) => {
     teachers,
     enrollments,
     attendanceRecords,
-    articles, // Exponer artículos
+    articles,
+    membershipPlans, // Exponer membershipPlans
     currentUser,
     notifications,
     isLoading,
@@ -386,6 +390,25 @@ export const SharedDataProvider = ({ children }) => {
         addNotification(`Profesor "${teacherToDelete.name}" eliminado.`, 'warning', 'admin');
       }
     },
+    // CRUD MembershipPlans
+    addMembershipPlan: (planData) => {
+      const newPlan = { ...planData, id: `plan_${Date.now()}` };
+      setMembershipPlans(prev => [...prev, newPlan]);
+      addNotification(`Nuevo tipo de membresía "${newPlan.name}" creado.`, 'success', 'admin');
+    },
+    updateMembershipPlan: (updatedPlanData) => {
+      setMembershipPlans(prev => prev.map(p => p.id === updatedPlanData.id ? updatedPlanData : p));
+      addNotification(`Tipo de membresía "${updatedPlanData.name}" actualizado.`, 'info', 'admin');
+    },
+    deleteMembershipPlan: (planId) => {
+      const planToDelete = membershipPlans.find(p => p.id === planId);
+      if (planToDelete) {
+        setMembershipPlans(prev => prev.filter(p => p.id !== planId));
+        addNotification(`Tipo de membresía "${planToDelete.name}" eliminado.`, 'warning', 'admin');
+        // TODO: Considerar qué sucede con los clientes que tienen este plan asignado.
+      }
+    },
+    // Attendance Records
     addAttendanceRecord: (newRecord) => {
       setAttendanceRecords(prevRecords => {
         const existingRecordIndex = prevRecords.findIndex(

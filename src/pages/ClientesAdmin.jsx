@@ -22,24 +22,26 @@ import { generateAlphanumericCode } from "../utils/codeUtils";
 const ClientSchema = Yup.object().shape({
   firstName: Yup.string().required('El nombre es obligatorio'),
   // Añadir 'role' al esquema si se va a gestionar desde aquí.
-  // role: Yup.string().oneOf(['user', 'admin']).required('El rol es obligatorio'),
+    // role: Yup.string().oneOf(['user', 'admin']).required('El rol es obligatorio'), // Si se gestiona el rol aquí
   lastName: Yup.string().required('El apellido es obligatorio'),
-  dni: Yup.string().required('El DNI es obligatorio').matches(/^[0-9]+$/, "DNI debe contener solo números"), // Ajustar regex según formato DNI local
+  dni: Yup.string().required('El DNI es obligatorio').matches(/^[0-9]+$/, "DNI debe contener solo números"),
   email: Yup.string().email('Email inválido').required('El email es obligatorio'),
   birthDate: Yup.date().required('La fecha de nacimiento es obligatoria').nullable(),
   password: Yup.string()
     .min(6, 'La contraseña debe tener al menos 6 caracteres')
-    // Condicionalmente requerido: solo al crear, no al editar si se deja en blanco
-    .when('id', { // 'id' es un campo que existe al editar, no al crear en initialValues
-        is: (id) => !id, // Si id no existe (creación)
+    .when('id', {
+        is: (id) => !id,
         then: schema => schema.required('La contraseña es obligatoria'),
         otherwise: schema => schema.optional()
     }),
-  plan: Yup.string().required('El plan es obligatorio'),
+  plan: Yup.string().required('El plan es obligatorio'), // Este 'plan' es el planName
+  // membershipDurationDays ya no se setea directamente desde aquí si el plan lo define
+  // Si cada plan tiene su propia duración, este campo podría eliminarse del form de cliente
+  // o hacerse opcional/informativo. Por ahora, lo mantenemos pero su valor vendrá del plan seleccionado.
   membershipDurationDays: Yup.number()
-    .required('La duración es obligatoria')
     .positive('La duración debe ser un número positivo')
-    .integer('La duración debe ser un número entero'),
+    .integer('La duración debe ser un número entero')
+    .required('La duración es obligatoria (se autocompletará al seleccionar un plan).'),
 });
 
 
@@ -66,28 +68,35 @@ const ClientsAdmin = () => {
   const initialFormValues = {
     id: '',
     firstName: '',
-    // role: 'user', // Añadir rol por defecto
+    // role: 'user',
     lastName: '',
     dni: '',
     email: '',
     birthDate: '',
-    password: '', // Dejar vacío en edición para no cambiarla, o requerir confirmación
-    plan: 'basic',
-    membershipDurationDays: 30,
+    password: '',
+    plan: '', // Ahora se seleccionará de una lista, empezar vacío
+    membershipDurationDays: 0, // Se autocompletará o se ajustará
   };
 
   const handleSubmitClient = (values, { setSubmitting, resetForm }) => {
     const clientValues = { ...values };
+    const selectedPlan = (contextMembershipPlans || []).find(p => p.name === clientValues.plan);
+
+    if (!selectedPlan && clientValues.plan) { // Si se seleccionó un plan pero no se encontró (raro, pero por si acaso)
+        showError("Error de Plan", "El plan seleccionado no es válido. Por favor, recargue o contacte a soporte.");
+        setSubmitting(false);
+        return;
+    }
 
     // Preparar datos de membresía para anidar
     const membershipDetails = {
-        planName: clientValues.plan,
-        // Mantener startDate si se está editando y existe, sino, nueva fecha.
+        planName: clientValues.plan, // Guardamos el nombre del plan
         membershipStartDate: editingClient?.membership?.membershipStartDate || new Date().toISOString(),
-        membershipDurationDays: Number(clientValues.membershipDurationDays),
-        // El 'status' y 'endDate' se calcularán o se podrían añadir campos al form si se quiere control manual.
-        // 'autoRenew' también podría ser un campo del formulario.
-        autoRenew: editingClient?.membership?.autoRenew || false, // Valor por defecto o mantener existente
+        // Usar la duración del plan seleccionado, o la del formulario si el plan no la define (fallback)
+        membershipDurationDays: selectedPlan ? Number(selectedPlan.durationDays) : Number(clientValues.membershipDurationDays),
+        autoRenew: editingClient?.membership?.autoRenew || false,
+        // Otros detalles del plan como precio podrían copiarse aquí si se necesita denormalizar,
+        // pero es mejor referenciarlos desde membershipPlans por ID o nombre para mantener consistencia.
     };
 
     if (editingClient) {
@@ -188,12 +197,33 @@ const ClientsAdmin = () => {
           initialValues={editingClient ? { ...initialFormValues, ...editingClient, password: '' } : initialFormValues}
           validationSchema={ClientSchema}
           onSubmit={handleSubmitClient}
-          enableReinitialize // Para que el form se actualice cuando editingClient cambie
+          enableReinitialize
         >
-          {({ isSubmitting, dirty, isValid }) => (
-            <Form className="space-y-4 max-w-lg bg-gray-800 p-6 rounded-lg">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+          {({ isSubmitting, dirty, isValid, values, setFieldValue }) => {
+            // Acceder a contextMembershipPlans aquí para el dropdown
+            const { membershipPlans: contextMembershipPlans } = useContext(SharedDataContext);
+
+            // Efecto para actualizar membershipDurationDays cuando cambia el plan
+            useEffect(() => {
+              if (values.plan) {
+                const selectedPlanData = (contextMembershipPlans || []).find(p => p.name === values.plan);
+                if (selectedPlanData && selectedPlanData.durationDays) {
+                  setFieldValue('membershipDurationDays', selectedPlanData.durationDays);
+                }
+              } else {
+                 if (!editingClient) {
+                    setFieldValue('membershipDurationDays', initialFormValues.membershipDurationDays);
+                 } else if (editingClient && !values.plan) {
+                    setFieldValue('membershipDurationDays', 0);
+                 }
+              }
+            }, [values.plan, setFieldValue, contextMembershipPlans, editingClient, initialFormValues.membershipDurationDays]);
+
+            return (
+              <Form className="space-y-4 max-w-lg bg-gray-800 p-6 rounded-lg">
+                {/* Campos del formulario: firstName, lastName, dni, email, birthDate, password */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
                   <label htmlFor="firstName" className="block text-sm font-medium text-gray-200">Nombre</label>
                   <Field type="text" name="firstName" id="firstName"
                          className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500"/>
@@ -233,21 +263,32 @@ const ClientsAdmin = () => {
                 <ErrorMessage name="password" component="div" className="text-red-500 text-xs mt-1" />
               </div>
               <div>
-                <label htmlFor="plan" className="block text-sm font-medium text-gray-200">Plan</label>
-                <Field as="select" name="plan" id="plan"
-                        className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500">
-                  <option value="basic">Básico</option>
-                  <option value="premium">Premium</option>
-                  <option value="gold">Gold</option>
+                <label htmlFor="plan" className="block text-sm font-medium text-gray-200">Plan Asignado</label>
+                <Field
+                  as="select"
+                  name="plan"
+                  id="plan"
+                  className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500"
+                >
+                  <option value="">Seleccione un Plan</option>
+                  {(contextMembershipPlans || []).map(p => (
+                    <option key={p.id} value={p.name}>{p.name} (${parseFloat(p.price).toFixed(2)}) - {p.durationDays} días</option>
+                  ))}
                 </Field>
                 <ErrorMessage name="plan" component="div" className="text-red-500 text-xs mt-1" />
               </div>
               <div>
                 <label htmlFor="membershipDurationDays" className="block text-sm font-medium text-gray-200">Duración Membresía (días)</label>
-                <Field type="number" name="membershipDurationDays" id="membershipDurationDays" min="1"
-                       className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500"/>
+                <Field
+                  type="number" name="membershipDurationDays" id="membershipDurationDays" min="1" readOnly={!!values.plan} // Hacerlo readOnly si hay un plan seleccionado
+                  className={`mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500 ${!!values.plan ? 'bg-gray-600 text-gray-400 cursor-not-allowed' : ''}`}
+                />
                 <ErrorMessage name="membershipDurationDays" component="div" className="text-red-500 text-xs mt-1" />
+                 <p className="text-xs text-gray-400 mt-1">
+                  {values.plan ? "La duración se establece automáticamente según el plan." : "Ingrese duración si no selecciona un plan predefinido."}
+                 </p>
               </div>
+
               <button type="submit"
                       disabled={isSubmitting || !dirty || !isValid}
                       className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-md shadow disabled:opacity-50 disabled:cursor-not-allowed">
