@@ -205,21 +205,31 @@ const ClientsAdmin = () => {
             useEffect(() => {
               if (values.plan) {
                 const selectedPlanData = (contextMembershipPlans || []).find(p => p.name === values.plan);
-                if (selectedPlanData && selectedPlanData.durationDays) {
+                if (selectedPlanData && typeof selectedPlanData.durationDays === 'number') { // Asegurar que durationDays sea un número
                   setFieldValue('membershipDurationDays', selectedPlanData.durationDays);
-                } else if (!selectedPlanData) { // Si el plan seleccionado no se encuentra o no tiene durationDays
-                  setFieldValue('membershipDurationDays', 0); // Poner 0 o un valor que indique error/manual
+                } else {
+                  // Si el plan no tiene durationDays o no se encuentra el plan,
+                  // y no estamos editando un cliente que ya tenía una duración, poner 0.
+                  // Si estamos editando y el plan se quita, mantener la duración que tenía o poner 0.
+                  if (!editingClient || !values.id) { // Si es nuevo cliente o no hay ID (implicando nuevo)
+                     setFieldValue('membershipDurationDays', 0);
+                  } else if (editingClient && !selectedPlanData) { // Editando y el plan seleccionado no es válido
+                     setFieldValue('membershipDurationDays', editingClient.membership?.membershipDurationDays || 0);
+                  }
                 }
-              } else {
-                 if (!editingClient) {
-                    setFieldValue('membershipDurationDays', initialFormValues.membershipDurationDays);
-                 } else if (editingClient && !values.plan) {
-                    setFieldValue('membershipDurationDays', editingClient.membership?.membershipDurationDays || 0);
+              } else { // No hay plan seleccionado
+                 if (!editingClient) { // Nuevo cliente
+                    setFieldValue('membershipDurationDays', initialFormValues.membershipDurationDays); // Default 0
+                 } else { // Editando cliente, pero se quitó el plan
+                    // Mantener la duración que tenía si se quita el plan, o resetear a 0.
+                    // Para que sea más claro, si se quita el plan, la duración debería ser 0 o requerir entrada manual.
+                    // Como el campo es readOnly si hay plan, si no hay plan, debería ser editable.
+                    // Por ahora, si se quita el plan, la duración se va a 0.
+                    setFieldValue('membershipDurationDays', 0);
                  }
               }
             // eslint-disable-next-line react-hooks/exhaustive-deps
-            }, [values.plan, setFieldValue, contextMembershipPlans, editingClient]);
-            // Se añade initialFormValues.membershipDurationDays a las dependencias si se usa para el reset
+            }, [values.plan, editingClient, setFieldValue, contextMembershipPlans]); // Removido initialFormValues de dependencias, ya que se usa directamente.
 
             return (
               <Form className="space-y-4 max-w-lg bg-gray-800 p-6 rounded-lg">
