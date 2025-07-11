@@ -79,16 +79,25 @@ La aplicación permite una gestión integral del gimnasio con dos roles principa
 
 ### Funcionalidades del Administrador:
 
+*   **Dashboard Principal (`HomePage.jsx`):**
+    *   Muestra estadísticas clave (clientes activos, clases de hoy, etc.).
+    *   Lista los últimos registros de ingreso.
+    *   Provee accesos rápidos a otras secciones del panel de admin.
 *   **Gestión de Clientes (`ClientesAdmin.jsx`):**
-    *   CRUD completo de clientes (nombre, DNI, email, etc.).
-    *   Asignación y gestión de membresías a clientes (plan, duración, fecha de inicio). Los datos de membresía se anidan dentro del objeto cliente.
-    *   Generación de códigos QR para acceso de clientes.
-    *   Todas las acciones actualizan `SharedDataContext` y `localStorage`, con feedback vía SweetAlert2.
-*   **Gestión de Clientes (`ClientesAdmin.jsx`):**
-    *   CRUD completo de clientes (nombre, DNI, email, etc.).
-    *   Asignación y gestión de membresías a clientes (plan, duración, fecha de inicio). Los datos de membresía se anidan dentro del objeto cliente.
-    *   Generación de códigos QR para acceso de clientes y códigos alfanuméricos (Iniciales+DNI).
+    *   CRUD completo de clientes (nombre, DNI, email, contraseña, rol, etc.).
+    *   Asignación y gestión de membresías a clientes:
+        *   Selección de un tipo de plan predefinido (gestionado en "Tipos de Membresía").
+        *   La duración de la membresía se autocompleta según el plan seleccionado.
+        *   Fecha de inicio de membresía.
+    *   Generación de códigos QR y códigos alfanuméricos (Iniciales+DNI) para acceso de clientes.
     *   Actualiza `SharedDataContext` y `localStorage`, con feedback vía SweetAlert2.
+*   **Gestión de Tipos de Membresía (`MembershipsAdmin.jsx` -> Vista "Gestionar Tipos de Plan"):**
+    *   CRUD para definir los diferentes planes de membresía que ofrece el gimnasio (ej. "Plan Básico", "Plan Premium").
+    *   Campos: Nombre del Plan, Precio, Duración en días, Beneficios (texto libre).
+*   **Estado de Membresías de Clientes (`MembershipsAdmin.jsx` -> Vista "Estado de Membresías"):**
+    *   Lista todos los clientes mostrando el estado actual de sus membresías (Activa, Vencida, Próxima a Vencer), calculado dinámicamente.
+    *   Permite filtrar por estado y buscar clientes.
+    *   Enlace para editar la ficha del cliente.
 *   **Gestión de Clases (`ClassesAdmin.jsx` -> `ManageClassesView.jsx`):**
     *   CRUD completo de clases (nombre, instructor, día, horario, capacidad, ubicación, descripción).
     *   Instructores seleccionados de la lista de profesores gestionados.
