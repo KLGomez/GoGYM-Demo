@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom"; // Importar Link para el l
 import { PowerIcon, UserCircleIcon } from "@heroicons/react/24/outline";
 // Swal ya no es necesario aquí, el contexto lo maneja.
 // import Swal from "sweetalert2";
-import { SharedDataContext } from '../../contexts/SharedDataContext'; // Importar el contexto
+import { SharedDataContext } from '../contexts/SharedDataContext'; // Corregir ruta de importación
 
 const HeaderAdmin = () => {
   const navigate = useNavigate();
