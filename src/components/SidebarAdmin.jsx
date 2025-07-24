@@ -4,6 +4,7 @@ import {
   CalendarDaysIcon,
   CreditCardIcon,
   UsersIcon,
+  QrCodeIcon, // Para el Check-in
 } from "@heroicons/react/24/outline";
 
 const SidebarAdmin = () => {
@@ -11,31 +12,37 @@ const SidebarAdmin = () => {
 
   const menuItems = [
     {
+      label: "Check-In QR", // Nueva opción
+      icon: QrCodeIcon,
+      path: "check-in", // Relativo: se resolverá a /admin/check-in
+    },
+    {
       label: "Clientes",
       icon: UsersIcon,
-      path: "/clients",
+      path: "clients", // Relativo: se resolverá a /admin/clients
     },
     {
       label: "Clases",
       icon: CalendarDaysIcon,
-      path: "/classes",
+      path: "classes", // Relativo: se resolverá a /admin/classes
     },
     {
       label: "Membresías",
       icon: CreditCardIcon,
-      path: "/memberships",
+      path: "memberships", // Relativo: se resolverá a /admin/memberships
     },
     {
       label: "Artículos",
       icon: ClipboardDocumentListIcon,
-      path: "/articles",
+      path: "articles", // Relativo: se resolverá a /admin/articles
     },
   ];
 
   return (
     <>
       {/* Sidebar visible solo en md+ */}
-      <aside className="hidden md:flex bg-gray-800 text-white w-64 h-screen p-6 flex-col shadow-lg">
+      <aside className="hidden md:flex flex-col w-64 bg-gray-800 text-white p-6 shadow-lg min-h-screen">
+        <h2 className="text-2xl font-bold text-orange-400 mb-6 text-left">GoGYM</h2>
         <nav className="flex flex-col gap-4">
           {menuItems.map((item, index) => {
             const isActive = location.pathname === item.path;

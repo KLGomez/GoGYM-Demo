@@ -1,48 +1,39 @@
-import { Link, useNavigate } from "react-router-dom";
-import { PowerIcon } from "@heroicons/react/24/outline";
-import Swal from "sweetalert2";
-
+import React, { useContext } from 'react'; // Importar useContext
+import { useNavigate, Link } from "react-router-dom"; // Importar Link para el logo si se desea
+import { PowerIcon, UserCircleIcon } from "@heroicons/react/24/outline";
+// Swal ya no es necesario aquí, el contexto lo maneja.
+// import Swal from "sweetalert2";
+import { SharedDataContext } from '../contexts/SharedDataContext'; // Corregir ruta de importación
 
 const HeaderAdmin = () => {
   const navigate = useNavigate();
+  const { currentUser, logoutUser } = useContext(SharedDataContext); // Usar el contexto
+
+  // Obtener nombre del admin desde currentUser del contexto
+  const adminName = currentUser ? `${currentUser.firstName} ${currentUser.lastName}`.trim() : "Admin";
 
   const handleLogout = () => {
-    Swal.fire({
-      title: "¿Cerrar sesión?",
-      text: "Tu sesión se cerrará y deberás volver a iniciar.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#F26419",
-      cancelButtonColor: "#6b7280", // gray-500
-      confirmButtonText: "Sí, cerrar sesión",
-      cancelButtonText: "Cancelar",
-      background: "#1f2937", // gray-800
-      color: "#fff",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        console.log("Sesión cerrada.");
-        // Acá se podría limpiar los datos de sesión que podriamos usar localstorage
-        navigate("/login");
-      }
-    });
+    logoutUser(); // Llama a la función de logout del contexto
+    // La redirección a /login ya está manejada en AppAdmin.jsx o en el propio logoutUser si se configuró así.
+    // Pero por si acaso, o para asegurar, se puede dejar:
+    navigate("/login");
   };
 
   return (
     <header className="bg-gray-900 text-white flex justify-between items-center px-6 py-4 shadow z-50">
-      <Link to="/" className="text-2xl font-bold text-orange-400 hover:text-orange-500">
-        GOGYM
+      <Link to="/admin" className="flex items-center gap-3"> {/* Enlace al dashboard del admin */}
+        <UserCircleIcon className="h-7 w-7 text-orange-400" />
+        <span className="text-lg font-semibold text-orange-300">{adminName}</span>
       </Link>
 
-      <div className="flex items-center gap-2 text-sm text-gray-200">
-        <span>ADMIN</span>
-        <button
-          onClick={handleLogout}
-          className="hover:text-orange-300 cursor-pointer transition-transform transform hover:scale-110"
-          title="Cerrar sesión"
-        >
-          <PowerIcon className="w-6 h-6 text-orange-400" />
-        </button>
-      </div>
+      <button
+        onClick={handleLogout}
+        className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-700 hover:text-orange-300 cursor-pointer transition-transform transform hover:scale-105"
+        title="Cerrar sesión"
+      >
+        <PowerIcon className="w-6 h-6 text-orange-400" />
+        <span className="hidden sm:inline">Cerrar Sesión</span>
+      </button>
     </header>
   );
 };
