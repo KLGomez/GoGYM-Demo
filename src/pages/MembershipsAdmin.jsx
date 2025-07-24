@@ -8,7 +8,7 @@ import { calculateMembershipDetails } from '../utils/membershipUtils';
 import { Link } from 'react-router-dom';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import { showSuccess, showError, confirmAction } from '../utils/alerts';
+import { showError, confirmAction } from '../utils/alerts';
 
 // Esquema de validación para Tipos de Plan
 const MembershipPlanSchema = Yup.object().shape({
@@ -29,7 +29,7 @@ const MembershipPlanForm = ({ onSubmit, initialData, onCancel }) => {
         id: initialData?.id || null
       }}
       validationSchema={MembershipPlanSchema}
-      onSubmit={(values, { setSubmitting, resetForm }) => {
+      onSubmit={(values, { setSubmitting }) => {
         onSubmit(values);
         setSubmitting(false);
         // No resetear el form aquí, se maneja en el componente padre para decidir si cerrar o no.

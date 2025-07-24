@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo, useContext } from 'react'; // Importar useContext
+import React, { useState, useMemo, useContext } from 'react'; // Importar useContext
 import { ArrowLeftIcon, UserPlusIcon, UserMinusIcon } from '@heroicons/react/24/outline';
-import { showSuccess, showError } from '../utils/alerts'; // SweetAlerts ya están en el contexto para acciones principales
+import { showError } from '../utils/alerts'; // SweetAlerts ya están en el contexto para acciones principales
 import { SharedDataContext } from '../contexts/SharedDataContext'; // Importar el contexto
 import { calculateMembershipDetails } from '../utils/membershipUtils';
 

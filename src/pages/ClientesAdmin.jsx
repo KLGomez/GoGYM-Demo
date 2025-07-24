@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react"; // Importar useContext
+import React, { useState, useContext } from "react"; // Importar useContext
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { SharedDataContext } from "../contexts/SharedDataContext"; // Importar el contexto
@@ -12,11 +12,10 @@ import {
   PencilIcon,
 } from "@heroicons/react/24/outline";
 import { QRCodeCanvas } from 'qrcode.react';
-import { showSuccess, showError, confirmAction } from "../utils/alerts";
+import { showError, confirmAction } from "../utils/alerts";
 // getClients y saveClients ya no se usan directamente, se accede vía contexto.
 // import { getClients, saveClients } from "../utils/storage";
 import { calculateMembershipDetails } from "../utils/membershipUtils";
-import { generateAlphanumericCode } from "../utils/codeUtils";
 
 // Esquema de validación con Yup
 const ClientSchema = Yup.object().shape({
@@ -80,13 +79,7 @@ const ClientsAdmin = () => {
 
   const handleSubmitClient = (values, { setSubmitting, resetForm }) => {
     const clientValues = { ...values };
-    const selectedPlan = (contextMembershipPlans || []).find(p => p.name === clientValues.plan);
-
-    if (!selectedPlan && clientValues.plan) { // Si se seleccionó un plan pero no se encontró (raro, pero por si acaso)
-        showError("Error de Plan", "El plan seleccionado no es válido. Por favor, recargue o contacte a soporte.");
-        setSubmitting(false);
-        return;
-    }
+    const selectedPlan = { name: values.plan, durationDays: 30 };
 
     // Preparar datos de membresía para anidar
     const membershipDetails = {
@@ -199,37 +192,7 @@ const ClientsAdmin = () => {
           onSubmit={handleSubmitClient}
           enableReinitialize
         >
-          {({ isSubmitting, dirty, isValid, values, setFieldValue }) => {
-            const { membershipPlans: contextMembershipPlans } = useContext(SharedDataContext);
-
-            useEffect(() => {
-              if (values.plan) {
-                const selectedPlanData = (contextMembershipPlans || []).find(p => p.name === values.plan);
-                if (selectedPlanData && typeof selectedPlanData.durationDays === 'number') { // Asegurar que durationDays sea un número
-                  setFieldValue('membershipDurationDays', selectedPlanData.durationDays);
-                } else {
-                  // Si el plan no tiene durationDays o no se encuentra el plan,
-                  // y no estamos editando un cliente que ya tenía una duración, poner 0.
-                  // Si estamos editando y el plan se quita, mantener la duración que tenía o poner 0.
-                  if (!editingClient || !values.id) { // Si es nuevo cliente o no hay ID (implicando nuevo)
-                     setFieldValue('membershipDurationDays', 0);
-                  } else if (editingClient && !selectedPlanData) { // Editando y el plan seleccionado no es válido
-                     setFieldValue('membershipDurationDays', editingClient.membership?.membershipDurationDays || 0);
-                  }
-                }
-              } else { // No hay plan seleccionado
-                 if (!editingClient) { // Nuevo cliente
-                    setFieldValue('membershipDurationDays', initialFormValues.membershipDurationDays); // Default 0
-                 } else { // Editando cliente, pero se quitó el plan
-                    // Mantener la duración que tenía si se quita el plan, o resetear a 0.
-                    // Para que sea más claro, si se quita el plan, la duración debería ser 0 o requerir entrada manual.
-                    // Como el campo es readOnly si hay plan, si no hay plan, debería ser editable.
-                    // Por ahora, si se quita el plan, la duración se va a 0.
-                    setFieldValue('membershipDurationDays', 0);
-                 }
-              }
-            // eslint-disable-next-line react-hooks/exhaustive-deps
-            // }, [values.plan, editingClient, setFieldValue, contextMembershipPlans]); // Comentando el useEffect problemático
+          {({ isSubmitting, dirty, isValid, values }) => {
 
             return (
               <Form className="space-y-4 max-w-lg bg-gray-800 p-6 rounded-lg">
@@ -283,17 +246,16 @@ const ClientsAdmin = () => {
                   className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500"
                 >
                   <option value="">Seleccione un Plan</option>
-                  {(contextMembershipPlans || []).map(p => (
-                    <option key={p.id} value={p.name}>{p.name} (${parseFloat(p.price).toFixed(2)}) - {p.durationDays} días</option>
-                  ))}
+                  <option value="Básico">Básico ($29.99) - 30 días</option>
+                  <option value="Premium">Premium ($49.99) - 30 días</option>
                 </Field>
                 <ErrorMessage name="plan" component="div" className="text-red-500 text-xs mt-1" />
               </div>
               <div>
                 <label htmlFor="membershipDurationDays" className="block text-sm font-medium text-gray-200">Duración Membresía (días)</label>
                 <Field
-                  type="number" name="membershipDurationDays" id="membershipDurationDays" min="1" readOnly={!!values.plan} // Hacerlo readOnly si hay un plan seleccionado
-                  className={`mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500 ${!!values.plan ? 'bg-gray-600 text-gray-400 cursor-not-allowed' : ''}`}
+                  type="number" name="membershipDurationDays" id="membershipDurationDays" min="1" readOnly={Boolean(values.plan)} // Hacerlo readOnly si hay un plan seleccionado
+                  className={`mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500 ${values.plan ? 'bg-gray-600 text-gray-400 cursor-not-allowed' : ''}`}
                 />
                 <ErrorMessage name="membershipDurationDays" component="div" className="text-red-500 text-xs mt-1" />
                  <p className="text-xs text-gray-400 mt-1">

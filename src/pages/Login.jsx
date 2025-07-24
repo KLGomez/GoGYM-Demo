@@ -6,7 +6,7 @@ import { SharedDataContext } from '../contexts/SharedDataContext'; // Importar e
 export default function Login() {
     const navigate = useNavigate();
     const { loginUser, currentUser } = useContext(SharedDataContext); // Usar el contexto
-    const [localError, setLocalError] = useState(''); // Para errores que LoginForm podría necesitar
+    const [loginError, setLoginError] = useState('');
 
     // Redirigir si ya hay un usuario en el contexto (ej. recarga de página)
     useEffect(() => {
@@ -22,7 +22,7 @@ export default function Login() {
     }, [currentUser, navigate]);
 
     const handleLoginSubmit = async (formData) => { // formData es {email, password}
-        setLocalError(''); // Limpiar errores locales
+        setLoginError(''); // Limpiar errores de login anteriores
         const loggedInUser = loginUser(formData); // loginUser del contexto maneja la lógica y SweetAlerts
 
         if (loggedInUser) {
@@ -33,12 +33,12 @@ export default function Login() {
                 navigate('/user');
             } else {
                 // Esto no debería suceder si loginUser funciona bien y devuelve un usuario con rol
-                setLocalError('Rol de usuario no reconocido tras el login.');
+                setLoginError('Rol de usuario no reconocido tras el login.');
             }
         } else {
             // loginUser ya mostró un SweetAlert de error.
-            // Opcionalmente, podemos poner un error local si LoginForm lo necesita.
-            // setLocalError("Credenciales incorrectas (mensaje local para LoginForm).");
+            // Establecer un error para pasarlo a LoginForm.
+            setLoginError("Credenciales incorrectas.");
         }
     };
 
@@ -62,15 +62,13 @@ export default function Login() {
 
                 {/* Lado derecho: Formulario */}
                 <div className="w-1/2 bg-black flex items-center justify-center">
-                    {/* Pasar handleLoginSubmit y localError a LoginForm si es necesario */}
-                    <LoginForm onLogin={handleLoginSubmit} error={localError} />
+                    <LoginForm onLogin={handleLoginSubmit} error={loginError} />
                 </div>
             </div>
 
             {/* Solo formulario en mobile */}
             <div className="md:hidden w-full max-w-md">
-                 {/* Pasar handleLoginSubmit y localError a LoginForm si es necesario */}
-                <LoginForm onLogin={handleLoginSubmit} error={localError} />
+                <LoginForm onLogin={handleLoginSubmit} error={loginError} />
             </div>
         </div>
     );

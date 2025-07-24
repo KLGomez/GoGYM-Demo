@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react"; // Importar useContext
+import React, { useState } from "react"; // Importar useContext
 import {
   CalendarDaysIcon,
   PlusCircleIcon,
@@ -8,11 +8,6 @@ import {
   ArrowLeftIcon,
 } from "@heroicons/react/24/outline";
 import ManageClassesView from "./ManageClassesView"; // Ya usa el contexto
-import ScheduleView from "./ScheduleView"; // Necesitará refactor para usar el contexto
-import ManageTeachersView from "./ManageTeachersView"; // Necesitará refactor
-import AttendanceView from "./AttendanceView"; // Necesitará refactor
-import EnrollStudentsView from "./EnrollStudentsView"; // Necesitará refactor
-import { SharedDataContext } from "../contexts/SharedDataContext"; // Importar contexto
 import { showError } from "../utils/alerts"; // Para placeholders
 
 // PlaceholderView no cambia, solo muestra un mensaje.

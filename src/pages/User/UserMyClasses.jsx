@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react'; // Importar useContext
 import { CalendarDaysIcon, ClockIcon, UserGroupIcon, MapPinIcon, NoSymbolIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
-import { confirmAction, showSuccess, showError } from '../../utils/alerts';
+import { confirmAction } from '../../utils/alerts';
 import { SharedDataContext } from '../../contexts/SharedDataContext'; // Importar el contexto
 import { useNavigate } from 'react-router-dom'; // Para navegar a la página de feedback
 

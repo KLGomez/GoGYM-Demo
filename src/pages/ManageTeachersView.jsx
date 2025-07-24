@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useContext } from 'react'; // Importar useContext
+import React, { useState, useContext } from 'react'; // Importar useContext
 import { ArrowLeftIcon, PlusIcon, TrashIcon, PencilIcon } from '@heroicons/react/24/outline';
 // Ya no se usa getTeachers/saveTeachers directamente
 // import { getTeachers, saveTeachers } from '../utils/storage';
-import { showSuccess, showError, confirmAction } from '../utils/alerts'; // Se usan para validaciones locales
+import { showError, confirmAction } from '../utils/alerts'; // Se usan para validaciones locales
 import { SharedDataContext } from '../contexts/SharedDataContext'; // Importar el contexto
 
 
