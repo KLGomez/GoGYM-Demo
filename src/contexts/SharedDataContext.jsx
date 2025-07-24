@@ -114,30 +114,6 @@ export const SharedDataProvider = ({ children }) => {
   useEffect(() => { if (!isLoading) saveClients(clients); }, [clients, isLoading]);
 
 
-  // --- MANEJO DE CURRENTUSER (LOGIN/LOGOUT) ---
-  const loginUser = useCallback((userData) => {
-    const clientData = clients.find(c => c.email === userData.email); // Asumiendo login por email
-    if (clientData && clientData.password === userData.password) { // Comparación directa (NO SEGURO PARA PRODUCCIÓN)
-      setCurrentUser(clientData);
-      localStorage.setItem('currentUserSession', JSON.stringify(clientData));
-      addNotification(`Bienvenido de nuevo, ${clientData.firstName}!`, 'success', clientData.id, true);
-      return clientData;
-    }
-    showError("Error de Inicio de Sesión", "Email o contraseña incorrectos.");
-    return null;
-  }, [clients, addNotification]);
-
-  const logoutUser = useCallback(() => {
-    const userName = currentUser?.firstName;
-    setCurrentUser(null);
-    localStorage.removeItem('currentUserSession');
-    // No se limpia el array de notificaciones global, pero las nuevas no serán para este usuario
-    // Opcional: Mostrar una alerta de despedida
-    if(userName) showSuccess("Sesión Cerrada", `¡Hasta pronto, ${userName}!`);
-    else showSuccess("Sesión Cerrada", "Has cerrado sesión exitosamente.");
-  }, [currentUser]);
-
-
   // --- NOTIFICACIONES ---
   const addNotification = useCallback((message, type = 'info', forUserId = null, isGlobal = false) => {
     // forUserId: null para admin, o un ID específico de usuario.
@@ -166,6 +142,30 @@ export const SharedDataProvider = ({ children }) => {
     }
     // Las notificaciones globales o para otros usuarios/admin se gestionarán en sus respectivos paneles.
   }, [currentUser]);
+
+  // --- MANEJO DE CURRENTUSER (LOGIN/LOGOUT) ---
+  const loginUser = useCallback((userData) => {
+    const clientData = clients.find(c => c.email === userData.email); // Asumiendo login por email
+    if (clientData && clientData.password === userData.password) { // Comparación directa (NO SEGURO PARA PRODUCCIÓN)
+      setCurrentUser(clientData);
+      localStorage.setItem('currentUserSession', JSON.stringify(clientData));
+      addNotification(`Bienvenido de nuevo, ${clientData.firstName}!`, 'success', clientData.id, true);
+      return clientData;
+    }
+    showError("Error de Inicio de Sesión", "Email o contraseña incorrectos.");
+    return null;
+  }, [clients, addNotification]);
+
+  const logoutUser = useCallback(() => {
+    const userName = currentUser?.firstName;
+    setCurrentUser(null);
+    localStorage.removeItem('currentUserSession');
+    // No se limpia el array de notificaciones global, pero las nuevas no serán para este usuario
+    // Opcional: Mostrar una alerta de despedida
+    if(userName) showSuccess("Sesión Cerrada", `¡Hasta pronto, ${userName}!`);
+    else showSuccess("Sesión Cerrada", "Has cerrado sesión exitosamente.");
+  }, [currentUser]);
+
 
   const markNotificationAsRead = useCallback((notificationId) => {
     setNotifications(prev =>
