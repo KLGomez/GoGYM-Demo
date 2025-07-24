@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useContext } from 'react'; // Importar useContext
+import React, { useState, useContext } from 'react'; // Importar useContext
 import { ArrowLeftIcon, PlusIcon, TrashIcon, PencilIcon } from '@heroicons/react/24/outline'; // Añadir PencilIcon
-import { showSuccess, showError, confirmAction } from '../utils/alerts';
+import { showError, confirmAction } from '../utils/alerts';
 // Las funciones de storage ya no se usan directamente, se accede vía contexto
 // import { getGymClasses, saveGymClasses, getTeachers } from '../utils/storage';
 import { SharedDataContext } from '../contexts/SharedDataContext'; // Importar el contexto

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react'; // Importar useContext
 import { CalendarIcon, UserGroupIcon, ClockIcon, MagnifyingGlassIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline';
-import { showSuccess, showError, confirmAction } from '../../utils/alerts';
+import { showError, confirmAction } from '../../utils/alerts';
 import { SharedDataContext } from '../../contexts/SharedDataContext'; // Importar el contexto
 
 // Los datos simulados ya no son necesarios aquí, vendrán del contexto.

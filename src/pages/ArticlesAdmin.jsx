@@ -1,7 +1,7 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext } from 'react';
 import { PlusIcon, PencilIcon, TrashIcon, ArrowLeftIcon, NewspaperIcon } from '@heroicons/react/24/outline';
 import { SharedDataContext } from '../contexts/SharedDataContext';
-import { showSuccess, showError, confirmAction } from '../utils/alerts';
+import { showError, confirmAction } from '../utils/alerts';
 
 // Asumimos que en SharedDataContext se añadirán:
 // articles: [],

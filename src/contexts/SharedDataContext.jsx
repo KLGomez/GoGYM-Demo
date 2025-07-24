@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
 import {
     getClients, saveClients,
     getTeachers, saveTeachers,
@@ -46,7 +46,6 @@ export const SharedDataProvider = ({ children }) => {
     const storedEnrollments = getClassEnrollments();
     const storedAttendance = getAttendanceRecords();
     const storedArticles = getArticles();
-    const storedMembershipPlans = getFromLocalStorage('membershipPlans', []); // Cargar tipos de membresía
     const storedCurrentUser = JSON.parse(localStorage.getItem('currentUserSession'));
 
     setClients(storedClients);
@@ -112,7 +111,7 @@ export const SharedDataProvider = ({ children }) => {
   useEffect(() => { if (!isLoading) saveClassEnrollments(enrollments); }, [enrollments, isLoading]);
   useEffect(() => { if (!isLoading) saveAttendanceRecords(attendanceRecords); }, [attendanceRecords, isLoading]);
   useEffect(() => { if (!isLoading) saveArticles(articles); }, [articles, isLoading]);
-  useEffect(() => { if (!isLoading) saveToLocalStorage('membershipPlans', membershipPlans); }, [membershipPlans, isLoading]); // Persistir membershipPlans
+  useEffect(() => { if (!isLoading) saveClients(clients); }, [clients, isLoading]);
 
 
   // --- MANEJO DE CURRENTUSER (LOGIN/LOGOUT) ---
@@ -126,7 +125,7 @@ export const SharedDataProvider = ({ children }) => {
     }
     showError("Error de Inicio de Sesión", "Email o contraseña incorrectos.");
     return null;
-  }, [clients]);
+  }, [clients, addNotification]);
 
   const logoutUser = useCallback(() => {
     const userName = currentUser?.firstName;
@@ -313,7 +312,7 @@ export const SharedDataProvider = ({ children }) => {
       }
     }
     return true;
-  }, [enrollments, gymClasses, clients, currentUser, addNotification]);
+  }, [enrollments, gymClasses, currentUser, addNotification, clients]);
 
   // --- CRUD Membresías (Admin - actualiza cliente) ---
   // La gestión de membresías se hace actualizando el objeto cliente.
@@ -349,7 +348,7 @@ export const SharedDataProvider = ({ children }) => {
   }, [addNotification]);
 
 
-  const contextValue = {
+  const contextValue = useMemo(() => ({
     clients,
     gymClasses,
     teachers,
@@ -451,7 +450,7 @@ export const SharedDataProvider = ({ children }) => {
         addNotification(`Artículo "${articleToDelete.title}" eliminado.`, 'warning', 'admin');
       }
     }
-  };
+  }), [clients, gymClasses, teachers, enrollments, attendanceRecords, articles, membershipPlans, currentUser, notifications, isLoading, loginUser, logoutUser, addNotification, markNotificationAsRead, clearUserNotifications, addClient, updateClient, deleteClient, addGymClass, updateGymClass, deleteGymClass, enrollToClass, cancelEnrollment, updateClientMembership, submitFeedback]);
 
   return (
     <SharedDataContext.Provider value={contextValue}>

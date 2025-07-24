@@ -14,7 +14,7 @@ const StatCard = ({ title, value, icon, color, linkTo }) => (
 );
 
 const HomePage = () => {
-  const { clients, gymClasses, teachers, attendanceRecords, isLoading, currentUser } = useContext(SharedDataContext);
+  const { clients, gymClasses, teachers, attendanceRecords, isLoading } = useContext(SharedDataContext);
 
   if (isLoading) {
     return <div className="text-center py-10"><p className="text-white">Cargando dashboard...</p></div>;

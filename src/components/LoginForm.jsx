@@ -7,28 +7,26 @@ import { useState, useEffect } from "react";
 export default function LoginForm({ onLogin, error: propError }) {
     const [email, setEmail] = useState(""); // Cambiado de username a email para coincidir con el contexto
     const [password, setPassword] = useState("");
-    // El error que se muestra puede ser el que viene de props (del contexto)
-    // o un error local del formulario si fuera necesario.
-    // Por simplicidad, solo usaremos el propError.
-    // const [localFormError, setLocalFormError] = useState("");
+    const [localError, setLocalError] = useState("");
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!email || !password) {
-            // Opcional: manejar error local si se desea antes de llamar a onLogin
-            // setLocalFormError("Por favor, ingresa email y contraseña.");
-            // O delegar toda la validación y manejo de errores a onLogin/contexto.
-            // Para este caso, si onLogin espera el objeto, se lo pasamos.
-            // El contexto/Login.jsx mostrará el error de "campos vacíos" si es necesario.
+            setLocalError("Por favor, ingresa email y contraseña.");
+            return;
         }
+        // Limpiar el error local si la validación pasa
+        setLocalError("");
         // Llamar a la función onLogin pasada por props con los datos del formulario
         onLogin({ email, password });
     };
 
-    // Si propError cambia (porque el contexto o Login.jsx lo actualizan),
-    // el componente se re-renderizará y mostrará el nuevo error.
-    // No es estrictamente necesario un useEffect aquí para el error,
-    // a menos que quisiéramos limpiarlo después de un tiempo o en cambios de input.
+    // Limpiar el error local cuando el usuario empieza a escribir de nuevo
+    useEffect(() => {
+        if (email || password) {
+            setLocalError("");
+        }
+    }, [email, password]);
 
     return (
         <div className="bg-black rounded-2xl shadow-xl p-10 border-4 border-white w-full max-w-md">
@@ -65,8 +63,8 @@ export default function LoginForm({ onLogin, error: propError }) {
                     />
                 </div>
 
-                {propError && ( // Mostrar el error pasado por props
-                    <p className="text-red-500 text-sm text-center">{propError}</p>
+                {(localError || propError) && ( // Mostrar error local o de props
+                    <p className="text-red-500 text-sm text-center">{localError || propError}</p>
                 )}
 
                 <button

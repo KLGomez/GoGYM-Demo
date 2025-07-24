@@ -1,14 +1,13 @@
-import React, { useState, useEffect, useContext, useRef } from 'react';
+import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { SharedDataContext } from '../contexts/SharedDataContext';
-import { showError, showSuccess, confirmAction } from '../utils/alerts';
+import { showError, showSuccess } from '../utils/alerts';
 import { calculateMembershipDetails } from '../utils/membershipUtils';
 import { QrCodeIcon, UserIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 
 const CheckInPage = () => {
-  const { clients, gymClasses, enrollments, isLoading, addAttendanceRecord } = useContext(SharedDataContext);
+  const { clients, isLoading, addAttendanceRecord } = useContext(SharedDataContext);
   const [manualCode, setManualCode] = useState('');
-  const [scanResult, setScanResult] = useState(null);
   const [clientDetails, setClientDetails] = useState(null);
   const [scannerActive, setScannerActive] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -30,15 +29,13 @@ const CheckInPage = () => {
 
       const onScanSuccess = (decodedText, decodedResult) => {
         console.log(`Scan result: ${decodedText}`, decodedResult);
-        setScanResult(decodedText);
         setScannerActive(false); // Detener scanner después de un escaneo exitoso
         html5QrcodeScanner.clear().catch(error => console.error("Error clearing scanner:", error));
         processCheckIn(decodedText, 'qr');
       };
 
-      const onScanFailure = (error) => {
+      const onScanFailure = () => {
         // No hacer nada en caso de fallo, el scanner sigue intentando.
-        // console.warn(`QR error = ${error}`);
       };
 
       html5QrcodeScanner.render(onScanSuccess, onScanFailure);
@@ -50,9 +47,9 @@ const CheckInPage = () => {
         }
       };
     }
-  }, [scannerActive]);
+  }, [scannerActive, processCheckIn]);
 
-  const processCheckIn = async (identifier, type) => {
+  const processCheckIn = useCallback(async (identifier, type) => {
     if (processing) return;
     setProcessing(true);
     setClientDetails(null);
@@ -72,7 +69,7 @@ const CheckInPage = () => {
            setProcessing(false);
            return;
         }
-      } catch (e) {
+      } catch {
         showError("Error de QR", "No se pudo procesar el código QR.");
         setProcessing(false);
         return;
@@ -119,16 +116,15 @@ const CheckInPage = () => {
     }
     setProcessing(false);
     setManualCode(''); // Limpiar input manual
-  };
+  }, [clients, processing, addAttendanceRecord]);
 
-  const handleManualSubmit = (e) => {
-    e.preventDefault();
+  const handleManualSubmit = (event) => {
+    event.preventDefault();
     processCheckIn(manualCode, 'manual');
   };
 
   const toggleScanner = () => {
     setScannerActive(!scannerActive);
-    setScanResult(null); // Limpiar resultado anterior
     setClientDetails(null);
   };
 

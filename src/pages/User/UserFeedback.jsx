@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react'; // Importar useC
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { StarIcon as StarOutline } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolid } from '@heroicons/react/24/solid';
-import { showSuccess, showError, confirmAction } from '../../utils/alerts';
+import { showError, confirmAction } from '../../utils/alerts';
 import { SharedDataContext } from '../../contexts/SharedDataContext'; // Importar el contexto
 
 const UserFeedback = () => {

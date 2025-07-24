@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useMemo } from 'react'; // Importar useContext y useMemo
+import React, { useContext, useMemo } from 'react'; // Importar useContext y useMemo
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { SharedDataContext } from '../contexts/SharedDataContext'; // Importar el contexto
 
