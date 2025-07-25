@@ -13,6 +13,7 @@ import ScheduleView from "./ScheduleView";
 import ManageTeachersView from "./ManageTeachersView";
 import AttendanceView from "./AttendanceView";
 import EnrollStudentsView from "./EnrollStudentsView"; // Importar EnrollStudentsView
+import CardMenuOption from "../components/CardMenuOption";
 
 // Placeholder para las futuras vistas de subsección
 const PlaceholderView = ({ title, onBack }) => (
@@ -34,13 +35,44 @@ const ClassesAdmin = () => {
   const [currentView, setCurrentView] = useState("menu");
 
   const menuOptions = [
-    { icon: <CalendarDaysIcon className="w-8 h-8 text-white" />, label: "Cronograma de Clase", viewName: "schedule" },
-    { icon: <PlusCircleIcon className="w-8 h-8 text-white" />, label: "Añadir/Eliminar Clase", viewName: "manageClasses" },
-    { icon: <AcademicCapIcon className="w-8 h-8 text-white" />, label: "Profesores", viewName: "teachers" },
-    { icon: <UserGroupIcon className="w-8 h-8 text-white" />, label: "Inscribir Alumnos", viewName: "students" }, // Etiqueta actualizada
-    { icon: <UserGroupIcon className="w-8 h-8 text-white" />, label: "Asistencia", viewName: "attendance" }, // Icono UserGroupIcon también para Asistencia
-    { icon: <ClockIcon className="w-8 h-8 text-white" />, label: "Historial", viewName: "history" },
+    {
+      icon: <CalendarDaysIcon className="w-8 h-8 text-white" />,
+      label: "Cronograma de Clases",
+      viewName: "schedule",
+      description: "Visualizá el calendario de clases programadas.",
+    },
+    {
+      icon: <PlusCircleIcon className="w-8 h-8 text-white" />,
+      label: "Gestionar Clases",
+      viewName: "manageClasses",
+      description: "Creá, editá y organizá las clases disponibles.",
+    },
+    {
+      icon: <AcademicCapIcon className="w-8 h-8 text-white" />,
+      label: "Gestionar Profesores",
+      viewName: "teachers",
+      description: "Asigná y editá perfiles de los instructores.",
+    },
+    {
+      icon: <UserGroupIcon className="w-8 h-8 text-white" />,
+      label: "Inscribir Alumnos",
+      viewName: "students",
+      description: "Agregá alumnos a las clases activas.",
+    },
+    {
+      icon: <UserGroupIcon className="w-8 h-8 text-white" />,
+      label: "Registrar Asistencia",
+      viewName: "attendance",
+      description: "Llevá el control de asistencia en cada clase.",
+    },
+    {
+      icon: <ClockIcon className="w-8 h-8 text-white" />,
+      label: "Historial de Clases",
+      viewName: "history",
+      description: "Consultá las clases pasadas y sus registros.",
+    },
   ];
+
 
   const handleMenuClick = (viewName) => {
     setCurrentView(viewName);
@@ -50,21 +82,19 @@ const ClassesAdmin = () => {
 
   if (currentView === "menu") {
     return (
-      <div>
-        <h2 className="text-3xl font-bold text-orange-400 mb-6">Gestión de Clases y Horarios</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {menuOptions.map((opt, index) => (
-            <div
-              key={index}
-              onClick={() => handleMenuClick(opt.viewName)}
-              className="bg-orange-500 hover:bg-orange-600 text-white p-4 rounded-lg shadow flex flex-col items-center justify-center gap-2 cursor-pointer transition h-32"
-            >
-              {opt.icon}
-              <span className="font-semibold text-center">{opt.label}</span>
-            </div>
-          ))}
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        {menuOptions.map((opt, index) => (
+          <CardMenuOption
+            key={index}
+            icon={opt.icon}
+            label={opt.label}
+            description={opt.description || "Accedé a esta funcionalidad para más detalles."}
+            onClick={() => handleMenuClick(opt.viewName)}
+
+          />
+        ))}
       </div>
+
     );
   }
 

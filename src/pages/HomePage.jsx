@@ -1,201 +1,83 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { CameraIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
-import { QrReader } from '@blackbox-vision/react-qr-reader';
-import { showError } from '../utils/alerts';
+import React, { useContext } from 'react';
+import { SharedDataContext } from '../contexts/SharedDataContext';
+import { UsersIcon, RectangleStackIcon, CurrencyDollarIcon, DocumentChartBarIcon, CalendarDaysIcon, ArrowTrendingUpIcon } from '@heroicons/react/24/outline';
+import { Link } from 'react-router-dom';
+
+const StatCard = ({ title, value, icon, color, linkTo }) => (
+  <Link to={linkTo || '#'} className={`bg-gray-800 p-6 rounded-xl shadow-lg hover:shadow-orange-400/30 transition-shadow duration-300 flex items-center space-x-4 border-l-4 ${color}`}>
+    <div className={`p-3 rounded-full bg-gray-700`}>{React.createElement(icon, { className: "h-7 w-7 text-orange-400" })}</div>
+    <div>
+      <p className="text-sm text-gray-400">{title}</p>
+      <p className="text-2xl font-semibold text-white">{value}</p>
+    </div>
+  </Link>
+);
 
 const HomePage = () => {
-  const [qrInput, setQrInput] = useState('');
-  const [scanResult, setScanResult] = useState('');
-  const [scanError, setScanError] = useState('');
-  const [showCameraScanner, setShowCameraScanner] = useState(false);
+  const { clients, gymClasses, teachers, attendanceRecords, isLoading } = useContext(SharedDataContext);
 
-  // codeReaderRef ya no es necesario si confiamos en el desmontaje del componente.
-  // const codeReaderRef = useRef(null);
+  if (isLoading) {
+    return <div className="text-center py-10"><p className="text-white">Cargando dashboard...</p></div>;
+  }
 
-  const handleExternalScan = (e) => {
-    e.preventDefault();
-    if (!qrInput.trim()) {
-      setScanError("Por favor, ingrese o escanee un código QR.");
-      setScanResult('');
-      return;
-    }
-    setScanError('');
-    processQrData(qrInput, "Escáner Externo");
-    setQrInput('');
-  };
+  const activeClients = clients?.filter(c => c.membershipStatusDetails?.status === 'Active').length || 0;
+  const totalClassesToday = gymClasses?.filter(c => c.day === new Date().toLocaleDateString('es-ES', { weekday: 'long' })).length || 0;
+  const recentCheckIns = attendanceRecords?.slice(-5).reverse() || []; // Últimos 5 check-ins
 
-  const processQrData = (qrString, sourceType) => {
-    try {
-      const parsedData = JSON.parse(qrString);
-      if (parsedData && parsedData.clientId && parsedData.name) {
-        let clientDetailsToDisplay = {
-            Nombre: parsedData.name,
-            Email: parsedData.email || 'N/A',
-            Plan: parsedData.plan || 'N/A',
-            "ID Cliente": parsedData.clientId,
-        };
-
-        if (parsedData.membershipEndDate && parsedData.status) {
-            const endDate = new Date(parsedData.membershipEndDate);
-            const today = new Date();
-            today.setHours(0,0,0,0);
-            const endOfDayEndDate = new Date(endDate);
-            endOfDayEndDate.setHours(23,59,59,999);
-            const timeDiff = endOfDayEndDate.getTime() - today.getTime();
-            const daysRemaining = Math.ceil(timeDiff / (1000 * 3600 * 24));
-
-            clientDetailsToDisplay = {
-                ...clientDetailsToDisplay,
-                "Estado Membresía": parsedData.status,
-                "Vencimiento": endDate.toLocaleDateString('es-ES'),
-                "Días Restantes": daysRemaining < 0 ? 0 : daysRemaining,
-            };
-        } else if (parsedData.membershipStartDate && typeof parsedData.membershipDurationDays === 'number') {
-             clientDetailsToDisplay["Info Membresía"] = "Datos de inicio/duración no en QR, cálculo no realizado.";
-        }
-
-        setScanResult({
-          source: sourceType,
-          data: clientDetailsToDisplay,
-          raw: qrString,
-        });
-        setScanError('');
-      } else {
-        setScanError(`Error (${sourceType}): QR no reconocido como un código de cliente válido.`);
-        setScanResult('');
-      }
-    } catch (error) {
-      setScanError(`Error (${sourceType}): El código QR no es un JSON válido. (${error.message})`);
-      setScanResult('');
-    }
-  };
-
-  const handleCameraScan = (result, error /*, codeReader */) => { // codeReader ya no se usa aquí directamente
-    // Ya no se guarda codeReader en una ref.
-    // if (codeReader) {
-    //     codeReaderRef.current = codeReader;
-    // }
-
-    if (result) {
-      const qrText = result?.getText();
-      if (qrText) {
-        processQrData(qrText, "Cámara");
-        // La llamada explícita a reset() se elimina.
-        // if (codeReaderRef.current) {
-        //   codeReaderRef.current.reset();
-        // }
-        setShowCameraScanner(false); // Esto desmontará <QrReader /> y debería detener la cámara.
-      }
-    }
-    if (error) {
-      // Ignorar errores comunes que no son críticos para la UX
-      const ignoredErrorNames = ["NotFoundException", "ChecksumException", "FormatException"];
-      if (error.name && !ignoredErrorNames.includes(error.name) && !error.message?.includes("No QR code found")) {
-          // console.error("Error de QR Scanner (@blackbox-vision/react-qr-reader):", error);
-          // Podríamos querer ser más selectivos con los errores que mostramos al usuario.
-          // Errores como NotAllowedError (permisos) o NotFoundError (cámara no encontrada) son importantes.
-          if (error.name === "NotAllowedError" || error.name === "NotFoundError" || error.name === "OverconstrainedError") {
-              setScanError(`Error de cámara: ${error.message}. Verifique permisos y que no esté en uso.`);
-              setShowCameraScanner(false); // Ocultar si hay un error de cámara fundamental
-          } else {
-              // Para otros errores menos críticos, podríamos solo loguearlos o ignorarlos.
-              // setScanError(`Error de escaneo: ${error.name}`);
-          }
-      }
-    }
-  };
-
-  // useEffect para detener la cámara si se oculta manualmente
-  // Este useEffect ya no es necesario si confiamos en el desmontaje del QrReader.
-  /*
-  useEffect(() => {
-    if (!showCameraScanner && codeReaderRef.current) {
-      // console.log("Ocultando cámara manualmente, reseteando lector...");
-      codeReaderRef.current.reset();
-      codeReaderRef.current = null;
-    }
-  }, [showCameraScanner]);
-  */
+  // Si `HomePage` también sirve como página de Check-in, se debe incluir esa funcionalidad aquí.
+  // Por ahora, este es un Dashboard de Admin. La `CheckInPage.jsx` es la dedicada para check-in.
 
   return (
-    <div className="min-h-screen text-white flex flex-col items-center justify-center">
-      <div className="w-full max-w-md p-8 bg-gray-800 rounded-xl shadow-2xl space-y-4">
-        <h1 className="text-4xl font-bold text-orange-400 text-center mb-8">
-          GoGYM - Control de Acceso
-        </h1>
+    <div className="p-6">
+      <h1 className="text-3xl font-bold text-orange-400 mb-8">Dashboard Principal</h1>
 
-        <button
-          onClick={() => {
-            setShowCameraScanner(prev => !prev);
-            setScanResult('');
-            setScanError('');
-          }}
-          className="w-full flex items-center justify-center gap-3 px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-orange-500 transition-transform transform hover:scale-105"
-        >
-          <CameraIcon className="h-6 w-6" aria-hidden="true" />
-          {showCameraScanner ? "Ocultar Cámara" : "Escanear con Cámara"}
-        </button>
+      {/* Sección de Estadísticas Rápidas */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-10">
+        <StatCard title="Clientes Activos" value={activeClients} icon={UsersIcon} color="border-green-500" linkTo="/admin/clients" />
+        <StatCard title="Clases Hoy" value={totalClassesToday} icon={CalendarDaysIcon} color="border-blue-500" linkTo="/admin/classes" />
+        <StatCard title="Total Profesores" value={teachers?.length || 0} icon={UsersIcon} color="border-purple-500" linkTo="/admin/classes" />
+        {/* El linkTo para profesores debería ser a ManageTeachersView, pero ClassesAdmin lo maneja internamente */}
+        <StatCard title="Clases Totales" value={gymClasses?.length || 0} icon={RectangleStackIcon} color="border-yellow-500" linkTo="/admin/classes" />
+      </div>
 
-        {showCameraScanner && (
-          <div className="my-4 p-4 bg-gray-700 rounded-md">
-            <QrReader
-              onResult={handleCameraScan}
-              constraints={{ facingMode: 'environment' }}
-              scanDelay={300} // algunas versiones usan 'delay'
-              className="w-full h-auto" // Asegúrate de que el componente tenga un tamaño visible
-              videoStyle={{ width: '100%', height: 'auto' }} // Estilo para el video interno
-              // videoContainerStyle={{ paddingTop: '0' }} // Ajustes si es necesario
-            />
-            <p className="text-center text-sm text-gray-400 mt-2">Apunte la cámara al código QR.</p>
-          </div>
-        )}
-
-        <form onSubmit={handleExternalScan} className="space-y-4">
-          <div>
-            <label htmlFor="qrCodeInput" className="block text-sm font-medium text-gray-300 mb-1">
-              Entrada QR (Escáner Externo o Manual):
-            </label>
-            <input
-              type="text"
-              name="qrCodeInput"
-              id="qrCodeInput"
-              value={qrInput}
-              onChange={(e) => setQrInput(e.target.value)}
-              placeholder="Esperando datos del QR..."
-              className="w-full px-4 py-2 border border-gray-600 rounded-md shadow-sm bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full flex items-center justify-center gap-3 px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-lime-600 hover:bg-lime-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-teal-500 transition-transform transform hover:scale-105"
-          >
-            <DocumentTextIcon className="h-6 w-6" aria-hidden="true" />
-            Procesar Entrada
-          </button>
-        </form>
-
-        {scanError &&
-          <div className="mt-6 p-3 bg-red-800 rounded-md text-center">
-            <p className="text-sm text-red-100">{scanError}</p>
-          </div>
-        }
-        {scanResult && typeof scanResult === 'object' && scanResult.data && (
-          <div className="mt-6 p-4 bg-gray-700 rounded-md">
-            <h3 className="text-lg font-semibold text-orange-300 mb-2">
-              Cliente Verificado ({scanResult.source}):
-            </h3>
-            {Object.entries(scanResult.data).map(([key, value]) => (
-              <p key={key} className="text-sm text-gray-100">
-                <span className="font-semibold">{key}:</span> {typeof value === 'object' ? JSON.stringify(value) : value.toString()}
-              </p>
+      {/* Sección de Últimos Check-ins (si aplica para el dashboard admin) */}
+      <div className="bg-gray-800 p-6 rounded-xl shadow-lg mb-10">
+        <h2 className="text-xl font-semibold text-orange-400 mb-4">Últimos Registros de Ingreso</h2>
+        {attendanceRecords && attendanceRecords.length > 0 ? (
+          <ul className="space-y-3 max-h-60 overflow-y-auto">
+            {recentCheckIns.map(record => (
+              <li key={record.id} className="flex justify-between items-center bg-gray-700 p-3 rounded-md">
+                <div>
+                  <p className="text-white font-medium">{record.clientName}</p>
+                  <p className="text-xs text-gray-400">
+                    {new Date(record.checkInTime).toLocaleString('es-ES')} - {record.type === 'qr' ? 'QR' : 'Manual'}
+                    {record.className && <span className="ml-2 text-orange-300">({record.className})</span>}
+                  </p>
+                </div>
+                <span className={`px-2 py-1 text-xs rounded-full ${
+                    clients.find(c=>c.id === record.clientId)?.membershipStatusDetails?.status === "Active" ? "bg-green-500 text-white" : "bg-red-500 text-white"
+                }`}>
+                  {clients.find(c=>c.id === record.clientId)?.membershipStatusDetails?.status || 'N/A'}
+                </span>
+              </li>
             ))}
-             <details className="mt-2 text-xs text-gray-400">
-                <summary>Datos crudos del QR</summary>
-                <pre className="whitespace-pre-wrap break-all bg-gray-800 p-2 rounded mt-1">{scanResult.raw}</pre>
-            </details>
-          </div>
+          </ul>
+        ) : (
+          <p className="text-gray-400">No hay registros de ingreso recientes.</p>
         )}
       </div>
+
+      {/* Accesos Rápidos */}
+      <div className="bg-gray-800 p-6 rounded-xl shadow-lg">
+        <h2 className="text-xl font-semibold text-orange-400 mb-4">Accesos Rápidos</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          <Link to="/admin/clients" className="bg-orange-500 hover:bg-orange-600 text-white text-center font-medium py-3 px-4 rounded-lg transition-colors">Gestionar Clientes</Link>
+          <Link to="/admin/classes" className="bg-orange-500 hover:bg-orange-600 text-white text-center font-medium py-3 px-4 rounded-lg transition-colors">Gestionar Clases</Link>
+          <Link to="/admin/memberships" className="bg-orange-500 hover:bg-orange-600 text-white text-center font-medium py-3 px-4 rounded-lg transition-colors">Membresías</Link>
+          <Link to="/check-in" className="bg-teal-500 hover:bg-teal-600 text-white text-center font-medium py-3 px-4 rounded-lg transition-colors">Página de Check-In</Link>
+        </div>
+      </div>
+
     </div>
   );
 };

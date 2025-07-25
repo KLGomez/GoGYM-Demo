@@ -6,15 +6,17 @@ import {
   UserGroupIcon,
   CreditCardIcon,
   ChatBubbleLeftRightIcon,
+  QrCodeIcon, // Importar QrCodeIcon
 } from '@heroicons/react/24/outline';
 
 const SidebarUser = () => {
   const navLinks = [
-    { to: '/', text: 'Dashboard', icon: HomeIcon },
-    { to: '/clases', text: 'Clases', icon: RectangleStackIcon },
-    { to: '/mis-clases', text: 'Mis Clases', icon: UserGroupIcon },
-    { to: '/mi-membresia', text: 'Membresía', icon: CreditCardIcon },
-    { to: '/feedback', text: 'Feedback', icon: ChatBubbleLeftRightIcon },
+    { to: '.', text: 'Dashboard', icon: HomeIcon },
+    { to: 'clases', text: 'Clases', icon: RectangleStackIcon },
+    { to: 'mis-clases', text: 'Mis Clases', icon: UserGroupIcon },
+    { to: 'mi-membresia', text: 'Membresía', icon: CreditCardIcon },
+    { to: 'mi-qr', text: 'Mi QR', icon: QrCodeIcon }, // Añadir enlace a Mi QR
+    { to: 'feedback', text: 'Feedback', icon: ChatBubbleLeftRightIcon },
   ];
 
   return (

@@ -1,20 +1,56 @@
-import React from 'react';
-import { Outlet } from 'react-router-dom'; // Outlet is already used, ensure Router/Routes are removed from AppUser
-import HeaderUser from './components/User/HeaderUser';
+import React, { useContext, useEffect } from 'react'; // Importar useContext y useEffect
+import { Outlet, useNavigate } from 'react-router-dom'; // Importar useNavigate
+import Header from './components/Header';
 import SidebarUser from './components/User/SidebarUser';
-import Footer from './components/Footer'; // Assuming Footer.jsx is the shared footer
+import Footer from './components/Footer';
+import { SharedDataContext } from './contexts/SharedDataContext'; // Importar el contexto
+import { showSuccess, showError, confirmAction } from './utils/alerts'; // Para mostrar notificaciones del contexto
 
-// Page imports are no longer needed here as they are handled by userRoutes.jsx
-
-// UserLayout remains the same, as it correctly uses <Outlet />
 const UserLayout = () => {
+  const { currentUser, notifications, markNotificationAsRead, isLoading } = useContext(SharedDataContext);
+  const navigate = useNavigate();
+
+  // Efecto para redirigir si no hay usuario o no está cargando
+  useEffect(() => {
+    if (!isLoading && !currentUser) {
+      showError("Acceso Denegado", "Debes iniciar sesión para acceder a esta área.");
+      navigate('/login');
+    }
+  }, [currentUser, isLoading, navigate]);
+
+  // Efecto para mostrar notificaciones del contexto
+  useEffect(() => {
+    if (currentUser && notifications && notifications.length > 0) {
+      const userNotifications = notifications.filter(
+        n => !n.read && (n.forUserId === currentUser.id || (n.isGlobal && n.forUserId !== 'admin'))
+      );
+      userNotifications.forEach(n => {
+        if (n.type === 'success') showSuccess("Notificación", n.message);
+        else if (n.type === 'error') showError("Notificación", n.message);
+        else if (n.type === 'warning') confirmAction("Atención", n.message, "Entendido", () => {}); // confirmAction para warnings
+        else showSuccess("Info", n.message); // Default
+
+        markNotificationAsRead(n.id);
+      });
+    }
+  }, [notifications, currentUser, markNotificationAsRead]);
+
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center bg-black text-white text-xl">Cargando...</div>;
+  }
+
+  if (!currentUser && !isLoading) {
+    // Ya se redirige en el useEffect, pero esto es un fallback por si acaso.
+    return null;
+  }
+
   return (
     <div className="flex flex-col min-h-screen">
-      <HeaderUser />
+      <Header /> {/* HeaderUser podría necesitar acceso al contexto para el nombre del usuario o logout */}
       <div className="flex flex-1">
-        <SidebarUser />
+        <SidebarUser /> {/* SidebarUser también podría necesitar el contexto */}
         <main className="flex-1 bg-black text-white p-6 pb-28 md:pb-6 overflow-y-auto">
-          <Outlet /> {/* Content of the current route will be rendered here */}
+          <Outlet /> {/* El contenido de la ruta hija se renderiza aquí */}
         </main>
       </div>
       <Footer />
@@ -22,31 +58,9 @@ const UserLayout = () => {
   );
 };
 
-// AppUser itself no longer needs to define routes or use Router.
-// It will be used as the element for the '/user' path in the main router,
-// and UserLayout will be rendered, which in turn renders child routes via <Outlet />.
-// For clarity, we can rename AppUser to UserFeatureWrapper or similar,
-// or simply export UserLayout directly if AppUser doesn't do anything else.
-// For now, let's assume AppUser might have other logic in the future (e.g., auth checks for /user path).
-// So, AppUser will just render UserLayout.
-// The router configuration in src/routes/index.jsx already specifies AppUser as the element for '/user',
-// which means UserLayout (returned by AppUser) will be rendered, and userRoutes will populate its <Outlet />.
-
+// AppUser ahora simplemente renderiza UserLayout.
+// UserLayout contiene la lógica de protección de ruta y manejo de notificaciones.
 const AppUser = () => {
-  // User-specific logic (like auth checks for /user path) could go here in a real app.
-  // For this refactor, AppUser's role is simplified.
-  // It's the component associated with the '/user' path segment.
-  // The actual layout and child routes are handled by UserLayout and userRoutes.jsx.
-
-  // The crucial part is that `src/routes/index.jsx` has:
-  // {
-  //   path: '/user',
-  //   element: <AppUser />, // This AppUser component
-  //   children: userRoutes,
-  // }
-  // And AppUser should render the component that contains the <Outlet /> for userRoutes.
-  // In this case, it's UserLayout.
-
   return <UserLayout />;
 };
 

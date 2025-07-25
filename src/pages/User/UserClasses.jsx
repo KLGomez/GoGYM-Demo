@@ -1,42 +1,65 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react'; // Importar useContext
 import { CalendarIcon, UserGroupIcon, ClockIcon, MagnifyingGlassIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline';
+import { showError, confirmAction } from '../../utils/alerts';
+import { SharedDataContext } from '../../contexts/SharedDataContext'; // Importar el contexto
 
-// Datos simulados de clases
-const simulatedClasses = [
-  { id: 1, name: 'Yoga Matutino', instructor: 'Ana Pérez', day: 'Lunes', time: '08:00 AM', duration: '60 min', capacity: 20, enrolled: 15, description: 'Empieza el día con energía y flexibilidad.' },
-  { id: 2, name: 'HIIT Intenso', instructor: 'Carlos Ruiz', day: 'Martes', time: '06:00 PM', duration: '45 min', capacity: 15, enrolled: 15, description: 'Entrenamiento de alta intensidad para quemar calorías.' },
-  { id: 3, name: 'Pilates Restaurativo', instructor: 'Laura Gómez', day: 'Miércoles', time: '09:00 AM', duration: '75 min', capacity: 18, enrolled: 10, description: 'Fortalece tu core y mejora tu postura.' },
-  { id: 4, name: 'Zumba Fiesta', instructor: 'Sofía Luna', day: 'Jueves', time: '07:00 PM', duration: '60 min', capacity: 25, enrolled: 22, description: 'Baila, diviértete y ponte en forma.' },
-  { id: 5, name: 'Boxeo Fitness', instructor: 'Roberto Díaz', day: 'Viernes', time: '05:30 PM', duration: '60 min', capacity: 12, enrolled: 8, description: 'Libera estrés y tonifica tus músculos.' },
-  { id: 6, name: 'Yoga Vespertino', instructor: 'Ana Pérez', day: 'Lunes', time: '06:00 PM', duration: '60 min', capacity: 20, enrolled: 18, description: 'Relájate y estira después de un largo día.' },
-  { id: 7, name: 'Funcional Avanzado', instructor: 'Carlos Ruiz', day: 'Miércoles', time: '07:00 AM', duration: '50 min', capacity: 15, enrolled: 14, description: 'Desafía tus límites con este entrenamiento funcional.' },
-];
+// Los datos simulados ya no son necesarios aquí, vendrán del contexto.
+// const simulatedClasses = [ ... ];
 
 const UserClasses = () => {
-  const [classes, setClasses] = useState(simulatedClasses);
+  const { gymClasses, currentUser, enrollToClass, isLoading } = useContext(SharedDataContext); // Usar el contexto
+
+  // El estado local 'classes' ahora se inicializa desde gymClasses del contexto.
+  const [classesToDisplay, setClassesToDisplay] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDay, setFilterDay] = useState('');
   const [filterInstructor, setFilterInstructor] = useState('');
 
-  // Simular la obtención de clases desde una API en el futuro
-  // useEffect(() => {
-  //   // fetch('/api/classes').then(res => res.json()).then(data => setClasses(data));
-  // }, []);
+  useEffect(() => {
+    if (!isLoading && gymClasses) {
+      setClassesToDisplay(gymClasses); // Cargar clases del contexto cuando estén listas
+    }
+  }, [gymClasses, isLoading]);
+
 
   const handleEnroll = (classId) => {
-    // Lógica para inscribirse a una clase
-    // Por ahora, solo un console.log y una alerta
-    // En una app real: verificar membresía activa, cupo, etc.
-    const selectedClass = classes.find(c => c.id === classId);
-    console.log(`Inscribiendo a la clase: ${selectedClass.name}`);
-    alert(`Te has inscrito (simulado) a: ${selectedClass.name}.\nEn una aplicación real, esto verificaría tu membresía y el cupo.`);
-    // Aquí se podría actualizar el estado de 'enrolled' o recargar datos.
+    if (!currentUser) {
+      showError("Acción Requerida", "Debes iniciar sesión para inscribirte a una clase.");
+      // Podríamos redirigir al login: navigate('/login');
+      return;
+    }
+
+    const selectedClass = gymClasses.find(c => c.id === classId);
+    if (!selectedClass) {
+      showError("Error", "Clase no encontrada.");
+      return;
+    }
+
+    // La verificación de membresía activa y cupos ahora se hace DENTRO de enrollToClass en el contexto.
+    // enrollToClass(userId, classId) ya maneja estas validaciones y muestra SweetAlerts.
+    confirmAction(
+      `Confirmar Inscripción`,
+      `¿Deseas inscribirte a la clase "${selectedClass.name}" (${selectedClass.day} - ${selectedClass.time})?`,
+      "Sí, inscribirme",
+      () => {
+        const success = enrollToClass(currentUser.id, classId);
+        if (success) {
+          // La notificación de éxito ya la da enrollToClass.
+          // El estado de gymClasses en el contexto se actualizará, y este componente
+          // se re-renderizará debido al useEffect que depende de gymClasses.
+          // No es necesario actualizar localmente setClassesToDisplay aquí si gymClasses se actualiza correctamente.
+          console.log(`Intento de inscripción a: ${selectedClass.name} por usuario ${currentUser.id}. Resultado: ${success}`);
+        }
+        // Si enrollToClass devuelve false, ya habrá mostrado un SweetAlert de error.
+      }
+    );
   };
 
-  const uniqueDays = [...new Set(simulatedClasses.map(c => c.day))];
-  const uniqueInstructors = [...new Set(simulatedClasses.map(c => c.instructor))];
+  // Generar listas para filtros a partir de las clases mostradas (classesToDisplay)
+  const uniqueDays = [...new Set(classesToDisplay.map(c => c.day))].sort();
+  const uniqueInstructors = [...new Set(classesToDisplay.map(c => c.instructor))].sort();
 
-  const filteredClasses = classes.filter(c => {
+  const filteredClasses = classesToDisplay.filter(c => {
     return (
       c.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
       (filterDay === '' || c.day === filterDay) &&
