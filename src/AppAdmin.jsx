@@ -1,7 +1,7 @@
 import React, { useContext, useEffect } from 'react'; // Importar useContext y useEffect
 import { Outlet, useNavigate } from "react-router-dom"; // Importar useNavigate
 import Sidebar from "./components/SidebarAdmin";
-import HeaderAdmin from "./components/HeaderAdmin";
+import Header from "./components/Header";
 import FooterAdmin from "./components/Footer";
 import { SharedDataContext } from './contexts/SharedDataContext'; // Importar el contexto
 import { showSuccess, showError } from './utils/alerts'; // Para mostrar notificaciones del contexto
@@ -55,7 +55,7 @@ const AdminLayout = () => {
 
   return (
     <div className="flex flex-col min-h-screen overflow-hidden">
-      <HeaderAdmin /> {/* HeaderAdmin podría necesitar el contexto para logout o nombre */}
+      <Header /> {/* HeaderAdmin podría necesitar el contexto para logout o nombre */}
       <div className="flex flex-1 overflow-hidden">
         <Sidebar /> {/* Sidebar podría necesitar el contexto */}
         <main className="flex-1 bg-black text-white p-6 pb-28 md:pb-6 overflow-y-auto">
