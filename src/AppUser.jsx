@@ -1,6 +1,6 @@
 import React, { useContext, useEffect } from 'react'; // Importar useContext y useEffect
 import { Outlet, useNavigate } from 'react-router-dom'; // Importar useNavigate
-import HeaderUser from './components/User/HeaderUser';
+import Header from './components/Header';
 import SidebarUser from './components/User/SidebarUser';
 import Footer from './components/Footer';
 import { SharedDataContext } from './contexts/SharedDataContext'; // Importar el contexto
@@ -46,7 +46,7 @@ const UserLayout = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <HeaderUser /> {/* HeaderUser podría necesitar acceso al contexto para el nombre del usuario o logout */}
+      <Header /> {/* HeaderUser podría necesitar acceso al contexto para el nombre del usuario o logout */}
       <div className="flex flex-1">
         <SidebarUser /> {/* SidebarUser también podría necesitar el contexto */}
         <main className="flex-1 bg-black text-white p-6 pb-28 md:pb-6 overflow-y-auto">

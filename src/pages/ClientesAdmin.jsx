@@ -16,12 +16,14 @@ import { showError, confirmAction } from "../utils/alerts";
 // getClients y saveClients ya no se usan directamente, se accede vía contexto.
 // import { getClients, saveClients } from "../utils/storage";
 import { calculateMembershipDetails } from "../utils/membershipUtils";
+import CardMenuOption from "../components/CardMenuOption";
+
 
 // Esquema de validación con Yup
 const ClientSchema = Yup.object().shape({
   firstName: Yup.string().required('El nombre es obligatorio'),
   // Añadir 'role' al esquema si se va a gestionar desde aquí.
-    // role: Yup.string().oneOf(['user', 'admin']).required('El rol es obligatorio'), // Si se gestiona el rol aquí
+  // role: Yup.string().oneOf(['user', 'admin']).required('El rol es obligatorio'), // Si se gestiona el rol aquí
   lastName: Yup.string().required('El apellido es obligatorio'),
   dni: Yup.string().required('El DNI es obligatorio').matches(/^[0-9]+$/, "DNI debe contener solo números"),
   email: Yup.string().email('Email inválido').required('El email es obligatorio'),
@@ -29,9 +31,9 @@ const ClientSchema = Yup.object().shape({
   password: Yup.string()
     .min(6, 'La contraseña debe tener al menos 6 caracteres')
     .when('id', {
-        is: (id) => !id,
-        then: schema => schema.required('La contraseña es obligatoria'),
-        otherwise: schema => schema.optional()
+      is: (id) => !id,
+      then: schema => schema.required('La contraseña es obligatoria'),
+      otherwise: schema => schema.optional()
     }),
   plan: Yup.string().required('El plan es obligatorio'), // Este 'plan' es el planName
   // membershipDurationDays ya no se setea directamente desde aquí si el plan lo define
@@ -83,13 +85,13 @@ const ClientsAdmin = () => {
 
     // Preparar datos de membresía para anidar
     const membershipDetails = {
-        planName: clientValues.plan, // Guardamos el nombre del plan
-        membershipStartDate: editingClient?.membership?.membershipStartDate || new Date().toISOString(),
-        // Usar la duración del plan seleccionado, o la del formulario si el plan no la define (fallback)
-        membershipDurationDays: selectedPlan ? Number(selectedPlan.durationDays) : Number(clientValues.membershipDurationDays),
-        autoRenew: editingClient?.membership?.autoRenew || false,
-        // Otros detalles del plan como precio podrían copiarse aquí si se necesita denormalizar,
-        // pero es mejor referenciarlos desde membershipPlans por ID o nombre para mantener consistencia.
+      planName: clientValues.plan, // Guardamos el nombre del plan
+      membershipStartDate: editingClient?.membership?.membershipStartDate || new Date().toISOString(),
+      // Usar la duración del plan seleccionado, o la del formulario si el plan no la define (fallback)
+      membershipDurationDays: selectedPlan ? Number(selectedPlan.durationDays) : Number(clientValues.membershipDurationDays),
+      autoRenew: editingClient?.membership?.autoRenew || false,
+      // Otros detalles del plan como precio podrían copiarse aquí si se necesita denormalizar,
+      // pero es mejor referenciarlos desde membershipPlans por ID o nombre para mantener consistencia.
     };
 
     if (editingClient) {
@@ -98,8 +100,8 @@ const ClientsAdmin = () => {
         ...clientValues, // Aplicar campos del formulario (firstName, lastName, email, etc.)
         password: clientValues.password ? clientValues.password : editingClient.password, // Actualizar pass solo si se provee uno nuevo
         membership: { // Anidar/actualizar detalles de membresía
-            ...(editingClient.membership || {}), // Mantener otros datos de membresía si existen
-            ...membershipDetails
+          ...(editingClient.membership || {}), // Mantener otros datos de membresía si existen
+          ...membershipDetails
         },
         // El rol se actualizaría aquí si se gestiona en este formulario
         // role: clientValues.role || editingClient.role,
@@ -156,22 +158,26 @@ const ClientsAdmin = () => {
     {
       icon: <UserPlusIcon className="w-8 h-8 text-white" />,
       label: "Alta de cliente",
+      description: "Registrar un nuevo cliente con sus datos personales y plan.",
       action: () => {
-        setEditingClient(null); // Asegurar que no estemos en modo edición
+        setEditingClient(null);
         setView("add");
       }
     },
     {
       icon: <UsersIcon className="w-8 h-8 text-white" />,
       label: "Lista de clientes",
+      description: "Visualizar, editar o eliminar los clientes registrados.",
       action: () => setView("list"),
     },
     {
       icon: <Cog6ToothIcon className="w-8 h-8 text-white" />,
       label: "Configuración",
+      description: "Opciones avanzadas de gestión (no disponible aún).",
       action: () => showError("Función no implementada", "La configuración aún no está disponible."),
     },
   ];
+
 
   // Renderizado del Formulario (Alta o Edición) con Formik
   if (view === "add") {
@@ -199,83 +205,83 @@ const ClientsAdmin = () => {
                 {/* Campos del formulario: firstName, lastName, dni, email, birthDate, password */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-200">Nombre</label>
-                  <Field type="text" name="firstName" id="firstName"
-                         className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500"/>
-                  <ErrorMessage name="firstName" component="div" className="text-red-500 text-xs mt-1" />
+                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-200">Nombre</label>
+                    <Field type="text" name="firstName" id="firstName"
+                      className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
+                    <ErrorMessage name="firstName" component="div" className="text-red-500 text-xs mt-1" />
+                  </div>
+                  <div>
+                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-200">Apellido</label>
+                    <Field type="text" name="lastName" id="lastName"
+                      className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
+                    <ErrorMessage name="lastName" component="div" className="text-red-500 text-xs mt-1" />
+                  </div>
                 </div>
                 <div>
-                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-200">Apellido</label>
-                  <Field type="text" name="lastName" id="lastName"
-                         className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500"/>
-                  <ErrorMessage name="lastName" component="div" className="text-red-500 text-xs mt-1" />
+                  <label htmlFor="dni" className="block text-sm font-medium text-gray-200">DNI</label>
+                  <Field type="text" name="dni" id="dni"
+                    className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
+                  <ErrorMessage name="dni" component="div" className="text-red-500 text-xs mt-1" />
                 </div>
-              </div>
-              <div>
-                <label htmlFor="dni" className="block text-sm font-medium text-gray-200">DNI</label>
-                <Field type="text" name="dni" id="dni"
-                       className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500"/>
-                <ErrorMessage name="dni" component="div" className="text-red-500 text-xs mt-1" />
-              </div>
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-200">Email</label>
-                <Field type="email" name="email" id="email"
-                       className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500"/>
-                <ErrorMessage name="email" component="div" className="text-red-500 text-xs mt-1" />
-              </div>
-              <div>
-                <label htmlFor="birthDate" className="block text-sm font-medium text-gray-200">Fecha de Nacimiento</label>
-                <Field type="date" name="birthDate" id="birthDate"
-                       className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500"/>
-                <ErrorMessage name="birthDate" component="div" className="text-red-500 text-xs mt-1" />
-              </div>
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-200">
-                  Contraseña {editingClient && "(Dejar en blanco para no cambiar)"}
-                </label>
-                <Field type="password" name="password" id="password"
-                       className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500"/>
-                <ErrorMessage name="password" component="div" className="text-red-500 text-xs mt-1" />
-              </div>
-              <div>
-                <label htmlFor="plan" className="block text-sm font-medium text-gray-200">Plan Asignado</label>
-                <Field
-                  as="select"
-                  name="plan"
-                  id="plan"
-                  className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500"
-                >
-                  <option value="">Seleccione un Plan</option>
-                  <option value="Básico">Básico ($29.99) - 30 días</option>
-                  <option value="Premium">Premium ($49.99) - 30 días</option>
-                </Field>
-                <ErrorMessage name="plan" component="div" className="text-red-500 text-xs mt-1" />
-              </div>
-              <div>
-                <label htmlFor="membershipDurationDays" className="block text-sm font-medium text-gray-200">Duración Membresía (días)</label>
-                <Field
-                  type="number" name="membershipDurationDays" id="membershipDurationDays" min="1" readOnly={Boolean(values.plan)} // Hacerlo readOnly si hay un plan seleccionado
-                  className={`mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500 ${values.plan ? 'bg-gray-600 text-gray-400 cursor-not-allowed' : ''}`}
-                />
-                <ErrorMessage name="membershipDurationDays" component="div" className="text-red-500 text-xs mt-1" />
-                 <p className="text-xs text-gray-400 mt-1">
-                  {values.plan ? "La duración se establece automáticamente según el plan." : "Ingrese duración si no selecciona un plan predefinido."}
-                 </p>
-              </div>
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-200">Email</label>
+                  <Field type="email" name="email" id="email"
+                    className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
+                  <ErrorMessage name="email" component="div" className="text-red-500 text-xs mt-1" />
+                </div>
+                <div>
+                  <label htmlFor="birthDate" className="block text-sm font-medium text-gray-200">Fecha de Nacimiento</label>
+                  <Field type="date" name="birthDate" id="birthDate"
+                    className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
+                  <ErrorMessage name="birthDate" component="div" className="text-red-500 text-xs mt-1" />
+                </div>
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-200">
+                    Contraseña {editingClient && "(Dejar en blanco para no cambiar)"}
+                  </label>
+                  <Field type="password" name="password" id="password"
+                    className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
+                  <ErrorMessage name="password" component="div" className="text-red-500 text-xs mt-1" />
+                </div>
+                <div>
+                  <label htmlFor="plan" className="block text-sm font-medium text-gray-200">Plan Asignado</label>
+                  <Field
+                    as="select"
+                    name="plan"
+                    id="plan"
+                    className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500"
+                  >
+                    <option value="">Seleccione un Plan</option>
+                    <option value="Básico">Básico ($29.99) - 30 días</option>
+                    <option value="Premium">Premium ($49.99) - 30 días</option>
+                  </Field>
+                  <ErrorMessage name="plan" component="div" className="text-red-500 text-xs mt-1" />
+                </div>
+                <div>
+                  <label htmlFor="membershipDurationDays" className="block text-sm font-medium text-gray-200">Duración Membresía (días)</label>
+                  <Field
+                    type="number" name="membershipDurationDays" id="membershipDurationDays" min="1" readOnly={Boolean(values.plan)} // Hacerlo readOnly si hay un plan seleccionado
+                    className={`mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500 ${values.plan ? 'bg-gray-600 text-gray-400 cursor-not-allowed' : ''}`}
+                  />
+                  <ErrorMessage name="membershipDurationDays" component="div" className="text-red-500 text-xs mt-1" />
+                  <p className="text-xs text-gray-400 mt-1">
+                    {values.plan ? "La duración se establece automáticamente según el plan." : "Ingrese duración si no selecciona un plan predefinido."}
+                  </p>
+                </div>
 
-              <button type="submit"
-                      disabled={isSubmitting || !dirty || !isValid}
-                      className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-md shadow disabled:opacity-50 disabled:cursor-not-allowed">
-                {editingClient ? "Actualizar Cliente" : "Guardar Cliente"}
-              </button>
-              {editingClient && (
-                <button type="button"
-                        onClick={() => { setEditingClient(null); setView("list"); }}
-                        className="mt-2 w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-md shadow">
-                  Cancelar Edición
+                <button type="submit"
+                  disabled={isSubmitting || !dirty || !isValid}
+                  className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-md shadow disabled:opacity-50 disabled:cursor-not-allowed">
+                  {editingClient ? "Actualizar Cliente" : "Guardar Cliente"}
                 </button>
-              )}
-            </Form>
+                {editingClient && (
+                  <button type="button"
+                    onClick={() => { setEditingClient(null); setView("list"); }}
+                    className="mt-2 w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-md shadow">
+                    Cancelar Edición
+                  </button>
+                )}
+              </Form>
             );
           }}
         </Formik>
@@ -317,7 +323,7 @@ const ClientsAdmin = () => {
                       </p>
                     </div>
                     <div className="flex space-x-2 flex-shrink-0">
-                       <button
+                      <button
                         onClick={() => handleEditClient(client)}
                         className="text-blue-400 hover:text-blue-600 p-1"
                         title="Editar Cliente"
@@ -345,11 +351,11 @@ const ClientsAdmin = () => {
             })}
           </div>
         )}
-         <button
-           onClick={() => {
-             setEditingClient(null); // Asegurar que no estemos en modo edición
-             setView("add");
-           }}
+        <button
+          onClick={() => {
+            setEditingClient(null); // Asegurar que no estemos en modo edición
+            setView("add");
+          }}
           className="mt-6 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-md shadow flex items-center gap-2"
         >
           <UserPlusIcon className="w-5 h-5" />
@@ -359,7 +365,7 @@ const ClientsAdmin = () => {
     );
   }
 
-   // Renderizado del Modal QR
+  // Renderizado del Modal QR
   if (view === "qr" && selectedClientForQR) {
     const clientNameForDisplay = `${selectedClientForQR.firstName || ''} ${selectedClientForQR.lastName || ''}`.trim() || selectedClientForQR.name;
     // Para el QR, necesitamos los datos de membresía que están DENTRO del objeto cliente
@@ -370,22 +376,22 @@ const ClientsAdmin = () => {
     );
 
     const qrDataToEncode = {
-        clientId: selectedClientForQR.id,
-        name: clientNameForDisplay,
-        email: selectedClientForQR.email,
-        plan: membership.planName, // Usar el planName desde el objeto membership del cliente
-        membershipEndDate: membershipEndDate,
-        status: status,
-        alphanumericCode: selectedClientForQR.alphanumericCode
+      clientId: selectedClientForQR.id,
+      name: clientNameForDisplay,
+      email: selectedClientForQR.email,
+      plan: membership.planName, // Usar el planName desde el objeto membership del cliente
+      membershipEndDate: membershipEndDate,
+      status: status,
+      alphanumericCode: selectedClientForQR.alphanumericCode
     };
     const qrDataString = JSON.stringify(qrDataToEncode);
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-           <div className="bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full">
+        <div className="bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-bold text-orange-400">Código QR de Acceso</h3>
-            <button onClick={() => {setSelectedClientForQR(null); setView('list');}} className="text-gray-400 hover:text-white">
+            <button onClick={() => { setSelectedClientForQR(null); setView('list'); }} className="text-gray-400 hover:text-white">
               <XMarkIcon className="w-6 h-6" />
             </button>
           </div>
@@ -413,16 +419,16 @@ const ClientsAdmin = () => {
       <h2 className="text-3xl font-bold text-orange-400 mb-6">Gestión de Clientes</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {menuOptions.map((opt, index) => (
-          <div
+          <CardMenuOption
             key={index}
+            icon={opt.icon}
+            label={opt.label}
+            description={opt.description || "Accedé a esta funcionalidad para más detalles."}
             onClick={opt.action}
-            className="bg-orange-500 hover:bg-orange-600 text-white p-4 rounded-lg shadow flex flex-col items-center justify-center gap-2 cursor-pointer transition duration-200 h-32"
-          >
-            {opt.icon}
-            <span className="font-semibold text-center">{opt.label}</span>
-          </div>
+          />
         ))}
       </div>
+
     </div>
   );
 };
