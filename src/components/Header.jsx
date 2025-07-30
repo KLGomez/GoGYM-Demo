@@ -1,19 +1,35 @@
 import React, { useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { PowerIcon, UserCircleIcon } from '@heroicons/react/24/outline';
-import { SharedDataContext } from '../contexts/SharedDataContext'; // Ajustá la ruta si es necesario
+import Swal from 'sweetalert2';
+import { SharedDataContext } from '../contexts/SharedDataContext';
+import { confirmAction, showSuccess } from '../utils/alerts';
 
 const Header = () => {
   const navigate = useNavigate();
   const { currentUser, logoutUser } = useContext(SharedDataContext);
 
   const isAdmin = currentUser?.role === 'admin';
-  const displayName = currentUser ? `${currentUser.firstName} ${currentUser.lastName}`.trim() : (isAdmin ? 'Admin' : 'Usuario');
+  const displayName = currentUser
+    ? `${currentUser.firstName} ${currentUser.lastName}`.trim()
+    : isAdmin
+      ? 'Admin'
+      : 'Usuario';
 
   const handleLogout = () => {
-    logoutUser();
-    navigate('/login');
-  };
+  confirmAction(
+    '¿Estás segura/o de cerrar sesión?',
+    'Vas a ser redirigida/o al login.',
+    'Sí, cerrar sesión',
+    async () => {
+      logoutUser();
+      await showSuccess('Sesión cerrada', 'Nos vemos pronto 💪🏽');
+      navigate('/login');
+    }
+  );
+};
+
+
 
   const dashboardPath = isAdmin ? '/admin' : '/user';
 
@@ -28,7 +44,9 @@ const Header = () => {
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
           <UserCircleIcon className="h-7 w-7 text-orange-400" />
-          <span className="hidden sm:inline text-lg font-medium text-orange-300">{displayName}</span>
+          <span className="hidden sm:inline text-lg font-medium text-orange-300">
+            {displayName}
+          </span>
         </div>
         <button
           onClick={handleLogout}
