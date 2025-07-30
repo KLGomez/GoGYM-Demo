@@ -10,10 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@blackbox-vision/react-qr-reader": "^5.0.0",
     "@heroicons/react": "^2.2.0",
     "@tailwindcss/vite": "^4.1.8",
     "formik": "^2.4.6",
     "html2canvas": "^1.4.1",
+
     "html5-qrcode": "^2.3.8",
     "jspdf": "^3.0.1",
     "qrcode.react": "^4.2.0",
@@ -21,6 +23,7 @@
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.2",
     "sweetalert2": "^11.22.0",
+    "tailwindcss": "^4.1.8",
     "yup": "^1.6.1"
   },
   "devDependencies": {
