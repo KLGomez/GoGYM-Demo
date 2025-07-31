@@ -18,6 +18,7 @@ const AdminLayout = () => {
         showError("Acceso Denegado", "Debes iniciar sesión para acceder al panel de administración.");
         navigate('/login');
       } else if (currentUser.role !== 'admin') {
+        //! Acá esta el error -> verificar 
         // Asumimos que el objeto currentUser tiene una propiedad 'role'
         // Si no la tiene, se debe adaptar la lógica de loginUser en el contexto para asignarla.
         // O inferirla aquí si es necesario, ej: currentUser.email === 'admin@gogym.com'

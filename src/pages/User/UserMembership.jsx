@@ -5,6 +5,7 @@ import { SharedDataContext } from '../../contexts/SharedDataContext'; // Importa
 import { useNavigate } from 'react-router-dom'; // Para el botón de login
 
 // Definición de beneficios por plan (esto podría venir del contexto o API en el futuro)
+//por ahora esta en el panel de admin como un crud
 const PLAN_BENEFITS = {
   'Plan Básico Mensual': [
     'Acceso a clases grupales (excepto especiales)',
