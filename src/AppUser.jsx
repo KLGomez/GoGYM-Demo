@@ -7,16 +7,17 @@ import { SharedDataContext } from './contexts/SharedDataContext'; // Importar el
 import { showSuccess, showError, confirmAction } from './utils/alerts'; // Para mostrar notificaciones del contexto
 
 const UserLayout = () => {
-  const { currentUser, notifications, markNotificationAsRead, isLoading } = useContext(SharedDataContext);
+  const { currentUser, notifications, markNotificationAsRead, isLoading, isLoggingOut } = useContext(SharedDataContext);
   const navigate = useNavigate();
 
   // Efecto para redirigir si no hay usuario o no está cargando
   useEffect(() => {
-    if (!isLoading && !currentUser) {
+    if (!isLoading && !currentUser && !isLoggingOut) {
       showError("Acceso Denegado", "Debes iniciar sesión para acceder a esta área.");
       navigate('/login');
     }
-  }, [currentUser, isLoading, navigate]);
+  }, [currentUser, isLoading, isLoggingOut, navigate]);
+
 
   // Efecto para mostrar notificaciones del contexto
   useEffect(() => {
@@ -27,7 +28,7 @@ const UserLayout = () => {
       userNotifications.forEach(n => {
         if (n.type === 'success') showSuccess("Notificación", n.message);
         else if (n.type === 'error') showError("Notificación", n.message);
-        else if (n.type === 'warning') confirmAction("Atención", n.message, "Entendido", () => {}); // confirmAction para warnings
+        else if (n.type === 'warning') confirmAction("Atención", n.message, "Entendido", () => { }); // confirmAction para warnings
         else showSuccess("Info", n.message); // Default
 
         markNotificationAsRead(n.id);
