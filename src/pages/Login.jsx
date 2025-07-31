@@ -32,7 +32,7 @@ export default function Login() {
             } else if (role === 'user') {
                 navigate('/user');
             } else {
-                // Esto no debería suceder si loginUser funciona bien y devuelve un usuario con rol
+                // esto no deberia pasar si loginUser funciona bien y devuelve un usuario con rol
                 setLoginError('Rol de usuario no reconocido tras el login.');
             }
         } else {
