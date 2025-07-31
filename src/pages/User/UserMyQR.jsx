@@ -17,7 +17,6 @@ const UserMyQRPage = () => {
   }
 
   if (!currentUser) {
-    // Esto no debería suceder si AppUser protege bien la ruta, pero es un fallback.
     showError("Acceso Denegado", "Debes iniciar sesión para ver tu código QR.");
     navigate('/login');
     return null;
@@ -25,35 +24,36 @@ const UserMyQRPage = () => {
 
   const clientNameForDisplay = `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim();
 
-  // Datos a codificar en el QR. Deben coincidir con lo que CheckInPage espera.
   const qrDataToEncode = {
     clientId: currentUser.id,
     name: clientNameForDisplay,
     email: currentUser.email,
     plan: currentUser.membership?.planName,
-    alphanumericCode: currentUser.alphanumericCode, // Incluir el código alfanumérico
-    // No incluimos membershipEndDate o status directamente en el QR para que CheckInPage siempre valide con datos frescos del contexto.
+    alphanumericCode: currentUser.alphanumericCode,
   };
+
   const qrDataString = JSON.stringify(qrDataToEncode);
 
   const handleDownloadPDF = () => {
     if (qrCardRef.current) {
       html2canvas(qrCardRef.current, {
-        scale: 2, // Aumentar escala para mejor resolución en PDF
-        backgroundColor: '#1f2937' // Color de fondo del div, para que no sea transparente
-      }).then(canvas => {
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF({
-          orientation: 'portrait',
-          unit: 'px',
-          format: [canvas.width, canvas.height] // Ajustar tamaño del PDF al del canvas
+        scale: 2,
+        backgroundColor: '#1f2937'
+      })
+        .then(canvas => {
+          const imgData = canvas.toDataURL('image/png');
+          const pdf = new jsPDF({
+            orientation: 'portrait',
+            unit: 'px',
+            format: [canvas.width, canvas.height]
+          });
+          pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+          pdf.save(`GoGym_QR_${currentUser.alphanumericCode || 'Usuario'}.pdf`);
+        })
+        .catch(err => {
+          console.error("Error generando PDF:", err);
+          showError("Error de Descarga", "No se pudo generar el PDF del código QR.");
         });
-        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-        pdf.save(`GoGym_QR_${currentUser.alphanumericCode || 'Usuario'}.pdf`);
-      }).catch(err => {
-        console.error("Error generando PDF:", err);
-        showError("Error de Descarga", "No se pudo generar el PDF del código QR.");
-      });
     }
   };
 
@@ -69,43 +69,72 @@ const UserMyQRPage = () => {
 
       <h1 className="text-3xl font-bold text-center text-orange-400 mb-8">Mi Código QR de Acceso</h1>
 
+      {/* ✅ Zona segura para html2canvas */}
       <div
         ref={qrCardRef}
-        className="bg-gray-800 p-6 md:p-8 rounded-xl shadow-2xl max-w-sm mx-auto flex flex-col items-center space-y-5 border border-gray-700"
+        style={{
+          backgroundColor: '#1f2937', // gray-800
+          color: '#f5f5f5',
+          border: '1px solid #374151', // gray-700
+          padding: '2rem',
+          borderRadius: '1rem',
+          maxWidth: '24rem',
+          margin: '0 auto',
+          boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '1.25rem',
+        }}
       >
-        <div className="p-3 bg-white rounded-lg shadow-md">
+        <div style={{ padding: '0.75rem', backgroundColor: '#ffffff', borderRadius: '0.5rem' }}>
           <QRCodeCanvas
             value={qrDataString}
-            size={200} // Tamaño del QR
+            size={200}
             bgColor="#ffffff"
             fgColor="#000000"
-            level="H" // Nivel de corrección de errores (L, M, Q, H)
-            imageSettings={{ // Opcional: para añadir un logo en el centro si se desea
-              // src: "/path-to-your-logo-for-qr.png",
-              // height: 40,
-              // width: 40,
-              // excavate: true,
-            }}
+            level="H"
           />
         </div>
 
-        <div className="text-center">
-          <p className="text-2xl font-semibold text-white">{clientNameForDisplay}</p>
-          <p className="text-gray-400">{currentUser.email}</p>
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ fontSize: '1.5rem', fontWeight: '600', color: '#ffffff' }}>
+            {clientNameForDisplay}
+          </p>
+          <p style={{ color: '#9ca3af' }}>{currentUser.email}</p>
           {currentUser.alphanumericCode && (
-            <p className="mt-3 text-lg">
-              <span className="text-gray-300 font-medium">Tu Código: </span>
-              <span className="text-orange-400 font-bold tracking-wider bg-gray-700 px-2 py-1 rounded">
+            <p style={{ marginTop: '0.75rem', fontSize: '1.125rem' }}>
+              <span style={{ color: '#d1d5db', fontWeight: '500' }}>Tu Código: </span>
+              <span
+                style={{
+                  color: '#fb923c',
+                  fontWeight: '700',
+                  letterSpacing: '0.05em',
+                  backgroundColor: '#374151',
+                  padding: '0.25rem 0.5rem',
+                  borderRadius: '0.375rem',
+                }}
+              >
                 {currentUser.alphanumericCode}
               </span>
             </p>
           )}
           {currentUser.membership?.planName && (
-            <p className="text-gray-300 mt-1">Plan: {currentUser.membership.planName}</p>
+            <p style={{ color: '#d1d5db', marginTop: '0.25rem' }}>
+              Plan: {currentUser.membership.planName}
+            </p>
           )}
         </div>
 
-        <p className="text-xs text-gray-500 text-center mt-4 px-4">
+        <p
+          style={{
+            fontSize: '0.75rem',
+            color: '#6b7280',
+            textAlign: 'center',
+            marginTop: '1rem',
+            padding: '0 1rem',
+          }}
+        >
           Presenta este código QR o tu código alfanumérico en la recepción para registrar tu ingreso.
         </p>
       </div>
