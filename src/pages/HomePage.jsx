@@ -40,6 +40,17 @@ const HomePage = () => {
         <StatCard title="Clases Totales" value={gymClasses?.length || 0} icon={RectangleStackIcon} color="border-yellow-500" linkTo="/admin/classes" />
       </div>
 
+      {/* Accesos Rápidos */}
+      <div className="bg-gray-800 p-6 rounded-xl shadow-lg mb-10">
+        <h2 className="text-xl font-semibold text-orange-400 mb-4">Accesos Rápidos</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          <Link to="/admin/clients" className="bg-orange-500 hover:bg-orange-600 text-white text-center font-medium py-3 px-4 rounded-lg transition-colors">Gestionar Clientes</Link>
+          <Link to="/admin/classes" className="bg-orange-500 hover:bg-orange-600 text-white text-center font-medium py-3 px-4 rounded-lg transition-colors">Gestionar Clases</Link>
+          <Link to="/admin/memberships" className="bg-orange-500 hover:bg-orange-600 text-white text-center font-medium py-3 px-4 rounded-lg transition-colors">Membresías</Link>
+          <Link to="/admin/check-in" className="bg-teal-500 hover:bg-teal-600 text-white text-center font-medium py-3 px-4 rounded-lg transition-colors">Página de Check-In</Link>
+        </div>
+      </div>
+
       {/* Sección de Últimos Check-ins (si aplica para el dashboard admin) */}
       <div className="bg-gray-800 p-6 rounded-xl shadow-lg mb-10">
         <h2 className="text-xl font-semibold text-orange-400 mb-4">Últimos Registros de Ingreso</h2>
@@ -67,16 +78,7 @@ const HomePage = () => {
         )}
       </div>
 
-      {/* Accesos Rápidos */}
-      <div className="bg-gray-800 p-6 rounded-xl shadow-lg">
-        <h2 className="text-xl font-semibold text-orange-400 mb-4">Accesos Rápidos</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          <Link to="/admin/clients" className="bg-orange-500 hover:bg-orange-600 text-white text-center font-medium py-3 px-4 rounded-lg transition-colors">Gestionar Clientes</Link>
-          <Link to="/admin/classes" className="bg-orange-500 hover:bg-orange-600 text-white text-center font-medium py-3 px-4 rounded-lg transition-colors">Gestionar Clases</Link>
-          <Link to="/admin/memberships" className="bg-orange-500 hover:bg-orange-600 text-white text-center font-medium py-3 px-4 rounded-lg transition-colors">Membresías</Link>
-          <Link to="/check-in" className="bg-teal-500 hover:bg-teal-600 text-white text-center font-medium py-3 px-4 rounded-lg transition-colors">Página de Check-In</Link>
-        </div>
-      </div>
+
 
     </div>
   );
