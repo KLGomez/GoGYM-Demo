@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
-import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { SharedDataContext } from '../contexts/SharedDataContext';
 import { showError, showSuccess } from '../utils/alerts';
 import { calculateMembershipDetails } from '../utils/membershipUtils';
 import { QrCodeIcon, UserIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { startQRScanner } from '../utils/readQr.js';
+
 
 
 const CheckInPage = () => {
@@ -87,39 +88,32 @@ const CheckInPage = () => {
   }, [clients, processing, addAttendanceRecord]);
 
   // Configuración del scanner
+  const stopScannerRef = useRef(null); // para guardar la función de cleanup del scanner
+
   useEffect(() => {
     if (scannerActive && scannerRef.current) {
-      const html5QrcodeScanner = new Html5QrcodeScanner(
-        "qr-reader",
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-          supportedFormats: [Html5QrcodeSupportedFormats.QR_CODE]
+      startQRScanner(
+        scannerRef.current,
+        (result) => {
+          setScannerActive(false);
+          processCheckIn(result, 'qr');
         },
-        false // verbose
-      );
-
-      const onScanSuccess = (decodedText, decodedResult) => {
-        console.log(`Scan result: ${decodedText}`, decodedResult);
-        setScannerActive(false); // Detener scanner después de un escaneo exitoso
-        html5QrcodeScanner.clear().catch(error => console.error("Error clearing scanner:", error));
-        processCheckIn(decodedText, 'qr');
-      };
-
-      const onScanFailure = () => {
-        // No hacer nada en caso de fallo, el scanner sigue intentando.
-      };
-
-      html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-
-      // Limpiar el scanner al desmontar el componente o desactivar
-      return () => {
-        if (html5QrcodeScanner && html5QrcodeScanner.getState && html5QrcodeScanner.getState() !== 0 /* NOT_STARTED */) {
-          html5QrcodeScanner.clear().catch(error => console.error("Failed to clear html5QrcodeScanner: ", error));
+        (error) => {
+          console.error("Error escaneando QR:", error);
         }
-      };
+      ).then(stop => {
+        stopScannerRef.current = stop;
+      });
     }
+
+    return () => {
+      if (stopScannerRef.current) {
+        stopScannerRef.current();
+        stopScannerRef.current = null;
+      }
+    };
   }, [scannerActive, processCheckIn]);
+
 
 
 
@@ -164,11 +158,12 @@ const CheckInPage = () => {
 
         {/* Contenedor del Scanner QR */}
         {scannerActive && (
-          <div id="qr-reader-container" className="mb-6 relative">
-            <div id="qr-reader" className="w-full rounded-lg overflow-hidden border-2 border-orange-400"></div>
-            <p className="text-sm text-gray-400 mt-2 text-center">Coloca el código QR del cliente frente a la cámara.</p>
+          <div className="mb-6 relative">
+            <video ref={scannerRef} className="w-full rounded-lg border-2 border-orange-400" />
+            <p className="text-sm text-gray-400 mt-2 text-center">Colocá el código QR frente a la cámara.</p>
           </div>
         )}
+ 
 
         {/* Formulario para ingreso manual */}
         {!scannerActive && (
