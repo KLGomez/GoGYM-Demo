@@ -6,6 +6,9 @@ import { QrCodeIcon, UserIcon, ArrowPathIcon } from '@heroicons/react/24/outline
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { startQRScanner } from '../utils/readQr.js';
+import { processManualEntry } from '../utils/manualEntry';
+
+
 
 
 
@@ -44,13 +47,20 @@ const CheckInPage = () => {
         return;
       }
     } else if (type === 'manual') {
-      if (!identifier.trim()) {
-        showError("Entrada Inválida", "Por favor, ingrese un código de cliente.");
+      const result = processManualEntry({ identifier, clients, addAttendanceRecord });
+
+      if (!result) {
         setProcessing(false);
         return;
       }
-      foundClient = clients.find(c => c.alphanumericCode === identifier.toUpperCase() || c.dni === identifier);
+
+      setClientDetails(result);
+      setProcessing(false);
+      setManualCode('');
+      return;
     }
+
+
 
     if (!foundClient) {
       showError("Cliente No Encontrado", "No se encontró ningún cliente con ese código o DNI.");
@@ -163,7 +173,7 @@ const CheckInPage = () => {
             <p className="text-sm text-gray-400 mt-2 text-center">Colocá el código QR frente a la cámara.</p>
           </div>
         )}
- 
+
 
         {/* Formulario para ingreso manual */}
         {!scannerActive && (
