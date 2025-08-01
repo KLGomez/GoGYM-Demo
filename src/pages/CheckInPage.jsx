@@ -1,11 +1,16 @@
 import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
-import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { SharedDataContext } from '../contexts/SharedDataContext';
 import { showError, showSuccess } from '../utils/alerts';
 import { calculateMembershipDetails } from '../utils/membershipUtils';
 import { QrCodeIcon, UserIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { startQRScanner } from '../utils/readQr.js';
+
+
 
 const CheckInPage = () => {
+  const navigate = useNavigate();
   const { clients, isLoading, addAttendanceRecord } = useContext(SharedDataContext);
   const [manualCode, setManualCode] = useState('');
   const [clientDetails, setClientDetails] = useState(null);
@@ -13,42 +18,6 @@ const CheckInPage = () => {
   const [processing, setProcessing] = useState(false);
 
   const scannerRef = useRef(null);
-
-  // Configuración del scanner
-  useEffect(() => {
-    if (scannerActive && scannerRef.current) {
-      const html5QrcodeScanner = new Html5QrcodeScanner(
-        "qr-reader",
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-          supportedFormats: [ Html5QrcodeSupportedFormats.QR_CODE ]
-        },
-        false // verbose
-      );
-
-      const onScanSuccess = (decodedText, decodedResult) => {
-        console.log(`Scan result: ${decodedText}`, decodedResult);
-        setScannerActive(false); // Detener scanner después de un escaneo exitoso
-        html5QrcodeScanner.clear().catch(error => console.error("Error clearing scanner:", error));
-        processCheckIn(decodedText, 'qr');
-      };
-
-      const onScanFailure = () => {
-        // No hacer nada en caso de fallo, el scanner sigue intentando.
-      };
-
-      html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-
-      // Limpiar el scanner al desmontar el componente o desactivar
-      return () => {
-        if (html5QrcodeScanner && html5QrcodeScanner.getState && html5QrcodeScanner.getState() !== 0 /* NOT_STARTED */ ) {
-           html5QrcodeScanner.clear().catch(error => console.error("Failed to clear html5QrcodeScanner: ", error));
-        }
-      };
-    }
-  }, [scannerActive, processCheckIn]);
-
   const processCheckIn = useCallback(async (identifier, type) => {
     if (processing) return;
     setProcessing(true);
@@ -65,9 +34,9 @@ const CheckInPage = () => {
         } else if (qrData.alphanumericCode) {
           foundClient = clients.find(c => c.alphanumericCode === qrData.alphanumericCode);
         } else {
-           showError("QR Inválido", "El código QR no contiene la información necesaria.");
-           setProcessing(false);
-           return;
+          showError("QR Inválido", "El código QR no contiene la información necesaria.");
+          setProcessing(false);
+          return;
         }
       } catch {
         showError("Error de QR", "No se pudo procesar el código QR.");
@@ -118,6 +87,36 @@ const CheckInPage = () => {
     setManualCode(''); // Limpiar input manual
   }, [clients, processing, addAttendanceRecord]);
 
+  // Configuración del scanner
+  const stopScannerRef = useRef(null); // para guardar la función de cleanup del scanner
+
+  useEffect(() => {
+    if (scannerActive && scannerRef.current) {
+      startQRScanner(
+        scannerRef.current,
+        (result) => {
+          setScannerActive(false);
+          processCheckIn(result, 'qr');
+        },
+        (error) => {
+          console.error("Error escaneando QR:", error);
+        }
+      ).then(stop => {
+        stopScannerRef.current = stop;
+      });
+    }
+
+    return () => {
+      if (stopScannerRef.current) {
+        stopScannerRef.current();
+        stopScannerRef.current = null;
+      }
+    };
+  }, [scannerActive, processCheckIn]);
+
+
+
+
   const handleManualSubmit = (event) => {
     event.preventDefault();
     processCheckIn(manualCode, 'manual');
@@ -133,56 +132,67 @@ const CheckInPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4 md:p-8 flex flex-col items-center">
-      <div className="w-full max-w-lg bg-gray-800 p-6 rounded-lg shadow-xl">
-        <h1 className="text-3xl font-bold text-orange-400 mb-6 text-center">Registro de Ingreso</h1>
+    <div className="min-h-screen bg-black text-white p-4 md:p-8 flex flex-col items-center">
+
+      <button
+        onClick={() => navigate('/admin')} // o la ruta de tu dashboard
+        className="mb-6 text-orange-400 hover:text-orange-500 flex items-center font-semibold"
+      >
+        <ArrowLeftIcon className="w-5 h-5 mr-2" />
+        Volver al Dashboard
+      </button>
+      <div className="w-full max-w-lg bg-gray-800 p-6 rounded-lg hover:shadow-orange-500 shadow-md">
+
+
+        <h1 className="text-3xl font-bold text-white mb-6 text-center">Registro de Ingreso</h1>
 
         {/* Botón para activar/desactivar scanner */}
         <button
-            onClick={toggleScanner}
-            className={`w-full flex items-center justify-center gap-2 py-3 px-4 mb-6 rounded-md font-semibold text-white transition-colors
+          onClick={toggleScanner}
+          className={`w-full flex items-center justify-center gap-2 py-3 px-4 mb-6 rounded-md font-semibold text-white transition-colors
                         ${scannerActive ? 'bg-red-500 hover:bg-red-600' : 'bg-teal-500 hover:bg-teal-600'}`}
         >
-            <QrCodeIcon className="w-6 h-6" />
-            {scannerActive ? 'Desactivar Escáner QR' : 'Activar Escáner QR'}
+          <QrCodeIcon className="w-6 h-6" />
+          {scannerActive ? 'Desactivar Escáner QR' : 'Activar Escáner QR'}
         </button>
 
         {/* Contenedor del Scanner QR */}
         {scannerActive && (
-          <div id="qr-reader-container" className="mb-6 relative">
-            <div id="qr-reader" className="w-full rounded-lg overflow-hidden border-2 border-orange-400"></div>
-            <p className="text-sm text-gray-400 mt-2 text-center">Coloca el código QR del cliente frente a la cámara.</p>
+          <div className="mb-6 relative">
+            <video ref={scannerRef} className="w-full rounded-lg border-2 border-orange-400" />
+            <p className="text-sm text-gray-400 mt-2 text-center">Colocá el código QR frente a la cámara.</p>
           </div>
         )}
+ 
 
         {/* Formulario para ingreso manual */}
         {!scannerActive && (
-        <form onSubmit={handleManualSubmit} className="space-y-4 mb-6">
-          <div>
-            <label htmlFor="manualCode" className="block text-sm font-medium text-gray-300 mb-1">
-              Ingreso Manual (Código Alfanumérico o DNI):
-            </label>
-            <div className="flex">
-              <input
-                type="text"
-                id="manualCode"
-                value={manualCode}
-                onChange={(e) => setManualCode(e.target.value)}
-                placeholder="Ej: JP12345678 o DNI"
-                className="flex-grow p-3 bg-gray-700 border border-gray-600 text-white rounded-l-md focus:ring-orange-500 focus:border-orange-500"
-                disabled={processing}
-              />
-              <button
-                type="submit"
-                disabled={processing || !manualCode.trim()}
-                className="bg-orange-500 hover:bg-orange-600 text-white font-semibold p-3 rounded-r-md disabled:opacity-50 flex items-center"
-              >
-                {processing ? <ArrowPathIcon className="w-5 h-5 animate-spin" /> : <UserIcon className="w-5 h-5"/>}
-                <span className="ml-2">Verificar</span>
-              </button>
+          <form onSubmit={handleManualSubmit} className="space-y-4 mb-6">
+            <div>
+              <label htmlFor="manualCode" className="block text-sm font-medium text-gray-300 mb-1">
+                Ingreso Manual (Código Alfanumérico o DNI):
+              </label>
+              <div className="flex">
+                <input
+                  type="text"
+                  id="manualCode"
+                  value={manualCode}
+                  onChange={(e) => setManualCode(e.target.value)}
+                  placeholder="Ej: JP12345678 o DNI"
+                  className="flex-grow p-3 bg-gray-700 border border-gray-600 text-white rounded-l-md focus:ring-orange-500 focus:border-orange-500"
+                  disabled={processing}
+                />
+                <button
+                  type="submit"
+                  disabled={processing || !manualCode.trim()}
+                  className="bg-orange-500 hover:bg-orange-600 text-white font-semibold p-3 rounded-r-md disabled:opacity-50 flex items-center"
+                >
+                  {processing ? <ArrowPathIcon className="w-5 h-5 animate-spin" /> : <UserIcon className="w-5 h-5" />}
+                  <span className="ml-2">Verificar</span>
+                </button>
+              </div>
             </div>
-          </div>
-        </form>
+          </form>
         )}
 
         {/* Resultados del Check-in */}
@@ -194,13 +204,13 @@ const CheckInPage = () => {
             <p>Código: {clientDetails.alphanumericCode}</p>
             <p>Plan: {clientDetails.membership?.planName || 'N/A'}</p>
             <p>Estado Membresía: <span className={`font-bold ${clientDetails.membershipStatusDetails.status === "Active" ? 'text-green-400' : 'text-red-400'}`}>
-                {clientDetails.membershipStatusDetails.status}
+              {clientDetails.membershipStatusDetails.status}
             </span></p>
             {clientDetails.membershipStatusDetails.status !== "Active" && clientDetails.membership?.endDate && (
-                <p>Venció el: {new Date(clientDetails.membership.endDate).toLocaleDateString()}</p>
+              <p>Venció el: {new Date(clientDetails.membership.endDate).toLocaleDateString()}</p>
             )}
-             {clientDetails.membershipStatusDetails.status === "Active" && clientDetails.membership?.endDate && (
-                <p>Vence el: {new Date(clientDetails.membership.endDate).toLocaleDateString()} ({clientDetails.membershipStatusDetails.daysRemaining} días restantes)</p>
+            {clientDetails.membershipStatusDetails.status === "Active" && clientDetails.membership?.endDate && (
+              <p>Vence el: {new Date(clientDetails.membership.endDate).toLocaleDateString()} ({clientDetails.membershipStatusDetails.daysRemaining} días restantes)</p>
             )}
           </div>
         )}
