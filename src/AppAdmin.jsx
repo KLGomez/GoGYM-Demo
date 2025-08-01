@@ -8,24 +8,22 @@ import { showSuccess, showError } from './utils/alerts'; // Para mostrar notific
 
 // Layout principal para el panel de Admin
 const AdminLayout = () => {
-  const { currentUser, notifications, markNotificationAsRead, isLoading } = useContext(SharedDataContext);
+  const { currentUser, notifications, markNotificationAsRead, isLoading, isLoggingOut } = useContext(SharedDataContext);
   const navigate = useNavigate();
 
   // Protección de ruta y rol
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && !isLoggingOut) {
       if (!currentUser) {
         showError("Acceso Denegado", "Debes iniciar sesión para acceder al panel de administración.");
         navigate('/login');
       } else if (currentUser.role !== 'admin') {
-        // Asumimos que el objeto currentUser tiene una propiedad 'role'
-        // Si no la tiene, se debe adaptar la lógica de loginUser en el contexto para asignarla.
-        // O inferirla aquí si es necesario, ej: currentUser.email === 'admin@gogym.com'
         showError("Acceso Denegado", "No tienes permisos para acceder a esta área.");
-        navigate('/user'); // Redirigir al panel de usuario o a una página de error
+        navigate('/user');
       }
     }
-  }, [currentUser, isLoading, navigate]);
+  }, [currentUser, isLoading, isLoggingOut, navigate]);
+
 
   // Mostrar notificaciones para el admin (ej. de acciones realizadas)
   useEffect(() => {

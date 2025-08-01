@@ -1,11 +1,11 @@
 import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
 import {
-    getClients, saveClients,
-    getTeachers, saveTeachers,
-    getGymClasses, saveGymClasses,
-    getClassEnrollments, saveClassEnrollments,
-    getAttendanceRecords, saveAttendanceRecords,
-    getArticles, saveArticles // Importar getArticles y saveArticles
+  getClients, saveClients,
+  getTeachers, saveTeachers,
+  getGymClasses, saveGymClasses,
+  getClassEnrollments, saveClassEnrollments,
+  getAttendanceRecords, saveAttendanceRecords,
+  getArticles, saveArticles // Importar getArticles y saveArticles
 } from '../utils/storage';
 import { showSuccess, showError } from '../utils/alerts';
 import { generateClientCode } from '../utils/codeUtils';
@@ -21,7 +21,7 @@ const initialSimulatedClasses = [
 ];
 
 const initialSimulatedEnrollments = [
-    // { userId: 'client_17...', classId: 'class1', enrollmentDate: '2024-07-28T...' }
+  // { userId: 'client_17...', classId: 'class1', enrollmentDate: '2024-07-28T...' }
 ];
 
 
@@ -36,6 +36,8 @@ export const SharedDataProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
 
   // --- Carga Inicial de Datos ---
   useEffect(() => {
@@ -82,10 +84,10 @@ export const SharedDataProvider = ({ children }) => {
     // Si se añadieron usuarios por defecto, actualizar el estado y localStorage
     // Esta comparación es importante para no disparar un save innecesario si no hubo cambios.
     if (finalClients.length > storedClients.length) {
-        setClients(finalClients);
-        // La persistencia se manejará por el useEffect de `clients`
+      setClients(finalClients);
+      // La persistencia se manejará por el useEffect de `clients`
     } else {
-        setClients(storedClients); // Si no hubo cambios, usar los originales de localStorage
+      setClients(storedClients); // Si no hubo cambios, usar los originales de localStorage
     }
 
     if (storedCurrentUser) {
@@ -136,9 +138,9 @@ export const SharedDataProvider = ({ children }) => {
 
     // Lógica para mostrar alerta si es para el usuario actual y está logueado
     if (currentUser && forUserId === currentUser.id && !isGlobal) {
-        if (type === 'success') showSuccess("Notificación", message);
-        else if (type === 'error') showError("Notificación", message);
-        else showSuccess("Notificación", message); // Default to success type for display
+      if (type === 'success') showSuccess("Notificación", message);
+      else if (type === 'error') showError("Notificación", message);
+      else showSuccess("Notificación", message); // Default to success type for display
     }
     // Las notificaciones globales o para otros usuarios/admin se gestionarán en sus respectivos paneles.
   }, [currentUser]);
@@ -158,13 +160,13 @@ export const SharedDataProvider = ({ children }) => {
 
   const logoutUser = useCallback(() => {
     const userName = currentUser?.firstName;
+    setIsLoggingOut(true); // 
     setCurrentUser(null);
     localStorage.removeItem('currentUserSession');
-    // No se limpia el array de notificaciones global, pero las nuevas no serán para este usuario
-    // Opcional: Mostrar una alerta de despedida
-    if(userName) showSuccess("Sesión Cerrada", `¡Hasta pronto, ${userName}!`);
+    if (userName) showSuccess("Sesión Cerrada", `¡Hasta pronto, ${userName}!`);
     else showSuccess("Sesión Cerrada", "Has cerrado sesión exitosamente.");
   }, [currentUser]);
+
 
 
   const markNotificationAsRead = useCallback((notificationId) => {
@@ -196,9 +198,9 @@ export const SharedDataProvider = ({ children }) => {
     // Podríamos añadir lógica aquí para regenerarlo si es necesario.
     const originalClient = clients.find(c => c.id === updatedClientData.id);
     if (originalClient &&
-        (originalClient.firstName !== updatedClientData.firstName ||
-         originalClient.lastName !== updatedClientData.lastName ||
-         originalClient.dni !== updatedClientData.dni)) {
+      (originalClient.firstName !== updatedClientData.firstName ||
+        originalClient.lastName !== updatedClientData.lastName ||
+        originalClient.dni !== updatedClientData.dni)) {
       updatedClientData.alphanumericCode = generateClientCode(updatedClientData.firstName, updatedClientData.lastName, updatedClientData.dni);
       addNotification(`Código de cliente para "${updatedClientData.firstName}" regenerado a ${updatedClientData.alphanumericCode} debido a cambio de datos.`, 'info', 'admin');
     }
@@ -210,8 +212,8 @@ export const SharedDataProvider = ({ children }) => {
     });
     // Si el cliente actualizado es el currentUser, actualizarlo también
     if (currentUser && currentUser.id === updatedClientData.id) {
-        setCurrentUser(updatedClientData);
-        localStorage.setItem('currentUserSession', JSON.stringify(updatedClientData));
+      setCurrentUser(updatedClientData);
+      localStorage.setItem('currentUserSession', JSON.stringify(updatedClientData));
     }
     addNotification(`Cliente "${updatedClientData.firstName}" actualizado.`, 'info', 'admin');
   }, [currentUser, addNotification]);
@@ -227,7 +229,7 @@ export const SharedDataProvider = ({ children }) => {
       addNotification(`Cliente "${clientToDelete.firstName}" eliminado.`, 'warning', 'admin');
     }
     if (currentUser && currentUser.id === clientId) { // Si el admin se autoelimina o elimina al user actual
-        logoutUser(); // Forzar logout
+      logoutUser(); // Forzar logout
     }
   }, [clients, currentUser, logoutUser, addNotification]);
 
@@ -287,7 +289,7 @@ export const SharedDataProvider = ({ children }) => {
     );
     addNotification(`Inscripción exitosa a "${clase.name}".`, 'success', userId);
     if (currentUser?.id !== userId) { // Si un admin inscribe a otro usuario
-        addNotification(`Has inscrito a ${user.firstName} en "${clase.name}".`, 'success', 'admin');
+      addNotification(`Has inscrito a ${user.firstName} en "${clase.name}".`, 'success', 'admin');
     }
     return true;
   }, [gymClasses, clients, currentUser, addNotification]);
@@ -307,8 +309,8 @@ export const SharedDataProvider = ({ children }) => {
       );
       addNotification(`Has cancelado tu inscripción a "${clase.name}".`, 'info', enrollment.userId);
       if (currentUser?.id !== enrollment.userId && currentUser?.role === 'admin') { // Si un admin cancela para otro
-          const user = clients.find(u => u.id === enrollment.userId);
-          addNotification(`Cancelaste la inscripción de ${user?.firstName || 'un usuario'} a "${clase.name}".`, 'info', 'admin');
+        const user = clients.find(u => u.id === enrollment.userId);
+        addNotification(`Cancelaste la inscripción de ${user?.firstName || 'un usuario'} a "${clase.name}".`, 'info', 'admin');
       }
     }
     return true;
@@ -320,18 +322,18 @@ export const SharedDataProvider = ({ children }) => {
   const updateClientMembership = useCallback((clientId, membershipDetails) => {
     const client = clients.find(c => c.id === clientId);
     if (!client) {
-        showError("Error", "Cliente no encontrado para actualizar membresía.");
-        return;
+      showError("Error", "Cliente no encontrado para actualizar membresía.");
+      return;
     }
     const updatedClient = {
-        ...client,
-        membership: { ...(client.membership || {}), ...membershipDetails }
-        // Asumimos que membershipDetails es un objeto como { planName, status, startDate, endDate, autoRenew }
+      ...client,
+      membership: { ...(client.membership || {}), ...membershipDetails }
+      // Asumimos que membershipDetails es un objeto como { planName, status, startDate, endDate, autoRenew }
     };
     updateClient(updatedClient); // Reutiliza la función de actualizar cliente
     addNotification(`Membresía de ${client.firstName} actualizada.`, 'success', 'admin');
     if (client.id === currentUser?.id) { // Si es el usuario actual
-        addNotification(`Tu membresía ha sido actualizada: ${membershipDetails.planName || ''} (${membershipDetails.status || ''})`, 'info', client.id);
+      addNotification(`Tu membresía ha sido actualizada: ${membershipDetails.planName || ''} (${membershipDetails.status || ''})`, 'info', client.id);
     }
   }, [clients, updateClient, currentUser, addNotification]);
 
@@ -346,6 +348,8 @@ export const SharedDataProvider = ({ children }) => {
     // saveToLocalStorage('feedbacks', [...feedbacks, feedbackData]);
     addNotification(`Gracias por tu feedback sobre "${feedbackData.className}".`, 'success', feedbackData.userId);
   }, [addNotification]);
+
+
 
 
   const contextValue = useMemo(() => ({
@@ -374,6 +378,8 @@ export const SharedDataProvider = ({ children }) => {
     cancelEnrollment,
     updateClientMembership,
     submitFeedback,
+    isLoggingOut, 
+    setIsLoggingOut,
     addTeacher: (teacherData) => {
       setTeachers(prev => [...prev, { ...teacherData, id: teacherData.id || `teach_${Date.now()}` }]);
       addNotification(`Profesor "${teacherData.name}" agregado.`, 'success', 'admin');
@@ -412,8 +418,8 @@ export const SharedDataProvider = ({ children }) => {
       setAttendanceRecords(prevRecords => {
         const existingRecordIndex = prevRecords.findIndex(
           r => r.clientId === newRecord.clientId &&
-               r.classId === newRecord.classId &&
-               r.date === newRecord.date
+            r.classId === newRecord.classId &&
+            r.date === newRecord.date
         );
 
         if (existingRecordIndex > -1) {
@@ -450,7 +456,7 @@ export const SharedDataProvider = ({ children }) => {
         addNotification(`Artículo "${articleToDelete.title}" eliminado.`, 'warning', 'admin');
       }
     }
-  }), [clients, gymClasses, teachers, enrollments, attendanceRecords, articles, membershipPlans, currentUser, notifications, isLoading, loginUser, logoutUser, addNotification, markNotificationAsRead, clearUserNotifications, addClient, updateClient, deleteClient, addGymClass, updateGymClass, deleteGymClass, enrollToClass, cancelEnrollment, updateClientMembership, submitFeedback]);
+  }), [clients, gymClasses, teachers, enrollments, attendanceRecords, articles, membershipPlans, currentUser, notifications, isLoading, loginUser, logoutUser, addNotification, markNotificationAsRead, clearUserNotifications, addClient, updateClient, deleteClient, addGymClass, updateGymClass, deleteGymClass, enrollToClass, cancelEnrollment, updateClientMembership, submitFeedback, isLoggingOut, setIsLoggingOut]);
 
   return (
     <SharedDataContext.Provider value={contextValue}>

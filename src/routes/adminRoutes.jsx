@@ -3,6 +3,7 @@ import ClassesAdmin from '../pages/ClassesAdmin';
 import MembershipsAdmin from '../pages/MembershipsAdmin';
 import ClientsAdmin from '../pages/ClientesAdmin'; // Ya usa contexto
 import HomePage from '../pages/HomePage'; // Usado para dashboard admin y check-in
+import CheckInPage from '../pages/CheckInPage';
 import ManageClassesView from '../pages/ManageClassesView'; // Ya usa contexto
 import ManageTeachersView from '../pages/ManageTeachersView'; // Ya usa contexto
 import EnrollStudentsView from '../pages/EnrollStudentsView'; // Ya usa contexto
@@ -16,14 +17,18 @@ import AttendanceView from '../pages/AttendanceView'; // Ya usa contexto
 // Por ahora, ClassesAdmin maneja su propia navegación interna a esas vistas.
 
 const adminRoutes = [
+    {
+    path: 'check-in',
+    element: <CheckInPage />
+  },
   {
     index: true, // Corresponds to /admin
     element: <HomePage />, // Dashboard del Admin
   },
   {
     path: 'check-in', // Esta ruta podría ser redundante si HomePage ya maneja el check-in,
-                      // o podría ser una versión específica del check-in para el admin.
-                      // La CheckInPage.jsx general es /check-in (ruta raíz).
+    // o podría ser una versión específica del check-in para el admin.
+    // La CheckInPage.jsx general es /check-in (ruta raíz).
     element: <HomePage />, // O un componente específico de CheckInAdmin si es diferente
   },
   {
