@@ -170,12 +170,12 @@ const ClientsAdmin = () => {
       description: "Visualizar, editar o eliminar los clientes registrados.",
       action: () => setView("list"),
     },
-    {
+/*     {
       icon: <Cog6ToothIcon className="w-8 h-8 text-white" />,
       label: "Configuración",
       description: "Opciones avanzadas de gestión (no disponible aún).",
       action: () => showError("Función no implementada", "La configuración aún no está disponible."),
-    },
+    }, */
   ];
 
 

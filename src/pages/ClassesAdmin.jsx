@@ -53,7 +53,7 @@ const ClassesAdmin = () => {
       viewName: "teachers",
       description: "Asigná y editá perfiles de los instructores.",
     },
-    {
+/*     {
       icon: <UserGroupIcon className="w-8 h-8 text-white" />,
       label: "Inscribir Alumnos",
       viewName: "students",
@@ -70,7 +70,7 @@ const ClassesAdmin = () => {
       label: "Historial de Clases",
       viewName: "history",
       description: "Consultá las clases pasadas y sus registros.",
-    },
+    }, */
   ];
 
 

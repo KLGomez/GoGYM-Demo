@@ -174,12 +174,12 @@ const MembershipsAdmin = () => {
       action: () => setCurrentView("statusView"),
       description: "Ver y filtrar el estado actual de todas las membresías de clientes."
     },
-    {
+/*     {
       icon: <CurrencyDollarIcon className="w-10 h-10 text-white" />,
       label: "Gestión de Pagos",
       action: () => { showError("Próximamente", "La funcionalidad de Gestión de Pagos aún no está implementada."); },
       description: "Registrar y consultar pagos de membresías (Próximamente)."
-    },
+    }, */
   ];
 
   if (isLoading && currentView !== "menu") {
