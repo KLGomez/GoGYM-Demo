@@ -85,18 +85,6 @@ export const SharedDataProvider = ({ children }) => {
       };
       finalClients.push(testUser);
     }
-
-    // Usuario Kenny
-    const kennyUserExists = finalClients.some(c => c.email === 'kenny@gogym.com');
-  if (!kennyUserExists) {
-    const kennyUser = {
-      id: 'kenny_default_001',
-      firstName: 'Kenny', lastName: 'Encinas', email: 'kenny@gogym.com', password: 'kennypass', role: 'user',
-      dni: '22222222', alphanumericCode: generateClientCode('Kenny', 'Encinas', '22222222'),
-      membership: { planName: 'Básico', membershipStartDate: new Date().toISOString(), membershipDurationDays: 30, },
-    };
-    finalClients.push(kennyUser);
-  }
   
     // Si se añadieron usuarios por defecto, actualizar el estado y localStorage
     // Esta comparación es importante para no disparar un save innecesario si no hubo cambios.
