@@ -1,0 +1,117 @@
+// src/components/CameraUploader.jsx
+
+import React, { useRef, useState, useCallback } from "react";
+import Webcam from "react-webcam";
+import { CloudArrowUpIcon, CameraIcon } from "@heroicons/react/24/outline";
+
+// Cargamos la variable de entorno
+const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_NAME;
+
+const videoConstraints = {
+  width: 300,
+  height: 300,
+  facingMode: "user",
+};
+
+const CameraUploader = ({ onUploadComplete }) => {
+  const webcamRef = useRef(null);
+  const [imgSrc, setImgSrc] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadedUrl, setUploadedUrl] = useState(null);
+  const [error, setError] = useState(null); // 💥 Por si algo falla
+
+  const capture = useCallback(() => {
+    const imageSrc = webcamRef.current?.getScreenshot();
+    if (imageSrc) {
+      setImgSrc(imageSrc);
+      setError(null); // limpiamos errores
+    } else {
+      setError("No se pudo capturar la imagen. Asegurate de tener la cámara activa.");
+    }
+  }, []);
+
+  const uploadToCloudinary = async () => {
+    if (!imgSrc) return;
+
+    setUploading(true);
+    setError(null);
+
+    const formData = new FormData();
+    formData.append("file", imgSrc);
+    formData.append("upload_preset", "gogym_clientes");
+    formData.append("folder", "clientes");
+
+    try {
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload/clientes/`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.secure_url) {
+        setUploadedUrl(data.secure_url);
+        onUploadComplete(data.secure_url); // ✅ pasamos la URL al formulario
+      } else {
+        setError("Error al subir la imagen. Intenta nuevamente.");
+      }
+    } catch (err) {
+      console.error("Error al subir imagen:", err);
+      setError("Error de conexión con Cloudinary.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="bg-gray-800 text-white p-4 rounded-lg shadow-md w-full max-w-md mx-auto">
+      {!imgSrc ? (
+        <>
+          <Webcam
+            audio={false}
+            ref={webcamRef}
+            screenshotFormat="image/jpeg"
+            videoConstraints={videoConstraints}
+            className="rounded-md w-full"
+          />
+          <button
+            onClick={capture}
+            className="mt-4 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded inline-flex items-center"
+          >
+            <CameraIcon className="h-5 w-5 mr-2" />
+            Capturar Foto
+          </button>
+          {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
+        </>
+      ) : (
+        <div className="flex flex-col items-center">
+          <img src={imgSrc} alt="Captura previa" className="rounded-md mb-4 w-64 h-64 object-cover" />
+          {!uploadedUrl ? (
+            <button
+              onClick={uploadToCloudinary}
+              disabled={uploading}
+              className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded inline-flex items-center"
+            >
+              <CloudArrowUpIcon className="h-5 w-5 mr-2" />
+              {uploading ? "Subiendo..." : "Subir a Cloudinary"}
+            </button>
+          ) : (
+            <p className="text-green-400 text-sm">✅ Imagen subida correctamente</p>
+          )}
+          <button
+            onClick={() => {
+              setImgSrc(null);
+              setUploadedUrl(null);
+              setError(null);
+            }}
+            className="mt-2 text-sm text-orange-300 hover:underline"
+          >
+            Tomar otra foto
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default CameraUploader;
