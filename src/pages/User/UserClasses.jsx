@@ -138,7 +138,7 @@ const UserClasses = () => {
                 <p className="text-sm text-gray-400 mb-1 flex items-center"><UserGroupIcon className="h-4 w-4 mr-2 text-gray-400" />Instructor: {clase.instructor}</p>
                 <p className="text-sm text-gray-400 mb-1 flex items-center"><CalendarIcon className="h-4 w-4 mr-2 text-gray-400" />Día: {clase.day}</p>
                 <p className="text-sm text-gray-400 mb-1 flex items-center"><ClockIcon className="h-4 w-4 mr-2 text-gray-400" />Hora: {clase.time} ({clase.duration})</p>
-                <p className="text-xs text-gray-300 mt-2 mb-3">{clase.description}</p>
+                <p className="text-gray-300 text-base mt-2">{clase.description}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-300 mb-3">

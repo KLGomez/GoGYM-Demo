@@ -92,14 +92,14 @@ const UserMyClasses = () => {
     const simulatedStatus = clase.status || (isUpcoming ? 'Confirmada' : 'Completada');
 
     return (
-      <div className="bg-white shadow-lg rounded-lg p-5 flex flex-col justify-between hover:shadow-xl transition-shadow">
+      <div className="bg-gray-800 text-white rounded-xl p-5 shadow-md hover:shadow-lg border border-gray-600 transition-shadow">
         <div>
           <h3 className="text-xl font-bold text-orange-600 mb-2">{clase.name || 'Nombre de Clase no Disponible'}</h3>
-          <p className="text-sm text-gray-600 mb-1 flex items-center"><UserGroupIcon className="h-4 w-4 mr-2 text-gray-400" />Instructor: {clase.instructor || 'N/A'}</p>
-          <p className="text-sm text-gray-600 mb-1 flex items-center"><CalendarDaysIcon className="h-4 w-4 mr-2 text-gray-400" />Fecha: {formatDate(clase.date)}</p>
-          <p className="text-sm text-gray-600 mb-1 flex items-center"><ClockIcon className="h-4 w-4 mr-2 text-gray-400" />Hora: {clase.time || 'N/A'}</p>
-          <p className="text-sm text-gray-600 mb-3 flex items-center"><MapPinIcon className="h-4 w-4 mr-2 text-gray-400" />Lugar: {clase.location || 'N/A'}</p>
-          {clase.description && <p className="text-xs text-gray-500 mt-1 mb-3">{clase.description}</p>}
+          <p className="text-sm text-gray-300 mb-1 flex items-center"><UserGroupIcon className="h-4 w-4 mr-2 text-gray-400" />Instructor: {clase.instructor || 'N/A'}</p>
+          <p className="text-sm text-gray-300 mb-1 flex items-center"><CalendarDaysIcon className="h-4 w-4 mr-2 text-gray-400" />Fecha: {formatDate(clase.date)}</p>
+          <p className="text-sm text-gray-300 mb-1 flex items-center"><ClockIcon className="h-4 w-4 mr-2 text-gray-400" />Hora: {clase.time || 'N/A'}</p>
+          <p className="text-sm text-gray-300 mb-3 flex items-center"><MapPinIcon className="h-4 w-4 mr-2 text-gray-400" />Lugar: {clase.location || 'N/A'}</p>
+          {clase.description && <p className="text-gray-300 text-base mt-2">{clase.description}</p>}
         </div>
         <div className="mt-auto pt-3 border-t border-gray-200">
           {isUpcoming && simulatedStatus === 'Confirmada' ? ( // Asumimos que se puede cancelar si es futura y confirmada
@@ -113,7 +113,7 @@ const UserMyClasses = () => {
             
           ) : (
             <div className="text-center">
-              <p className="text-sm font-semibold text-gray-500 mb-2">Estado: {simulatedStatus}</p>
+              <p className="text-sm font-semibold text-gray-400 mb-2">Estado: {simulatedStatus}</p>
               {/* Lógica para permitir feedback en clases pasadas o con cierto estado */}
               {(simulatedStatus === 'Completada' || simulatedStatus === 'Asistida') && (
                   <button
