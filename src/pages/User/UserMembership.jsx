@@ -225,23 +225,23 @@ const UserMembership = () => {
         </div>
       )}
 
-
-      <div className="bg-white shadow-xl rounded-lg overflow-hidden">
+      <div className="shadow-xl rounded-lg overflow-hidden">
+      <div className="bg-gray-800 text-white p-6">
         <div className={`p-6 ${getStatusColor(membershipData.status).split(' ')[1].replace('bg-', 'border-b-4 border-')}${membershipData.status?.toLowerCase()}`}>
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-700">{membershipData.planName}</h2>
+            <h2 className="text-2xl font-bold text-gray-200">{membershipData.planName}</h2>
             <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(membershipData.status)}`}>
               {membershipData.status}
             </span>
           </div>
         </div>
 
-        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 text-gray-700">
+        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 text-gray-200">
           <div>
             <h3 className="text-lg font-semibold text-orange-600 mb-2 flex items-center">
               <CalendarDaysIcon className="h-6 w-6 mr-2" /> Periodo de Vigencia
             </h3>
-            <p><strong>Inicio:</strong> {formatDate(membershipData.startDate)}</p>
+            <p><strong className="text-white">Inicio:</strong> {formatDate(membershipData.startDate)}</p>
             <p><strong>Fin / Próxima Renovación:</strong> {formatDate(membershipData.endDate)}</p>
             <p className="mt-1">
               <strong>Renovación Automática:</strong>
@@ -263,15 +263,16 @@ const UserMembership = () => {
             <h3 className="text-lg font-semibold text-orange-600 mb-2 flex items-center">
               <InformationCircleIcon className="h-6 w-6 mr-2" /> Beneficios del Plan
             </h3>
-            <ul className="list-disc list-inside space-y-1 text-gray-600">
+            <ul className="list-disc list-inside space-y-1 text-gray-200">
               {membershipData.benefits.map((benefit, index) => (
                 <li key={index}>{benefit}</li>
               ))}
             </ul>
           </div>
         </div>
+        </div>
 
-        <div className="p-6 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3">
+        <div className="p-6 bg-gray-900 border-t border-gray-700 flex flex-col sm:flex-row justify-end space-...">
           {membershipData.status === 'Vencida' && (
             <button
               onClick={handleRenewNow}
@@ -281,7 +282,7 @@ const UserMembership = () => {
             </button>
           )}
           {membershipData.status === 'Activa' && (
-             <button
+            <button
               onClick={handleToggleAutoRenew}
               className={`w-full sm:w-auto font-semibold py-2 px-4 rounded-lg transition-colors ${
                 membershipData.autoRenew

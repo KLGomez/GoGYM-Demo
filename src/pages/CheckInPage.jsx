@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
-import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { SharedDataContext } from '../contexts/SharedDataContext';
 import { showError, showSuccess } from '../utils/alerts';
 import { calculateMembershipDetails } from '../utils/membershipUtils';
 import { QrCodeIcon, UserIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
-
 
 const CheckInPage = () => {
   const navigate = useNavigate();

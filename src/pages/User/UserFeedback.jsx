@@ -24,6 +24,7 @@ const UserFeedback = () => {
   const { currentUser, submitFeedback: contextSubmitFeedback, isLoading, feedbacks } = useContext(SharedDataContext); // Usar el contexto
   const safeFeedbacks = Array.isArray(feedbacks) ? feedbacks : []; // Asegurarse de que feedbacks sea un array
   const myFeedbacks = safeFeedbacks?.filter(fb => fb.userId === currentUser?.id) || []; // Filtrar feedbacks del usuario actual
+
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -51,6 +52,9 @@ const UserFeedback = () => {
       } else {
         console.log("No se especificó clase para feedback en URL ni en localStorage.");
       }
+        // Si está logueado pero no hay params, podría mostrar un selector o mensaje
+        console.log("No se especificó clase para feedback en URL, pero usuario está logueado.");
+        // Dejar feedbackTarget como está o limpiarlo para que muestre el mensaje de "No se ha especificado"
     }
   }, [classIdParam, classNameParam, currentUser, isLoading, navigate]);
 
@@ -90,14 +94,13 @@ const UserFeedback = () => {
         console.log("Guardado en localStorage:", feedbackTarget.id, feedbackTarget.name);
 
 
+        });
         // La notificación de éxito ya la da contextSubmitFeedback.
         // showSuccess("¡Feedback Enviado!", `Gracias por tu feedback sobre "${feedbackTarget.name}".`);
         setRating(0);
         setComment('');
         navigate('/user/mis-clases'); // Redirigir después de enviar
-      }
-    );
-  };
+      };
 
   if (isLoading) {
     return <p className="text-center text-white text-xl py-10">Cargando...</p>;
@@ -174,6 +177,22 @@ if (!feedbackTarget.id || !feedbackTarget.name) {
 
   console.log("Feedbacks globales:", feedbacks);
   console.log("Mis feedbacks:", myFeedbacks);
+  if (!feedbackTarget.id || !feedbackTarget.name) {
+    return (
+      <div className="container mx-auto p-4 text-center">
+        <h1 className="text-3xl font-semibold text-white mb-6">Dejar Feedback</h1>
+        <p className="text-gray-400">
+          Para dejar feedback, primero selecciona una clase de tu historial en "Mis Clases".
+        </p>
+        <button
+          onClick={() => navigate('/user/mis-clases')}
+          className="mt-6 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg"
+        >
+          Ir a Mis Clases
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4">
@@ -211,6 +230,7 @@ if (!feedbackTarget.id || !feedbackTarget.name) {
               </button>
             ))}
             {rating > 0 && <span className="ml-3 text-gray-400">({rating} de 5 estrellas)</span>}
+            {rating > 0 && <span className="ml-3 text-gray-600">({rating} de 5 estrellas)</span>}
           </div>
         </div>
 
@@ -222,8 +242,8 @@ if (!feedbackTarget.id || !feedbackTarget.name) {
             id="comment"
             name="comment"
             rows="5"
-            className="w-full p-3 border border-gray-600 bg-gray-700 text-white rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
             placeholder={`¿Qué te pareció la clase "${feedbackTarget.name}"?`}
+            className="w-full p-3 border border-gray-600 bg-gray-700 text-white rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
           ></textarea>
@@ -240,9 +260,8 @@ if (!feedbackTarget.id || !feedbackTarget.name) {
         </div>
       </form>
 
-    <div className="flex-1 bg-gray-900 text-white p-8">
+    <div className="flex-1 bg-gray-900 text-white p-8 rounded-2xl shadow-2xl border border-gray-700">
       <h1 className="text-3xl font-bold mb-8">Feedback de Clases</h1>
-      
       <div className="grid md:grid-cols-2 gap-6 mb-8">
         {/* Mis Comentarios */}
         <div className="bg-gray-800 text-white rounded-xl shadow-lg p-6">

@@ -12,10 +12,10 @@ import {
 const SidebarUser = () => {
   const navLinks = [
     { to: '.', text: 'Dashboard', icon: HomeIcon },
-    { to: 'clases', text: 'Clases', icon: RectangleStackIcon },
-    { to: 'mis-clases', text: 'Mis Clases', icon: UserGroupIcon },
+    { to: 'mi-qr', text: 'MiQR', icon: QrCodeIcon }, // Añadir enlace a Mi QR
+    { to: 'clases', text: 'Cronograma', icon: RectangleStackIcon },
+    { to: 'mis-clases', text: 'Clases', icon: UserGroupIcon },
     { to: 'mi-membresia', text: 'Membresía', icon: CreditCardIcon },
-    { to: 'mi-qr', text: 'Mi QR', icon: QrCodeIcon }, // Añadir enlace a Mi QR
     { to: 'feedback', text: 'Feedback', icon: ChatBubbleLeftRightIcon },
   ];
 
@@ -34,7 +34,7 @@ const SidebarUser = () => {
                 `flex items-center gap-3 px-3 py-2 rounded transition duration-200 ${
                   isActive
                     ? 'bg-orange-500 text-white'
-                    : 'text-orange-300 hover:text-white hover:bg-orange-500 transform hover:scale-105 cursor-pointer'
+                    : 'text-orange-300 hover:text-white hover:bg-orange-500 transform hover:scale-110 cursor-pointer'
                 }`
               }
             >

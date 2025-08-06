@@ -72,10 +72,10 @@ const UserClasses = () => {
       <h1 className="text-3xl font-semibold text-white mb-6">Clases Disponibles</h1>
 
       {/* Filtros */}
-      <div className="mb-8 p-4 bg-white shadow rounded-lg">
+      <div className="mb-8 p-4 bg-gray-800 text-white shadow rounded-lg">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
           <div>
-            <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="search" className="block text-sm font-medium text-gray-300 mb-1">
               <MagnifyingGlassIcon className="h-5 w-5 inline-block mr-1 text-gray-400" />
               Buscar Clase
             </label>
@@ -89,7 +89,7 @@ const UserClasses = () => {
             />
           </div>
           <div>
-            <label htmlFor="filterDay" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="filterDay" className="block text-sm font-medium text-gray-300 mb-1">
               <CalendarIcon className="h-5 w-5 inline-block mr-1 text-gray-400" />
               Filtrar por Día
             </label>
@@ -104,7 +104,7 @@ const UserClasses = () => {
             </select>
           </div>
           <div>
-            <label htmlFor="filterInstructor" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="filterInstructor" className="block text-sm font-medium text-gray-300 mb-1">
               <UserGroupIcon className="h-5 w-5 inline-block mr-1 text-gray-400" />
               Filtrar por Instructor
             </label>
@@ -132,16 +132,16 @@ const UserClasses = () => {
       {filteredClasses.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredClasses.map((clase) => (
-            <div key={clase.id} className="bg-white shadow-lg rounded-lg p-6 flex flex-col justify-between hover:shadow-xl transition-shadow">
+            <div key={clase.id} className="bg-gray-800 border border-gray-700 text-white rounded-2xl p-6 flex flex-col justify-between hover:shadow-xl transition-shadow">
               <div>
                 <h2 className="text-xl font-bold text-orange-600 mb-2">{clase.name}</h2>
-                <p className="text-sm text-gray-600 mb-1 flex items-center"><UserGroupIcon className="h-4 w-4 mr-2 text-gray-400" />Instructor: {clase.instructor}</p>
-                <p className="text-sm text-gray-600 mb-1 flex items-center"><CalendarIcon className="h-4 w-4 mr-2 text-gray-400" />Día: {clase.day}</p>
-                <p className="text-sm text-gray-600 mb-1 flex items-center"><ClockIcon className="h-4 w-4 mr-2 text-gray-400" />Hora: {clase.time} ({clase.duration})</p>
-                <p className="text-xs text-gray-500 mt-2 mb-3">{clase.description}</p>
+                <p className="text-sm text-gray-400 mb-1 flex items-center"><UserGroupIcon className="h-4 w-4 mr-2 text-gray-400" />Instructor: {clase.instructor}</p>
+                <p className="text-sm text-gray-400 mb-1 flex items-center"><CalendarIcon className="h-4 w-4 mr-2 text-gray-400" />Día: {clase.day}</p>
+                <p className="text-sm text-gray-400 mb-1 flex items-center"><ClockIcon className="h-4 w-4 mr-2 text-gray-400" />Hora: {clase.time} ({clase.duration})</p>
+                <p className="text-xs text-gray-300 mt-2 mb-3">{clase.description}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-700 mb-3">
+                <p className="text-sm text-gray-300 mb-3">
                   Cupos: {clase.enrolled} / {clase.capacity}
                   <span className={`ml-2 font-semibold ${clase.enrolled >= clase.capacity ? 'text-red-500' : 'text-green-500'}`}>
                     {clase.enrolled >= clase.capacity ? '(Llena)' : `(${clase.capacity - clase.enrolled} disponibles)`}
@@ -152,7 +152,7 @@ const UserClasses = () => {
                   disabled={clase.enrolled >= clase.capacity}
                   className={`w-full font-semibold py-2 px-4 rounded-lg transition-colors ${
                     clase.enrolled >= clase.capacity
-                      ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                      ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
                       : 'bg-orange-500 hover:bg-orange-600 text-white'
                   }`}
                 >

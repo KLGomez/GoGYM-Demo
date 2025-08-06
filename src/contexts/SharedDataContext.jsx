@@ -40,6 +40,7 @@ export const SharedDataProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
+
   // --- Carga Inicial de Datos ---
   useEffect(() => {
     console.log("SharedDataContext: Cargando datos iniciales...");
@@ -60,7 +61,6 @@ export const SharedDataProvider = ({ children }) => {
     // Cargar los feedbacks al iniciar
     const storedFeedbacks = getFeedbacks();
     setFeedbacks(storedFeedbacks || []);
-
 
     // Asegurar usuarios por defecto si no existen
     let finalClients = [...storedClients];
@@ -86,6 +86,7 @@ export const SharedDataProvider = ({ children }) => {
       finalClients.push(testUser);
     }
   
+
     // Si se añadieron usuarios por defecto, actualizar el estado y localStorage
     // Esta comparación es importante para no disparar un save innecesario si no hubo cambios.
     if (finalClients.length > storedClients.length) {
@@ -120,8 +121,6 @@ export const SharedDataProvider = ({ children }) => {
   useEffect(() => { if (!isLoading) saveArticles(articles); }, [articles, isLoading]);
   useEffect(() => { if (!isLoading) saveClients(clients); }, [clients, isLoading]);
   useEffect(() => { if (!isLoading) saveFeedbacks(feedbacks); }, [feedbacks, isLoading]); // Guardar feedbacks en localStorage
-
-
 
   // --- NOTIFICACIONES ---
   const addNotification = useCallback((message, type = 'info', forUserId = null, isGlobal = false) => {
@@ -361,6 +360,19 @@ export const SharedDataProvider = ({ children }) => {
   saveFeedbacks(updatedFeedbacks); // se guarda en localStorage
   addNotification(`Gracias por tu feedback sobre "${feedbackData.className}".`, 'success', feedbackData.userId);
 }, [addNotification, currentUser, feedbacks]);
+
+  /* // --- Feedback (Usuario) ---
+  const submitFeedback = useCallback((feedbackData) => {
+    // feedbackData: { classId, className, rating, comment, userId }
+    // En una app real, esto se guardaría en localStorage o se enviaría a un backend.
+    console.log("Feedback Recibido (SharedDataContext):", feedbackData);
+    // Guardar en localStorage (ejemplo, no implementado en storage.js aún)
+    // const feedbacks = getFromLocalStorage('feedbacks', []);
+    // saveToLocalStorage('feedbacks', [...feedbacks, feedbackData]);
+    addNotification(`Gracias por tu feedback sobre "${feedbackData.className}".`, 'success', feedbackData.userId);
+  }, [addNotification]); */
+
+
 
 
   const contextValue = useMemo(() => ({
