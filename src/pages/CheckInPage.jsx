@@ -5,6 +5,8 @@ import { calculateMembershipDetails } from '../utils/membershipUtils';
 import { QrCodeIcon, UserIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+
 
 const CheckInPage = () => {
   const navigate = useNavigate();
@@ -86,7 +88,7 @@ const CheckInPage = () => {
 
   // Configuración del scanner
   useEffect(() => {
-    if (scannerActive && scannerRef.current) {
+    if (scannerActive) {
       const html5QrcodeScanner = new Html5QrcodeScanner(
         "qr-reader",
         {
