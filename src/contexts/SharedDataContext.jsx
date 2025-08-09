@@ -146,11 +146,28 @@ export const SharedDataProvider = ({ children }) => {
   // --- MANEJO DE CURRENTUSER (LOGIN/LOGOUT) ---
   const loginUser = useCallback((userData) => {
     const clientData = clients.find(c => c.email === userData.email); // Asumiendo login por email
-    if (clientData && clientData.password === userData.password) { // Comparación directa (NO SEGURO PARA PRODUCCIÓN)
+    if (!clientData) {
+      showError("Error de Inicio de Sesión", "Email o contraseña incorrectos.");
+      return null;
+    }
+    // Admin y usuario de prueba: contraseña hardcodeada
+    if (
+      (clientData.email === 'admin@gogym.com' && userData.password === 'admin123') ||
+      (clientData.email === 'user@gogym.com' && userData.password === 'user123')
+    ) {
       setCurrentUser(clientData);
       localStorage.setItem('currentUserSession', JSON.stringify(clientData));
-      addNotification(`Bienvenido de nuevo, ${clientData.firstName}!`, 'success', clientData.id, true);
+      addNotification(`Bienvenido/a ${clientData.firstName || clientData.email}!`, 'success', clientData.id, true);
       return clientData;
+    }
+    // Para otros clientes: contraseña = dni
+    if (clientData.role !== 'admin' && clientData.role !== 'user') {
+      if (userData.password === String(clientData.dni)) {
+        setCurrentUser(clientData);
+        localStorage.setItem('currentUserSession', JSON.stringify(clientData));
+        addNotification(`Bienvenido/a ${clientData.firstName || clientData.email}!`, 'success', clientData.id, true);
+        return clientData;
+      }
     }
     showError("Error de Inicio de Sesión", "Email o contraseña incorrectos.");
     return null;
