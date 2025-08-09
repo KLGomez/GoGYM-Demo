@@ -1,8 +1,11 @@
+// components/ClientEditForm.jsx
 import React from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
+import { getClients, saveClients } from "../utils/storage";
+import { showSuccess } from "../utils/alerts";
 
-const ClientEditForm = ({ initialValues, onSubmit }) => {
+const ClientEditForm = ({ initialClient, onCancel, onSave, CameraUploader }) => {
   const EditSchema = Yup.object().shape({
     nombre: Yup.string(),
     apellido: Yup.string(),
@@ -15,71 +18,131 @@ const ClientEditForm = ({ initialValues, onSubmit }) => {
     activo: Yup.boolean()
   });
 
+  const handleSubmit = (values) => {
+    const clients = getClients();
+    // Mantener el id y los campos no editables
+    const updated = clients.map((c) =>
+      c.id === initialClient.id
+        ? { ...c, ...values, id: initialClient.id } // merge para no perder campos no editables
+        : c
+    );
+    saveClients(updated);
+    showSuccess("Cliente actualizado", "Los datos del cliente se guardaron correctamente.");
+    if (onSave) onSave();
+  };
+
   return (
-    <div className="bg-gray-800 p-4 rounded-lg shadow-md text-white">
-      <h2 className="text-xl font-bold mb-4 text-orange-400">Editar Cliente</h2>
+    <div className="max-w-2xl mx-auto bg-gray-800 p-6 rounded-lg shadow-md text-white">
+      <button
+        type="button"
+        onClick={onCancel}
+        className="mb-4 text-orange-400 hover:text-orange-500"
+      >
+        &larr; Volver a la lista
+      </button>
+      <h2 className="text-xl font-bold mb-6 text-orange-400">Editar Cliente</h2>
       <Formik
-        initialValues={initialValues}
+        initialValues={initialClient}
         validationSchema={EditSchema}
-        onSubmit={onSubmit}
+        onSubmit={handleSubmit}
         enableReinitialize
       >
-        {({ isSubmitting, dirty, isValid }) => (
+        {({ isSubmitting, isValid, setFieldValue, values }) => (
           <Form className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="nombre">Nombre</label>
-                <Field name="nombre" type="text" className="input" />
-                <ErrorMessage name="nombre" component="div" className="text-red-400 text-sm" />
+                <label htmlFor="nombre" className="block text-sm font-medium text-gray-200">Nombre</label>
+                <Field
+                  name="nombre"
+                  type="text"
+                  className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-white focus:ring-orange-500 focus:border-orange-500"
+                />
+                <ErrorMessage name="nombre" component="div" className="text-red-500 text-xs mt-1" />
               </div>
               <div>
-                <label htmlFor="apellido">Apellido</label>
-                <Field name="apellido" type="text" className="input" />
-                <ErrorMessage name="apellido" component="div" className="text-red-400 text-sm" />
+                <label htmlFor="apellido" className="block text-sm font-medium text-gray-200">Apellido</label>
+                <Field
+                  name="apellido"
+                  type="text"
+                  className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-white focus:ring-orange-500 focus:border-orange-500"
+                />
+                <ErrorMessage name="apellido" component="div" className="text-red-500 text-xs mt-1" />
               </div>
               <div>
-                <label htmlFor="dni">DNI</label>
-                <Field name="dni" type="text" className="input" />
-                <ErrorMessage name="dni" component="div" className="text-red-400 text-sm" />
+                <label htmlFor="dni" className="block text-sm font-medium text-gray-200">DNI</label>
+                <Field
+                  name="dni"
+                  type="text"
+                  className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-white focus:ring-orange-500 focus:border-orange-500"
+                />
+                <ErrorMessage name="dni" component="div" className="text-red-500 text-xs mt-1" />
               </div>
               <div>
-                <label htmlFor="email">Email</label>
-                <Field name="email" type="email" className="input" />
-                <ErrorMessage name="email" component="div" className="text-red-400 text-sm" />
+                <label htmlFor="email" className="block text-sm font-medium text-gray-200">Email</label>
+                <Field
+                  name="email"
+                  type="email"
+                  className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-white focus:ring-orange-500 focus:border-orange-500"
+                />
+                <ErrorMessage name="email" component="div" className="text-red-500 text-xs mt-1" />
               </div>
               <div>
-                <label htmlFor="telefono">Teléfono</label>
-                <Field name="telefono" type="text" className="input" />
-                <ErrorMessage name="telefono" component="div" className="text-red-400 text-sm" />
+                <label htmlFor="telefono" className="block text-sm font-medium text-gray-200">Teléfono</label>
+                <Field
+                  name="telefono"
+                  type="text"
+                  className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-white focus:ring-orange-500 focus:border-orange-500"
+                />
+                <ErrorMessage name="telefono" component="div" className="text-red-500 text-xs mt-1" />
               </div>
               <div>
-                <label htmlFor="fechaNacimiento">Fecha de Nacimiento</label>
-                <Field name="fechaNacimiento" type="date" className="input" />
-                <ErrorMessage name="fechaNacimiento" component="div" className="text-red-400 text-sm" />
+                <label htmlFor="fechaNacimiento" className="block text-sm font-medium text-gray-200">Fecha de Nacimiento</label>
+                <Field
+                  name="fechaNacimiento"
+                  type="date"
+                  className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-white focus:ring-orange-500 focus:border-orange-500"
+                />
+                <ErrorMessage name="fechaNacimiento" component="div" className="text-red-500 text-xs mt-1" />
               </div>
               <div>
-                <label htmlFor="planAsignadoId">Plan</label>
-                <Field name="planAsignadoId" as="select" className="input">
+                <label htmlFor="planAsignadoId" className="block text-sm font-medium text-gray-200">Plan</label>
+                <Field
+                  name="planAsignadoId"
+                  as="select"
+                  className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-white focus:ring-orange-500 focus:border-orange-500"
+                >
                   <option value="">Seleccionar plan</option>
                   <option value="basic">Básico</option>
                   <option value="premium">Premium</option>
                 </Field>
-                <ErrorMessage name="planAsignadoId" component="div" className="text-red-400 text-sm" />
+                <ErrorMessage name="planAsignadoId" component="div" className="text-red-500 text-xs mt-1" />
               </div>
-              <div>
-                <label htmlFor="notasInternas">Notas Internas</label>
-                <Field name="notasInternas" as="textarea" className="input" />
-                <ErrorMessage name="notasInternas" component="div" className="text-red-400 text-sm" />
+              <div className="md:col-span-2">
+                <label htmlFor="notasInternas" className="block text-sm font-medium text-gray-200">Notas Internas</label>
+                <Field
+                  name="notasInternas"
+                  as="textarea"
+                  className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-white focus:ring-orange-500 focus:border-orange-500"
+                />
+                <ErrorMessage name="notasInternas" component="div" className="text-red-500 text-xs mt-1" />
               </div>
-              <div className="flex items-center gap-2">
-                <label htmlFor="activo">Activo</label>
-                <Field name="activo" type="checkbox" className="form-checkbox" />
+              <div className="flex items-center gap-2 mt-2">
+                <label htmlFor="activo" className="text-sm text-gray-200 mr-2">Estado:</label>
+                <button
+                  type="button"
+                  onClick={() => setFieldValue("activo", !values.activo)}
+                  className={`px-4 py-2 rounded-full font-semibold focus:outline-none transition-colors duration-200
+                    ${values.activo ? "bg-green-500 text-white" : "bg-gray-600 text-gray-300"}`}
+                  aria-pressed={values.activo}
+                >
+                  {values.activo ? "Activo" : "Inactivo"}
+                </button>
               </div>
             </div>
             <button
               type="submit"
-              disabled={isSubmitting || !dirty || !isValid}
-              className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+              disabled={isSubmitting || !isValid}
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-md shadow disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Guardar Cambios
             </button>
