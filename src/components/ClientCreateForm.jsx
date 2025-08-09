@@ -6,7 +6,7 @@ import CameraUploader from "./CameraUploader";
 import { getClients, saveClients } from "../utils/storage";
 import { showSuccess } from "../utils/alerts";
 
-const ClientCreateForm = ({ onCancel, onSave, editingClient }) => {
+const ClientCreateForm = ({ onCancel, onSave, editingClient, membershipPlans = [] }) => {
   const initialValues = editingClient || {
     nombre: "",
     apellido: "",
@@ -32,23 +32,44 @@ const ClientCreateForm = ({ onCancel, onSave, editingClient }) => {
     fechaNacimiento: Yup.date().required(
       "La fecha de nacimiento es obligatoria"
     ),
-    planAsignadoId: Yup.string().required("El plan es obligatorio"),
+  planAsignadoId: Yup.string().required("El plan es obligatorio"),
     notasInternas: Yup.string(),
     fotoUrl: Yup.string().url("La URL debe ser válida").notRequired(),
   });
 
   const handleSubmit = (values) => {
     const clients = getClients();
+    // Buscar el plan seleccionado
+    const selectedPlan = membershipPlans.find(plan => plan.id === values.planAsignadoId);
+    // Crear objeto membership si hay plan seleccionado
+    const membership = selectedPlan
+      ? {
+          planName: selectedPlan.name || selectedPlan.nombre || selectedPlan.planName,
+          membershipStartDate: new Date().toISOString(),
+          membershipDurationDays: selectedPlan.duracionEnDias || selectedPlan.durationDays || selectedPlan.membershipDurationDays || 30,
+          autoRenew: false
+        }
+      : undefined;
+
+    // Mapeo para visualización interna (no afecta envío al backend)
+    const mappedValues = {
+      ...values,
+      firstName: values.nombre,
+      lastName: values.apellido
+    };
+
     if (editingClient) {
       // Editar cliente
       const updated = clients.map((c) =>
-        c.id === editingClient.id ? { ...values, id: editingClient.id } : c
+        c.id === editingClient.id
+          ? { ...mappedValues, id: editingClient.id, membership }
+          : c
       );
       saveClients(updated);
       showSuccess("Cliente actualizado", "Los datos del cliente se guardaron correctamente.");
     } else {
       // Alta nuevo cliente
-      const newClient = { ...values, id: Date.now() };
+      const newClient = { ...mappedValues, id: Date.now(), membership };
       saveClients([...clients, newClient]);
       showSuccess("Cliente creado", "El cliente fue registrado exitosamente.");
     }
@@ -224,8 +245,15 @@ const ClientCreateForm = ({ onCancel, onSave, editingClient }) => {
                              focus:ring-orange-500 focus:border-orange-500"
                 >
                   <option value="">Seleccionar plan</option>
-                  <option value="plan1">Plan Básico</option>
-                  <option value="plan2">Plan Premium</option>
+                  {membershipPlans && membershipPlans.length > 0 ? (
+                    membershipPlans.map((plan) => (
+                      <option key={plan.id} value={plan.id}>
+                        {plan.name || plan.nombre || plan.planName}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="" disabled>No hay planes disponibles</option>
+                  )}
                 </Field>
                 <ErrorMessage
                   name="planAsignadoId"

@@ -5,7 +5,7 @@ import Webcam from "react-webcam";
 import { CloudArrowUpIcon, CameraIcon } from "@heroicons/react/24/outline";
 
 // Cargamos la variable de entorno
-const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_NAME;
+const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 
 const videoConstraints = {
   width: 300,
@@ -13,18 +13,21 @@ const videoConstraints = {
   facingMode: "user",
 };
 
+
 const CameraUploader = ({ onUploadComplete }) => {
   const webcamRef = useRef(null);
   const [imgSrc, setImgSrc] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadedUrl, setUploadedUrl] = useState(null);
   const [error, setError] = useState(null); // 💥 Por si algo falla
+  const [showCamera, setShowCamera] = useState(false);
 
   const capture = useCallback(() => {
     const imageSrc = webcamRef.current?.getScreenshot();
     if (imageSrc) {
       setImgSrc(imageSrc);
       setError(null); // limpiamos errores
+      setShowCamera(false); // Ocultar cámara tras capturar
     } else {
       setError("No se pudo capturar la imagen. Asegurate de tener la cámara activa.");
     }
@@ -36,8 +39,16 @@ const CameraUploader = ({ onUploadComplete }) => {
     setUploading(true);
     setError(null);
 
+    // Convertir base64 a Blob
+    function dataURLtoBlob(dataurl) {
+      const arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+        bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+      for (let i = 0; i < n; i++) u8arr[i] = bstr.charCodeAt(i);
+      return new Blob([u8arr], { type: mime });
+    }
+
     const formData = new FormData();
-    formData.append("file", imgSrc);
+    formData.append("file", dataURLtoBlob(imgSrc));
     formData.append("upload_preset", "gogym_clientes");
     formData.append("folder", "clientes");
 
@@ -67,21 +78,42 @@ const CameraUploader = ({ onUploadComplete }) => {
     <div className="bg-gray-800 text-white p-4 rounded-lg shadow-md w-full max-w-md mx-auto">
       {!imgSrc ? (
         <>
-          <Webcam
-            audio={false}
-            ref={webcamRef}
-            screenshotFormat="image/jpeg"
-            videoConstraints={videoConstraints}
-            className="rounded-md w-full"
-          />
-          <button
-            onClick={capture}
-            className="mt-4 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded inline-flex items-center"
-          >
-            <CameraIcon className="h-5 w-5 mr-2" />
-            Capturar Foto
-          </button>
-          {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
+          {!showCamera ? (
+            <button
+              type="button"
+              onClick={() => setShowCamera(true)}
+              className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded inline-flex items-center w-full sm:w-auto justify-center transition-colors duration-200"
+            >
+              <CameraIcon className="h-5 w-5 mr-2" />
+              Abrir cámara
+            </button>
+          ) : (
+            <>
+              <Webcam
+                audio={false}
+                ref={webcamRef}
+                screenshotFormat="image/jpeg"
+                videoConstraints={videoConstraints}
+                className="rounded-md w-full"
+              />
+              <div className="flex flex-col sm:flex-row gap-2 mt-4 w-full">
+                <button
+                  onClick={capture}
+                  className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded inline-flex items-center w-full sm:w-auto justify-center transition-colors duration-200"
+                >
+                  <CameraIcon className="h-5 w-5 mr-2" />
+                  Capturar Foto
+                </button>
+                <button
+                  onClick={() => setShowCamera(false)}
+                  className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded w-full sm:w-auto transition-colors duration-200"
+                >
+                  Cerrar cámara
+                </button>
+              </div>
+              {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
+            </>
+          )}
         </>
       ) : (
         <div className="flex flex-col items-center">
@@ -90,7 +122,7 @@ const CameraUploader = ({ onUploadComplete }) => {
             <button
               onClick={uploadToCloudinary}
               disabled={uploading}
-              className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded inline-flex items-center"
+              className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded inline-flex items-center w-full sm:w-auto justify-center transition-colors duration-200"
             >
               <CloudArrowUpIcon className="h-5 w-5 mr-2" />
               {uploading ? "Subiendo..." : "Subir a Cloudinary"}
@@ -104,7 +136,7 @@ const CameraUploader = ({ onUploadComplete }) => {
               setUploadedUrl(null);
               setError(null);
             }}
-            className="mt-2 text-sm text-orange-300 hover:underline"
+            className="mt-2 text-sm text-orange-300 hover:underline w-full sm:w-auto"
           >
             Tomar otra foto
           </button>

@@ -27,6 +27,8 @@ const ClientsAdmin = () => {
     updateClient: contextUpdateClient,
     deleteClient: contextDeleteClient,
     isLoading,
+  membershipPlans: contextMembershipPlans = [],
+    // ...existing code...
   } = useContext(SharedDataContext);
 
   const [view, setView] = useState("menu");
@@ -82,6 +84,7 @@ const ClientsAdmin = () => {
         onCancel={() => setView("menu")}
         onSave={() => setView("list")}
         CameraUploader={CameraUploader}
+        membershipPlans={contextMembershipPlans}
       />
     );
   }
@@ -93,6 +96,7 @@ const ClientsAdmin = () => {
         onCancel={() => setView("list")}
         onSave={() => setView("list")}
         CameraUploader={CameraUploader}
+        membershipPlans={contextMembershipPlans}
       />
     );
   }

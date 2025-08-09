@@ -5,7 +5,7 @@ import * as Yup from "yup";
 import { getClients, saveClients } from "../utils/storage";
 import { showSuccess } from "../utils/alerts";
 
-const ClientEditForm = ({ initialClient, onCancel, onSave, CameraUploader }) => {
+const ClientEditForm = ({ initialClient, onCancel, onSave, CameraUploader, membershipPlans = [] }) => {
   const EditSchema = Yup.object().shape({
     nombre: Yup.string(),
     apellido: Yup.string(),
@@ -20,10 +20,21 @@ const ClientEditForm = ({ initialClient, onCancel, onSave, CameraUploader }) => 
 
   const handleSubmit = (values) => {
     const clients = getClients();
+    // Buscar el plan seleccionado
+    const selectedPlan = membershipPlans.find(plan => plan.id === values.planAsignadoId);
+    // Crear objeto membership si hay plan seleccionado
+    const membership = selectedPlan
+      ? {
+          planName: selectedPlan.name || selectedPlan.nombre || selectedPlan.planName,
+          membershipStartDate: new Date().toISOString(),
+          membershipDurationDays: selectedPlan.duracionEnDias || selectedPlan.durationDays || selectedPlan.membershipDurationDays || 30,
+          autoRenew: false
+        }
+      : initialClient.membership;
     // Mantener el id y los campos no editables
     const updated = clients.map((c) =>
       c.id === initialClient.id
-        ? { ...c, ...values, id: initialClient.id } // merge para no perder campos no editables
+        ? { ...c, ...values, id: initialClient.id, membership }
         : c
     );
     saveClients(updated);
@@ -42,7 +53,10 @@ const ClientEditForm = ({ initialClient, onCancel, onSave, CameraUploader }) => 
       </button>
       <h2 className="text-xl font-bold mb-6 text-orange-400">Editar Cliente</h2>
       <Formik
-        initialValues={initialClient}
+        initialValues={{
+          ...initialClient,
+          planAsignadoId: initialClient.membership?.planId || initialClient.planAsignadoId || ""
+        }}
         validationSchema={EditSchema}
         onSubmit={handleSubmit}
         enableReinitialize
@@ -112,8 +126,15 @@ const ClientEditForm = ({ initialClient, onCancel, onSave, CameraUploader }) => 
                   className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-white focus:ring-orange-500 focus:border-orange-500"
                 >
                   <option value="">Seleccionar plan</option>
-                  <option value="basic">Básico</option>
-                  <option value="premium">Premium</option>
+                  {membershipPlans && membershipPlans.length > 0 ? (
+                    membershipPlans.map((plan) => (
+                      <option key={plan.id} value={plan.id}>
+                        {plan.name || plan.nombre || plan.planName}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="" disabled>No hay planes disponibles</option>
+                  )}
                 </Field>
                 <ErrorMessage name="planAsignadoId" component="div" className="text-red-500 text-xs mt-1" />
               </div>
