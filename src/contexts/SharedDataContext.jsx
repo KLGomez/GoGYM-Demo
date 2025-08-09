@@ -46,7 +46,15 @@ export const SharedDataProvider = ({ children }) => {
     const storedEnrollments = getClassEnrollments();
     const storedAttendance = getAttendanceRecords();
     const storedArticles = getArticles();
-    const storedCurrentUser = JSON.parse(localStorage.getItem('currentUserSession'));
+    let storedCurrentUser = null;
+    try {
+      const raw = localStorage.getItem('currentUserSession');
+      storedCurrentUser = raw ? JSON.parse(raw) : null;
+    } catch (error) {
+      console.error('Error parsing currentUserSession from localStorage:', error);
+      localStorage.removeItem('currentUserSession');
+      storedCurrentUser = null;
+    }
 
   setClients(storedClients);
   setGymClasses(Array.isArray(storedGymClasses) ? storedGymClasses : initialSimulatedClasses);

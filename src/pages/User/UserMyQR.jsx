@@ -128,7 +128,7 @@ const UserMyQRPage = () => {
             padding: '0 1rem',
           }}
         >
-          Presenta este código QR o tu código alfanumérico en la recepción para registrar tu ingreso.
+          Presenta este código QR en la recepción para registrar tu ingreso.
         </p>
       </div>
 

@@ -286,7 +286,7 @@ const ClientCreateForm = ({ onCancel, onSave, editingClient, membershipPlans = [
                 Foto del cliente
               </label>
               <CameraUploader
-                onUploadSuccess={(url) => setFieldValue("fotoUrl", url)}
+                onUploadComplete={(url) => setFieldValue("fotoUrl", url)}
               />
               {values.fotoUrl && (
                 <img
