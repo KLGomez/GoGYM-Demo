@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom'; // Para navegar a la página de 
 // const allSimulatedClasses = [ ... ];
 
 const UserMyClasses = () => {
-  const { currentUser, enrollments, gymClasses, cancelEnrollment, isLoading } = useContext(SharedDataContext);
+  const { currentUser, enrollments, gymClasses, teachers, cancelEnrollment, isLoading } = useContext(SharedDataContext);
   const navigate = useNavigate();
 
   const [myClassesDetails, setMyClassesDetails] = useState([]);
@@ -20,26 +20,24 @@ const UserMyClasses = () => {
       const userEnrollments = enrollments.filter(enr => enr.userId === currentUser.id);
       const detailedClasses = userEnrollments.map(enrollment => {
         const classDetail = gymClasses.find(c => c.id === enrollment.classId);
+        if (!classDetail) return null;
+        // Buscar nombre del profesor
+        let profName = 'N/A';
+        if (classDetail.profesor && Array.isArray(teachers)) {
+          const prof = teachers.find(t => t.id === classDetail.profesor);
+          if (prof) profName = `${prof.nombre} ${prof.apellido}`;
+        }
         return {
-          ...classDetail, // Datos de la clase (name, instructor, time, location, etc.)
-          enrollmentId: enrollment.id, // ID único de la inscripción
-          enrollmentDate: enrollment.enrollmentDate, // Fecha de inscripción
-          // Asumimos que las clases en gymClasses tienen un campo 'date' para la fecha específica de la sesión.
-          // Si no, necesitaríamos obtenerlo de otra parte o simularlo.
-          // Por ahora, usaremos classDetail.day y una lógica para determinar si es pasada/futura.
-          // Para un sistema real, cada instancia de clase tendría su propia fecha/hora.
-          // Aquí simularemos 'date' en classDetail si no existe, o la lógica de "pasada" se basará en enrollmentDate.
-          // Para simplificar, asumimos que `classDetail.date` existe o se manejará.
-          // Si no, la lógica de `upcomingClasses` y `pastClasses` necesitará ajuste.
-          // Para este ejemplo, voy a asumir que `classDetail` puede no tener `date`,
-          // y la lógica de filtrado se basará en `enrollment.enrollmentDate` o una fecha simulada.
-          // Vamos a añadir una fecha simulada a `classDetail` si no existe para que el filtro funcione.
-          date: classDetail?.date || new Date(enrollment.enrollmentDate).toISOString().split('T')[0] // Simulación o dato real
+          ...classDetail,
+          enrollmentId: enrollment.id,
+          enrollmentDate: enrollment.enrollmentDate,
+          date: classDetail?.date || new Date(enrollment.enrollmentDate).toISOString().split('T')[0],
+          profName
         };
-      }).filter(Boolean); // Filtrar posibles nulos si una clase no se encontró
+      }).filter(Boolean);
       setMyClassesDetails(detailedClasses);
     }
-  }, [currentUser, enrollments, gymClasses, isLoading]);
+  }, [currentUser, enrollments, gymClasses, teachers, isLoading]);
 
 
   const handleCancelEnrollment = (enrollmentId, className) => {
@@ -94,17 +92,16 @@ const UserMyClasses = () => {
     return (
       <div className="bg-white shadow-lg rounded-lg p-5 flex flex-col justify-between hover:shadow-xl transition-shadow">
         <div>
-          <h3 className="text-xl font-bold text-orange-600 mb-2">{clase.name || 'Nombre de Clase no Disponible'}</h3>
-          <p className="text-sm text-gray-600 mb-1 flex items-center"><UserGroupIcon className="h-4 w-4 mr-2 text-gray-400" />Instructor: {clase.instructor || 'N/A'}</p>
+          <h3 className="text-xl font-bold text-orange-600 mb-2">{clase.nombre || clase.name || 'Nombre de Clase no Disponible'}</h3>
+          <p className="text-sm text-gray-600 mb-1 flex items-center"><UserGroupIcon className="h-4 w-4 mr-2 text-gray-400" />Profesor: {clase.profName || 'N/A'}</p>
           <p className="text-sm text-gray-600 mb-1 flex items-center"><CalendarDaysIcon className="h-4 w-4 mr-2 text-gray-400" />Fecha: {formatDate(clase.date)}</p>
-          <p className="text-sm text-gray-600 mb-1 flex items-center"><ClockIcon className="h-4 w-4 mr-2 text-gray-400" />Hora: {clase.time || 'N/A'}</p>
-          <p className="text-sm text-gray-600 mb-3 flex items-center"><MapPinIcon className="h-4 w-4 mr-2 text-gray-400" />Lugar: {clase.location || 'N/A'}</p>
+          <p className="text-sm text-gray-600 mb-1 flex items-center"><ClockIcon className="h-4 w-4 mr-2 text-gray-400" />Hora: {clase.horaInicio || clase.time || 'N/A'}{clase.horaFin ? ` - ${clase.horaFin}` : ''}</p>
           {clase.description && <p className="text-xs text-gray-500 mt-1 mb-3">{clase.description}</p>}
         </div>
         <div className="mt-auto pt-3 border-t border-gray-200">
           {isUpcoming && simulatedStatus === 'Confirmada' ? ( // Asumimos que se puede cancelar si es futura y confirmada
             <button
-              onClick={() => handleCancelEnrollment(clase.enrollmentId, clase.name)}
+              onClick={() => handleCancelEnrollment(clase.enrollmentId, clase.nombre || clase.name)}
               className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-3 rounded-lg transition-colors flex items-center justify-center text-sm"
             >
               <NoSymbolIcon className="h-5 w-5 mr-2" />
@@ -116,7 +113,7 @@ const UserMyClasses = () => {
               {/* Lógica para permitir feedback en clases pasadas o con cierto estado */}
               {(simulatedStatus === 'Completada' || simulatedStatus === 'Asistida') && (
                    <button
-                      onClick={() => handleLeaveFeedback(clase.id, clase.name)} // Usar clase.id (ID de la clase, no de la inscripción)
+                      onClick={() => handleLeaveFeedback(clase.id, clase.nombre || clase.name)}
                       className="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-3 rounded-lg transition-colors flex items-center justify-center text-sm"
                   >
                       <ChatBubbleLeftRightIcon className="h-5 w-5 mr-2" />

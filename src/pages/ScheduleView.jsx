@@ -16,7 +16,8 @@ const ScheduleView = ({ onBack }) => {
     if (isLoading || !contextGymClasses) return {};
 
     const groupedClasses = (contextGymClasses || []).reduce((acc, cls) => {
-      const day = cls.day; // El modelo de datos del contexto usa 'day'
+      // Soportar tanto 'dia' como 'day' para compatibilidad
+      const day = cls.dia || cls.day;
       if (!acc[day]) {
         acc[day] = [];
       }
@@ -26,19 +27,21 @@ const ScheduleView = ({ onBack }) => {
 
     for (const day in groupedClasses) {
       groupedClasses[day].sort((a, b) => {
-        // Usar 'time' o 'startTime' si existe
-        const timeA = a.time || a.startTime || "00:00";
-        const timeB = b.time || b.startTime || "00:00";
+        // Usar 'horaInicio', 'startTime', o 'time'
+        const timeA = a.horaInicio || a.startTime || a.time || "00:00";
+        const timeB = b.horaInicio || b.startTime || b.time || "00:00";
         return timeA.localeCompare(timeB);
       });
     }
     return groupedClasses;
   }, [contextGymClasses, isLoading]);
 
-  const getInstructorName = (instructorId) => {
+  const getTeacherName = (profesorId) => {
     if (isLoading || !contextTeachers) return 'Cargando...';
-    const teacher = contextTeachers.find(t => t.id === instructorId);
-    return teacher ? teacher.name : 'N/A';
+    const teacher = contextTeachers.find(t => t.id === profesorId);
+    if (!teacher) return 'N/A';
+    // Soportar ambos modelos
+    return teacher.nombre ? `${teacher.nombre} ${teacher.apellido}` : (teacher.name || 'N/A');
   };
 
   const isEmptySchedule = Object.keys(scheduledClasses).length === 0 ||
@@ -65,22 +68,22 @@ const ScheduleView = ({ onBack }) => {
           No hay clases programadas para mostrar en el cronograma.
         </p>
       ) : (
-        // Ajustar el número de columnas para mejor visualización, 7 para días de la semana si es posible
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
           {daysOrder.map(day => (
-            <div key={day} className="bg-gray-800 p-4 rounded-lg shadow-lg min-h-[200px]"> {/* min-h para consistencia */}
+            <div key={day} className="bg-gray-800 p-4 rounded-lg shadow-lg min-h-[200px]">
               <h3 className="text-xl font-semibold text-orange-500 mb-3 border-b border-gray-700 pb-2 capitalize">{day}</h3>
               {scheduledClasses[day] && scheduledClasses[day].length > 0 ? (
                 <ul className="space-y-3">
                   {scheduledClasses[day].map(cls => (
                     <li key={cls.id} className="bg-gray-700 p-3 rounded shadow hover:shadow-md transition-shadow">
-                      <p className="font-semibold text-white text-md">{cls.name}</p>
+                      <p className="font-semibold text-white text-md">{cls.nombre || cls.name}</p>
                       <p className="text-sm text-orange-300">
-                        {cls.time || cls.startTime}{cls.endTime && cls.startTime ? ` - ${cls.endTime}` : (cls.duration ? ` (${cls.duration})` : '')}
+                        {(cls.horaInicio || cls.startTime || cls.time) || ''}{(cls.horaFin || cls.endTime) ? ` - ${(cls.horaFin || cls.endTime)}` : (cls.duration ? ` (${cls.duration})` : '')}
                       </p>
-                      <p className="text-sm text-gray-300">Prof: {getInstructorName(cls.instructorId)}</p>
-                      <p className="text-xs text-gray-400">Lugar: {cls.location || 'N/A'}</p>
-                      <p className="text-xs text-gray-400">Cupos: {cls.enrolled}/{cls.capacity}</p>
+                      <p className="text-sm text-gray-300">Prof: {getTeacherName(cls.profesor || cls.instructorId)}</p>
+                      {cls.capacidad || cls.capacity ? (
+                        <p className="text-xs text-gray-400">Cupos: {cls.enrolled || 0}/{cls.capacidad || cls.capacity}</p>
+                      ) : null}
                     </li>
                   ))}
                 </ul>

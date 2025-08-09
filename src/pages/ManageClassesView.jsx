@@ -9,13 +9,13 @@ const ManageClassesView = ({ onBack }) => {
   const [teachers, setTeachers] = useState([]);
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    instructorId: '',
-    dayOfWeek: 'Lunes',
-    startTime: '',
-    endTime: '',
-    capacity: '',
-    description: ''
+    nombre: '',
+    profesor: '',
+    dia: 'Lunes',
+    horaInicio: '',
+    horaFin: '',
+    capacidad: '',
+    activo: true
   });
 
   useEffect(() => {
@@ -29,7 +29,7 @@ const ManageClassesView = ({ onBack }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    const val = name === 'capacity' ? parseInt(value, 10) : value;
+    const val = name === 'capacidad' ? parseInt(value, 10) : value;
     setFormData(prev => ({ ...prev, [name]: val }));
   };
 
@@ -37,35 +37,30 @@ const ManageClassesView = ({ onBack }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    if (!formData.name.trim() || !formData.instructorId) { // Validar instructorId
-      showError('Campos Incompletos', 'El nombre de la clase y el instructor son obligatorios.');
+    // Validaciones requeridas
+    if (!formData.nombre.trim() || !formData.profesor || !formData.dia || !formData.horaInicio || !formData.horaFin || isNaN(formData.capacidad) || formData.capacidad < 1) {
+      showError('Campos Incompletos', 'Todos los campos son obligatorios y la capacidad debe ser al menos 1.');
       return;
     }
-    // ... (otras validaciones existentes) ...
-    if (!validateTime(formData.startTime) || !validateTime(formData.endTime)) {
+    if (!validateTime(formData.horaInicio) || !validateTime(formData.horaFin)) {
       showError('Formato de Hora Inválido', 'Por favor, ingrese la hora en formato HH:MM (ej: 09:00).');
       return;
     }
-    if (formData.startTime >= formData.endTime) {
+    if (formData.horaInicio >= formData.horaFin) {
       showError('Horario Inválido', 'La hora de fin debe ser posterior a la hora de inicio.');
-      return;
-    }
-    if (isNaN(formData.capacity) || formData.capacity <= 0) {
-      showError('Capacidad Inválida', 'La capacidad máxima debe ser un número mayor a cero.');
       return;
     }
 
     const newClass = {
       id: Date.now().toString(),
       ...formData,
-      capacity: Number(formData.capacity)
+      capacidad: Number(formData.capacidad)
     };
 
     setClasses(prevClasses => [...prevClasses, newClass]);
-    showSuccess('Clase Agregada', `${newClass.name} ha sido agregada exitosamente.`);
+    showSuccess('Clase Agregada', `${newClass.nombre} ha sido agregada exitosamente.`);
     setIsFormVisible(false);
-    setFormData({ name: '', instructorId: '', dayOfWeek: 'Lunes', startTime: '', endTime: '', capacity: '', description: '' });
+    setFormData({ nombre: '', profesor: '', dia: 'Lunes', horaInicio: '', horaFin: '', capacidad: '', activo: true });
   };
 
   const handleDeleteClass = (classId, className) => {
@@ -75,10 +70,10 @@ const ManageClassesView = ({ onBack }) => {
     });
   };
 
-  // Helper para obtener el nombre del instructor a partir de su ID
-  const getInstructorName = (instructorId) => {
-    const teacher = teachers.find(t => t.id === instructorId);
-    return teacher ? teacher.name : 'Desconocido';
+  // Helper para obtener el nombre del profesor a partir de su ID
+  const getTeacherName = (profesorId) => {
+    const teacher = teachers.find(t => t.id === profesorId);
+    return teacher ? `${teacher.nombre} ${teacher.apellido}` : 'Desconocido';
   };
 
   return (
@@ -105,54 +100,63 @@ const ManageClassesView = ({ onBack }) => {
       {isFormVisible && (
         <form onSubmit={handleSubmit} className="space-y-4 max-w-xl bg-gray-800 p-6 rounded-lg mb-8">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-200">Nombre de la Clase</label>
-            <input type="text" name="name" id="name" value={formData.name} onChange={handleInputChange}
-                   className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
+            <label htmlFor="nombre" className="block text-sm font-medium text-gray-200">Nombre de la Clase</label>
+            <input type="text" name="nombre" id="nombre" value={formData.nombre} onChange={handleInputChange}
+              className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
           </div>
           <div>
-            <label htmlFor="instructorId" className="block text-sm font-medium text-gray-200">Instructor</label>
-            <select name="instructorId" id="instructorId" value={formData.instructorId} onChange={handleInputChange}
-                    className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500">
-              <option value="">Seleccione un instructor</option>
-              {teachers.map(teacher => (
-                <option key={teacher.id} value={teacher.id}>{teacher.name} ({teacher.specialty})</option>
+            <label htmlFor="profesor" className="block text-sm font-medium text-gray-200">Profesor</label>
+            <select name="profesor" id="profesor" value={formData.profesor} onChange={handleInputChange}
+              className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500">
+              <option value="">Seleccione un profesor</option>
+              {teachers.filter(t => t.activo !== false).map(teacher => (
+                <option key={teacher.id} value={teacher.id}>{teacher.nombre} {teacher.apellido}</option>
               ))}
             </select>
           </div>
           <div>
-            <label htmlFor="dayOfWeek" className="block text-sm font-medium text-gray-200">Día de la Semana</label>
-            <select name="dayOfWeek" id="dayOfWeek" value={formData.dayOfWeek} onChange={handleInputChange}
-                    className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500">
+            <label htmlFor="dia" className="block text-sm font-medium text-gray-200">Día de la Semana</label>
+            <select name="dia" id="dia" value={formData.dia} onChange={handleInputChange}
+              className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500">
               {["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"].map(day => (
                 <option key={day} value={day}>{day}</option>
               ))}
             </select>
           </div>
-          {/* ... (resto de los campos del formulario: startTime, endTime, capacity, description sin cambios) ... */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="startTime" className="block text-sm font-medium text-gray-200">Hora Inicio (HH:MM)</label>
-              <input type="time" name="startTime" id="startTime" value={formData.startTime} onChange={handleInputChange}
-                     className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
+              <label htmlFor="horaInicio" className="block text-sm font-medium text-gray-200">Hora Inicio (HH:MM)</label>
+              <input type="time" name="horaInicio" id="horaInicio" value={formData.horaInicio} onChange={handleInputChange}
+                className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
             </div>
             <div>
-              <label htmlFor="endTime" className="block text-sm font-medium text-gray-200">Hora Fin (HH:MM)</label>
-              <input type="time" name="endTime" id="endTime" value={formData.endTime} onChange={handleInputChange}
-                     className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
+              <label htmlFor="horaFin" className="block text-sm font-medium text-gray-200">Hora Fin (HH:MM)</label>
+              <input type="time" name="horaFin" id="horaFin" value={formData.horaFin} onChange={handleInputChange}
+                className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
             </div>
           </div>
           <div>
-            <label htmlFor="capacity" className="block text-sm font-medium text-gray-200">Capacidad Máxima</label>
-            <input type="number" name="capacity" id="capacity" value={formData.capacity} onChange={handleInputChange} min="1"
-                   className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
+            <label htmlFor="capacidad" className="block text-sm font-medium text-gray-200">Capacidad Máxima</label>
+            <input type="number" name="capacidad" id="capacidad" value={formData.capacidad} onChange={handleInputChange} min="1"
+              className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
           </div>
-          <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-200">Descripción (Opcional)</label>
-            <textarea name="description" id="description" value={formData.description} onChange={handleInputChange} rows="3"
-                      className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500"></textarea>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setFormData(prev => ({ ...prev, activo: !prev.activo }))}
+              className={`relative w-14 h-7 rounded-full transition-colors duration-200 focus:outline-none ${formData.activo ? 'bg-green-500' : 'bg-gray-500'}`}
+              aria-pressed={formData.activo}
+            >
+              <span
+                className={`absolute left-1 top-1 w-5 h-5 rounded-full bg-white shadow transform transition-transform duration-200 ${formData.activo ? 'translate-x-7' : ''}`}
+                style={{ transition: 'transform 0.2s' }}
+              ></span>
+              <span className="sr-only">Toggle Activo</span>
+            </button>
+            <span className={`text-sm font-semibold ${formData.activo ? 'text-green-400' : 'text-gray-400'}`}>{formData.activo ? 'Activo' : 'Inactivo'}</span>
           </div>
           <button type="submit"
-                  className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md shadow">
+            className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md shadow">
             Guardar Clase
           </button>
         </form>
@@ -166,12 +170,12 @@ const ManageClassesView = ({ onBack }) => {
           {classes.map(cls => (
             <li key={cls.id} className="bg-gray-800 p-4 rounded-lg shadow flex justify-between items-center">
               <div>
-                <p className="font-semibold text-white">{cls.name} <span className="text-sm text-gray-400">({cls.dayOfWeek}, {cls.startTime}-{cls.endTime})</span></p>
-                <p className="text-sm text-gray-300">Instructor: {getInstructorName(cls.instructorId)} - Capacidad: {cls.capacity}</p>
-                {cls.description && <p className="text-xs text-gray-400 mt-1">Descripción: {cls.description}</p>}
+                <p className="font-semibold text-white">{cls.nombre} <span className="text-sm text-gray-400">({cls.dia}, {cls.horaInicio}-{cls.horaFin})</span></p>
+                <p className="text-sm text-gray-300">Profesor: {getTeacherName(cls.profesor)} - Capacidad: {cls.capacidad}</p>
+                <p className="text-xs mt-1"><span className={cls.activo ? 'text-green-400' : 'text-red-400'}>{cls.activo ? 'Activo' : 'Inactivo'}</span></p>
               </div>
               <button
-                onClick={() => handleDeleteClass(cls.id, cls.name)}
+                onClick={() => handleDeleteClass(cls.id, cls.nombre)}
                 className="text-red-500 hover:text-red-700"
                 title="Eliminar Clase"
               >

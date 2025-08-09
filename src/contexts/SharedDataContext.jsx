@@ -14,10 +14,8 @@ export const SharedDataContext = createContext(null);
 
 // Datos iniciales simulados si localStorage está vacío
 const initialSimulatedClasses = [
-  { id: 'class1', name: 'Yoga Matutino', instructor: 'Ana Pérez', day: 'Lunes', time: '08:00 AM', duration: '60 min', capacity: 20, enrolled: 15, description: 'Empieza el día con energía y flexibilidad.', location: 'Sala Zen' },
-  { id: 'class2', name: 'HIIT Intenso', instructor: 'Carlos Ruiz', day: 'Martes', time: '06:00 PM', duration: '45 min', capacity: 15, enrolled: 15, description: 'Entrenamiento de alta intensidad para quemar calorías.', location: 'Sala Energía' },
-  { id: 'class3', name: 'Pilates Restaurativo', instructor: 'Laura Gómez', day: 'Miércoles', time: '09:00 AM', duration: '75 min', capacity: 18, enrolled: 10, description: 'Fortalece tu core y mejora tu postura.', location: 'Estudio CuerpoMente' },
-  { id: 'class4', name: 'Zumba Fiesta', instructor: 'Sofía Luna', day: 'Jueves', time: '07:00 PM', duration: '60 min', capacity: 25, enrolled: 22, description: 'Baila, diviértete y ponte en forma.', location: 'Estudio Principal' },
+  { id: 'class1', nombre: 'Yoga Matutino', profesor: 'teach_1', dia: 'Lunes', horaInicio: '08:00', horaFin: '09:00', capacidad: 20, activo: true },
+  { id: 'class2', nombre: 'HIIT Intenso', profesor: 'teach_2', dia: 'Martes', horaInicio: '18:00', horaFin: '18:45', capacidad: 15, activo: true },
 ];
 
 const initialSimulatedEnrollments = [
@@ -50,9 +48,9 @@ export const SharedDataProvider = ({ children }) => {
     const storedArticles = getArticles();
     const storedCurrentUser = JSON.parse(localStorage.getItem('currentUserSession'));
 
-    setClients(storedClients);
-    setGymClasses(storedGymClasses.length > 0 ? storedGymClasses : initialSimulatedClasses);
-    setTeachers(storedTeachers);
+  setClients(storedClients);
+  setGymClasses(Array.isArray(storedGymClasses) ? storedGymClasses : initialSimulatedClasses);
+  setTeachers(Array.isArray(storedTeachers) ? storedTeachers : []);
     setEnrollments(storedEnrollments.length > 0 ? storedEnrollments : initialSimulatedEnrollments);
     setAttendanceRecords(storedAttendance);
     setArticles(storedArticles);
@@ -236,13 +234,14 @@ export const SharedDataProvider = ({ children }) => {
 
   // --- CRUD Clases (Admin) ---
   const addGymClass = useCallback((classData) => {
+    // Usar los nuevos nombres de campos
     setGymClasses(prev => [...prev, { ...classData, id: `class_${Date.now()}` }]);
-    addNotification(`Nueva clase "${classData.name}" agregada.`, 'success', 'admin');
+    addNotification(`Nueva clase "${classData.nombre}" agregada.`, 'success', 'admin');
   }, [addNotification]);
 
   const updateGymClass = useCallback((updatedClassData) => {
     setGymClasses(prev => prev.map(c => c.id === updatedClassData.id ? updatedClassData : c));
-    addNotification(`Clase "${updatedClassData.name}" actualizada.`, 'info', 'admin');
+    addNotification(`Clase "${updatedClassData.nombre}" actualizada.`, 'info', 'admin');
     // Notificar a usuarios inscritos si hay cambios relevantes (ej. cancelación, horario)
     // Esto es más complejo y requeriría buscar en enrollments.
   }, [addNotification]);
@@ -250,14 +249,12 @@ export const SharedDataProvider = ({ children }) => {
   const deleteGymClass = useCallback((classId) => {
     const classToDelete = gymClasses.find(c => c.id === classId);
     setGymClasses(prev => prev.filter(c => c.id !== classId));
-    // También eliminar inscripciones asociadas
     setEnrollments(prev => prev.filter(e => e.classId !== classId));
     if (classToDelete) {
-      addNotification(`Clase "${classToDelete.name}" eliminada. Inscripciones asociadas también eliminadas.`, 'warning', 'admin');
-      // Notificar a usuarios inscritos que la clase fue cancelada.
+      addNotification(`Clase "${classToDelete.nombre || classToDelete.name}" eliminada. Inscripciones asociadas también eliminadas.`, 'warning', 'admin');
       const enrolledUsers = enrollments.filter(e => e.classId === classId).map(e => e.userId);
       enrolledUsers.forEach(userId => {
-        addNotification(`La clase "${classToDelete.name}" ha sido cancelada por el administrador.`, 'warning', userId);
+        addNotification(`La clase "${classToDelete.nombre || classToDelete.name}" ha sido cancelada por el administrador.`, 'warning', userId);
       });
     }
   }, [gymClasses, enrollments, addNotification]);
@@ -382,17 +379,17 @@ export const SharedDataProvider = ({ children }) => {
     setIsLoggingOut,
     addTeacher: (teacherData) => {
       setTeachers(prev => [...prev, { ...teacherData, id: teacherData.id || `teach_${Date.now()}` }]);
-      addNotification(`Profesor "${teacherData.name}" agregado.`, 'success', 'admin');
+      addNotification(`Profesor "${teacherData.nombre} ${teacherData.apellido}" agregado.`, 'success', 'admin');
     },
     updateTeacher: (updatedTeacherData) => {
       setTeachers(prev => prev.map(t => t.id === updatedTeacherData.id ? updatedTeacherData : t));
-      addNotification(`Profesor "${updatedTeacherData.name}" actualizado.`, 'info', 'admin');
+      addNotification(`Profesor "${updatedTeacherData.nombre} ${updatedTeacherData.apellido}" actualizado.`, 'info', 'admin');
     },
     deleteTeacher: (teacherId) => {
       const teacherToDelete = teachers.find(t => t.id === teacherId);
       if (teacherToDelete) {
         setTeachers(prev => prev.filter(t => t.id !== teacherId));
-        addNotification(`Profesor "${teacherToDelete.name}" eliminado.`, 'warning', 'admin');
+        addNotification(`Profesor "${teacherToDelete.nombre} ${teacherToDelete.apellido}" eliminado.`, 'warning', 'admin');
       }
     },
     // CRUD MembershipPlans
