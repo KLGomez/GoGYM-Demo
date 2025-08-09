@@ -59,17 +59,10 @@ const UserMyQRPage = () => {
 
   return (
     <div className="container mx-auto p-4 md:p-8 text-white">
-      <button
-        onClick={() => navigate(-1)}
-        className="mb-6 text-orange-400 hover:text-orange-500 flex items-center font-semibold"
-      >
-        <ArrowLeftIcon className="w-5 h-5 mr-2" />
-        Volver
-      </button>
 
       <h1 className="text-3xl font-bold text-center text-orange-400 mb-8">Mi Código QR de Acceso</h1>
 
-      {/* ✅ Zona segura para html2canvas */}
+      {/* Zona segura para html2canvas */}
       <div
         ref={qrCardRef}
         style={{
@@ -135,7 +128,7 @@ const UserMyQRPage = () => {
             padding: '0 1rem',
           }}
         >
-          Presenta este código QR o tu código alfanumérico en la recepción para registrar tu ingreso.
+          Presenta este código QR en la recepción para registrar tu ingreso.
         </p>
       </div>
 

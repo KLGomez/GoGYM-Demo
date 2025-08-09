@@ -10,60 +10,74 @@ import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { showError, confirmAction } from '../utils/alerts';
 
-// Esquema de validación para Tipos de Plan
+// Esquema de validación para Tipos de Plan (creación)
 const MembershipPlanSchema = Yup.object().shape({
-  name: Yup.string().required('El nombre del plan es obligatorio.'),
-  price: Yup.number().positive('El precio debe ser un número positivo.').required('El precio es obligatorio.'),
-  benefits: Yup.string().required('Los beneficios son obligatorios.'),
-  durationDays: Yup.number().positive('La duración debe ser un número positivo entero.').integer().required('La duración en días es obligatoria.')
+  nombre: Yup.string().required('El nombre del plan es obligatorio.'),
+  precio: Yup.number().positive('El precio debe ser un número positivo.').required('El precio es obligatorio.'),
+  duracionEnDias: Yup.number().positive('La duración debe ser un número positivo entero.').integer().required('La duración en días es obligatoria.'),
+  descripcion: Yup.string(),
+  activo: Yup.boolean()
 });
 
 const MembershipPlanForm = ({ onSubmit, initialData, onCancel }) => {
+  const isEdit = Boolean(initialData?.id);
   return (
     <Formik
       initialValues={{
-        name: initialData?.name || '',
-        price: initialData?.price || '',
-        benefits: initialData?.benefits || '',
-        durationDays: initialData?.durationDays || 30, // Default a 30 días
+        nombre: initialData?.nombre || '',
+        precio: initialData?.precio || '',
+        duracionEnDias: initialData?.duracionEnDias || 30,
+        descripcion: initialData?.descripcion || '',
+        activo: typeof initialData?.activo === 'boolean' ? initialData.activo : true,
         id: initialData?.id || null
       }}
-      validationSchema={MembershipPlanSchema}
+      validationSchema={isEdit ? undefined : MembershipPlanSchema}
       onSubmit={(values, { setSubmitting }) => {
         onSubmit(values);
         setSubmitting(false);
-        // No resetear el form aquí, se maneja en el componente padre para decidir si cerrar o no.
       }}
       enableReinitialize
     >
-      {({ isSubmitting, dirty, isValid }) => (
+      {({ isSubmitting, dirty, isValid, setFieldValue, values }) => (
         <Form className="space-y-4 max-w-lg bg-gray-800 p-6 rounded-lg shadow-xl">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-200">Nombre del Plan</label>
-            <Field type="text" name="name" className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
-            <ErrorMessage name="name" component="div" className="text-red-500 text-xs mt-1" />
+            <label htmlFor="nombre" className="block text-sm font-medium text-gray-200">Nombre del Plan</label>
+            <Field type="text" name="nombre" className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
+            <ErrorMessage name="nombre" component="div" className="text-red-500 text-xs mt-1" />
           </div>
           <div>
-            <label htmlFor="price" className="block text-sm font-medium text-gray-200">Precio (ej: 29.99)</label>
-            <Field type="number" name="price" step="0.01" className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
-            <ErrorMessage name="price" component="div" className="text-red-500 text-xs mt-1" />
+            <label htmlFor="precio" className="block text-sm font-medium text-gray-200">Precio (ej: 29.99)</label>
+            <Field type="number" name="precio" step="0.01" className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
+            <ErrorMessage name="precio" component="div" className="text-red-500 text-xs mt-1" />
           </div>
           <div>
-            <label htmlFor="durationDays" className="block text-sm font-medium text-gray-200">Duración del Plan (días)</label>
-            <Field type="number" name="durationDays" min="1" className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
-            <ErrorMessage name="durationDays" component="div" className="text-red-500 text-xs mt-1" />
+            <label htmlFor="duracionEnDias" className="block text-sm font-medium text-gray-200">Duración del Plan (días)</label>
+            <Field type="number" name="duracionEnDias" min="1" className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
+            <ErrorMessage name="duracionEnDias" component="div" className="text-red-500 text-xs mt-1" />
           </div>
           <div>
-            <label htmlFor="benefits" className="block text-sm font-medium text-gray-200">Beneficios (uno por línea)</label>
-            <Field as="textarea" name="benefits" rows="4" className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
-            <ErrorMessage name="benefits" component="div" className="text-red-500 text-xs mt-1" />
+            <label htmlFor="descripcion" className="block text-sm font-medium text-gray-200">Descripción (opcional)</label>
+            <Field as="textarea" name="descripcion" rows="3" className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500" />
+            <ErrorMessage name="descripcion" component="div" className="text-red-500 text-xs mt-1" />
+          </div>
+          <div className="flex items-center gap-2 mt-2">
+            <label htmlFor="activo" className="text-sm text-gray-200">Estado:</label>
+            <button
+              type="button"
+              onClick={() => setFieldValue("activo", !values.activo)}
+              className={`px-4 py-2 rounded-full font-semibold focus:outline-none transition-colors duration-200
+                ${values.activo ? "bg-green-500 text-white" : "bg-gray-600 text-gray-300"}`}
+              aria-pressed={values.activo}
+            >
+              {values.activo ? "Activo" : "Inactivo"}
+            </button>
           </div>
           <div className="flex justify-end space-x-3 pt-2">
             <button type="button" onClick={onCancel} className="py-2 px-4 border border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-300 hover:bg-gray-700">
               Cancelar
             </button>
             <button type="submit" disabled={isSubmitting || !dirty || !isValid} className="py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-md shadow disabled:opacity-50">
-              {initialData?.id ? 'Actualizar Plan' : 'Crear Plan'}
+              {isEdit ? 'Actualizar Plan' : 'Crear Plan'}
             </button>
           </div>
         </Form>
@@ -137,11 +151,28 @@ const MembershipsAdmin = () => {
     return new Date(dateString + 'T00:00:00Z').toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
   };
 
+  // Normaliza los datos para localStorage/backend (creación y edición)
   const handlePlanFormSubmit = (values) => {
+    // Si es edición, solo enviar campos modificados (PATCH)
     if (editingPlan) {
-      updateMembershipPlan({ ...values, id: editingPlan.id });
+      const patch = { id: editingPlan.id };
+      // Solo incluir campos que cambiaron o están presentes
+      ["nombre", "precio", "duracionEnDias", "descripcion", "activo"].forEach((key) => {
+        if (values[key] !== undefined && values[key] !== editingPlan[key]) {
+          patch[key] = values[key];
+        }
+      });
+      updateMembershipPlan(patch);
     } else {
-      addMembershipPlan(values);
+      // Para creación, enviar todos los campos requeridos
+      const nuevoPlan = {
+        nombre: values.nombre,
+        precio: Number(values.precio),
+        duracionEnDias: Number(values.duracionEnDias),
+        descripcion: values.descripcion || "",
+        activo: typeof values.activo === "boolean" ? values.activo : true
+      };
+      addMembershipPlan(nuevoPlan);
     }
     setIsPlanFormVisible(false);
     setEditingPlan(null);
@@ -174,12 +205,12 @@ const MembershipsAdmin = () => {
       action: () => setCurrentView("statusView"),
       description: "Ver y filtrar el estado actual de todas las membresías de clientes."
     },
-    {
+/*     {
       icon: <CurrencyDollarIcon className="w-10 h-10 text-white" />,
       label: "Gestión de Pagos",
       action: () => { showError("Próximamente", "La funcionalidad de Gestión de Pagos aún no está implementada."); },
       description: "Registrar y consultar pagos de membresías (Próximamente)."
-    },
+    }, */
   ];
 
   if (isLoading && currentView !== "menu") {
@@ -241,14 +272,17 @@ const MembershipsAdmin = () => {
             {(contextMembershipPlans || []).map(plan => (
               <div key={plan.id} className="bg-gray-800 p-4 rounded-lg shadow-md flex justify-between items-start">
                 <div>
-                  <p className="font-semibold text-xl text-orange-400">{plan.name}</p>
-                  <p className="text-gray-300">Precio: ${parseFloat(plan.price).toFixed(2)}</p>
-                  <p className="text-gray-300">Duración: {plan.durationDays} días</p>
-                  <p className="text-xs text-gray-400 mt-1 whitespace-pre-line">Beneficios: {plan.benefits}</p>
+                  <p className="font-semibold text-xl text-orange-400">{plan.nombre || plan.name}</p>
+                  <p className="text-gray-300">Precio: ${parseFloat(plan.precio ?? plan.price).toFixed(2)}</p>
+                  <p className="text-gray-300">Duración: {plan.duracionEnDias ?? plan.durationDays} días</p>
+                  <p className="text-xs text-gray-400 mt-1 whitespace-pre-line">{plan.descripcion || plan.benefits}</p>
+                  <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold ${plan.activo === false ? "bg-gray-600 text-gray-300" : "bg-green-700 text-green-200"}`}>
+                    {plan.activo === false ? "Inactivo" : "Activo"}
+                  </span>
                 </div>
                 <div className="flex space-x-2 flex-shrink-0 mt-1">
                   <button onClick={() => handleEditPlan(plan)} className="p-2 text-blue-400 hover:text-blue-300" title="Editar Plan"><PencilIcon className="w-5 h-5" /></button>
-                  <button onClick={() => handleDeletePlan(plan.id, plan.name)} className="p-2 text-red-500 hover:text-red-400" title="Eliminar Plan"><TrashIcon className="w-5 h-5" /></button>
+                  <button onClick={() => handleDeletePlan(plan.id, plan.nombre || plan.name)} className="p-2 text-red-500 hover:text-red-400" title="Eliminar Plan"><TrashIcon className="w-5 h-5" /></button>
                 </div>
               </div>
             ))}

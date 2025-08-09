@@ -6,6 +6,9 @@ import { QrCodeIcon, UserIcon, ArrowPathIcon } from '@heroicons/react/24/outline
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { startQRScanner } from '../utils/readQr.js';
+import { processManualEntry } from '../utils/manualEntry';
+
+
 
 
 
@@ -44,13 +47,20 @@ const CheckInPage = () => {
         return;
       }
     } else if (type === 'manual') {
-      if (!identifier.trim()) {
-        showError("Entrada Inválida", "Por favor, ingrese un código de cliente.");
+      const result = processManualEntry({ identifier, clients, addAttendanceRecord });
+
+      if (!result) {
         setProcessing(false);
         return;
       }
-      foundClient = clients.find(c => c.alphanumericCode === identifier.toUpperCase() || c.dni === identifier);
+
+      setClientDetails(result);
+      setProcessing(false);
+      setManualCode('');
+      return;
     }
+
+
 
     if (!foundClient) {
       showError("Cliente No Encontrado", "No se encontró ningún cliente con ese código o DNI.");
@@ -163,7 +173,7 @@ const CheckInPage = () => {
             <p className="text-sm text-gray-400 mt-2 text-center">Colocá el código QR frente a la cámara.</p>
           </div>
         )}
- 
+
 
         {/* Formulario para ingreso manual */}
         {!scannerActive && (
@@ -198,20 +208,32 @@ const CheckInPage = () => {
         {/* Resultados del Check-in */}
         {clientDetails && (
           <div className={`mt-6 p-4 rounded-md border-l-4 ${clientDetails.membershipStatusDetails.status === "Active" ? 'bg-green-900 border-green-500' : 'bg-red-900 border-red-500'}`}>
-            <h3 className="text-xl font-semibold mb-2">{clientDetails.firstName} {clientDetails.lastName}</h3>
-            <p>Email: {clientDetails.email}</p>
-            <p>DNI: {clientDetails.dni}</p>
-            <p>Código: {clientDetails.alphanumericCode}</p>
-            <p>Plan: {clientDetails.membership?.planName || 'N/A'}</p>
-            <p>Estado Membresía: <span className={`font-bold ${clientDetails.membershipStatusDetails.status === "Active" ? 'text-green-400' : 'text-red-400'}`}>
-              {clientDetails.membershipStatusDetails.status}
-            </span></p>
-            {clientDetails.membershipStatusDetails.status !== "Active" && clientDetails.membership?.endDate && (
-              <p>Venció el: {new Date(clientDetails.membership.endDate).toLocaleDateString()}</p>
-            )}
-            {clientDetails.membershipStatusDetails.status === "Active" && clientDetails.membership?.endDate && (
-              <p>Vence el: {new Date(clientDetails.membership.endDate).toLocaleDateString()} ({clientDetails.membershipStatusDetails.daysRemaining} días restantes)</p>
-            )}
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              {clientDetails.fotoUrl && (
+                <img
+                  src={clientDetails.fotoUrl}
+                  alt="Foto del cliente"
+                  className="w-32 h-32 object-cover rounded-lg border-2 border-gray-600 mb-4 md:mb-0"
+                  style={{ background: '#222' }}
+                />
+              )}
+              <div className="flex-1">
+                <h3 className="text-xl font-semibold mb-2">{clientDetails.firstName} {clientDetails.lastName}</h3>
+                <p>Email: {clientDetails.email}</p>
+                <p>DNI: {clientDetails.dni}</p>
+                <p>Código: {clientDetails.alphanumericCode}</p>
+                <p>Plan: {clientDetails.membership?.planName || 'N/A'}</p>
+                <p>Estado Membresía: <span className={`font-bold ${clientDetails.membershipStatusDetails.status === "Active" ? 'text-green-400' : 'text-red-400'}`}>
+                  {clientDetails.membershipStatusDetails.status}
+                </span></p>
+                {clientDetails.membershipStatusDetails.status !== "Active" && clientDetails.membership?.endDate && (
+                  <p>Venció el: {new Date(clientDetails.membership.endDate).toLocaleDateString()}</p>
+                )}
+                {clientDetails.membershipStatusDetails.status === "Active" && clientDetails.membership?.endDate && (
+                  <p>Vence el: {new Date(clientDetails.membership.endDate).toLocaleDateString()} ({clientDetails.membershipStatusDetails.daysRemaining} días restantes)</p>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>
