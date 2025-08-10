@@ -1,11 +1,13 @@
 // components/ClientEditForm.jsx
-import React from "react";
+import React, { useContext } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import { getClients, saveClients } from "../utils/storage";
 import { showSuccess } from "../utils/alerts";
+import { SharedDataContext } from "../contexts/SharedDataContext";
 
 const ClientEditForm = ({ initialClient, onCancel, onSave, CameraUploader, membershipPlans = [] }) => {
+  const { updateClient: contextUpdateClient } = useContext(SharedDataContext);
+
   const EditSchema = Yup.object().shape({
     nombre: Yup.string(),
     apellido: Yup.string(),
@@ -19,7 +21,6 @@ const ClientEditForm = ({ initialClient, onCancel, onSave, CameraUploader, membe
   });
 
   const handleSubmit = (values) => {
-    const clients = getClients();
     // Buscar el plan seleccionado
     const selectedPlan = membershipPlans.find(plan => plan.id === values.planAsignadoId);
     // Crear objeto membership si hay plan seleccionado
@@ -32,12 +33,7 @@ const ClientEditForm = ({ initialClient, onCancel, onSave, CameraUploader, membe
         }
       : initialClient.membership;
     // Mantener el id y los campos no editables
-    const updated = clients.map((c) =>
-      c.id === initialClient.id
-        ? { ...c, ...values, id: initialClient.id, membership }
-        : c
-    );
-    saveClients(updated);
+    contextUpdateClient({ ...initialClient, ...values, membership });
     showSuccess("Cliente actualizado", "Los datos del cliente se guardaron correctamente.");
     if (onSave) onSave();
   };
