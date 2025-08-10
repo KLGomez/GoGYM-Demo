@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useContext } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { StarIcon as StarOutline } from '@heroicons/react/24/outline';
@@ -7,25 +6,25 @@ import { showError, confirmAction } from '../../utils/alerts';
 import { SharedDataContext } from '../../contexts/SharedDataContext';
 import { ChatBubbleLeftIcon, UserIcon, CalendarDaysIcon } from '@heroicons/react/24/outline';
 
-
 const StarRating = ({ rating }) => {
   return (
     <div className="flex">
-      {[1, 2, 3, 4, 5].map((star) => (
+      {[1, 2, 3, 4, 5].map((star) =>
         star <= rating ? (
           <StarSolid key={star} className="h-5 w-5 text-yellow-400" />
         ) : (
           <StarOutline key={star} className="h-5 w-5 text-yellow-400" />
         )
-      ))}
+      )}
     </div>
   );
 };
 
 const UserFeedback = () => {
-  const { currentUser, submitFeedback: contextSubmitFeedback, isLoading, feedbacks } = useContext(SharedDataContext);
+  const { currentUser, submitFeedback: contextSubmitFeedback, isLoading, feedbacks, enrollments } = useContext(SharedDataContext);
   const safeFeedbacks = Array.isArray(feedbacks) ? feedbacks : [];
   const myFeedbacks = safeFeedbacks?.filter(fb => fb.userId === currentUser?.id) || [];
+  const userEnrollments = enrollments?.filter(enr => enr.userId === currentUser?.id) || [];
 
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -53,9 +52,7 @@ const UserFeedback = () => {
       } else {
         console.log("No se especificó clase para feedback en URL ni en localStorage.");
       }
-      // Si está logueado pero no hay params, podría mostrar un selector o mensaje
       console.log("No se especificó clase para feedback en URL, pero usuario está logueado.");
-      // Dejar feedbackTarget como está o limpiarlo para que muestre el mensaje de "No se ha especificado"
     }
   }, [classIdParam, classNameParam, currentUser, isLoading, navigate]);
 
@@ -85,14 +82,12 @@ const UserFeedback = () => {
           rating,
           comment,
           userId: currentUser.id,
-          user: currentUser.name || currentUser.fullName || 'Usuario',
+          user: [currentUser.firstName, currentUser.lastName].filter(Boolean).join(' ') || 'Usuario',
           date: new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })
         });
 
-        // Guardar en localStorage
         localStorage.setItem("feedbackClassId", feedbackTarget.id);
         localStorage.setItem("feedbackClassName", feedbackTarget.name);
-        console.log("Guardado en localStorage:", feedbackTarget.id, feedbackTarget.name);
 
         setRating(0);
         setComment('');
@@ -100,10 +95,6 @@ const UserFeedback = () => {
       }
     );
   };
-
-  if (isLoading) {
-    return <p className="text-center text-white text-xl py-10">Cargando...</p>;
-  }
 
   // Simulación de comentarios de otros usuarios
   const otherUsersFeedbacks = [
@@ -141,10 +132,100 @@ const UserFeedback = () => {
   };
   const stats = calculateStats();
 
+  const FeedbackDashboard = () => (
+    <div className="flex-1 bg-gray-900 text-white p-8 rounded-2xl shadow-2xl border border-gray-700">
+      <h1 className="text-3xl font-bold mb-8">Feedback de Clases</h1>
+      <div className="grid md:grid-cols-2 gap-6 mb-8">
+        {/* Mis Comentarios */}
+        <div className="bg-gray-800 text-white rounded-xl shadow-lg p-6">
+          <h2 className="text-xl font-bold mb-4">Mis Comentarios</h2>
+          {userEnrollments.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500">Para calificar las clases, primero debes inscribirte a alguna.</p>
+            </div>
+          ) : myFeedbacks.length === 0 ? (
+            <div className="text-center py-8">
+              <ChatBubbleLeftIcon className="w-5 h-5 inline-block mr-2" />
+              <p className="text-gray-500">No has dejado ningún feedback aún.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {myFeedbacks.map((feedback) => (
+                <div key={`${feedback.id}-${feedback.userId}`} className="border-b border-gray-200 pb-4 last:border-b-0">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-semibold text-gray-800">{feedback.className}</h3>
+                    <StarRating rating={feedback.rating} interactive={false} />
+                  </div>
+                  <div className="flex items-center text-sm text-gray-200 mb-2">
+                    <UserIcon className="w-5 h-5 inline-block mr-2" />
+                    <span className="text-white bg-blue-800 px-2 py-1 rounded text-xs mr-2">
+                      {feedback.user}
+                    </span>
+                    <CalendarDaysIcon className="w-5 h-5 inline-block mr-2" />
+                    <span>{feedback.date}</span>
+                  </div>
+                  <div className="bg-gray-700 rounded p-3">
+                    <p className="text-gray-300 italic">"{feedback.comment}"</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Comentarios de Otros Usuarios */}
+        <div className="bg-gray-800 text-white rounded-xl shadow-lg p-6">
+          <h2 className="text-xl font-bold mb-4">Comentarios de Otros Usuarios</h2>
+          <div className="space-y-4">
+            {otherUsersFeedbacks.map((feedback) => (
+              <div key={`${feedback.id}-${feedback.userId}`} className="border-b border-gray-200 pb-4 last:border-b-0">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-semibold text-gray-800">{feedback.className}</h3>
+                  <StarRating rating={feedback.rating} interactive={false} />
+                </div>
+                <div className="flex items-center text-sm text-gray-200 mb-2">
+                  <UserIcon className="w-4 h-4 mr-1" />
+                  <span>{feedback.user}</span>
+                  <CalendarDaysIcon className="w-4 h-4 mr-1 ml-4" />
+                  <span>{feedback.date}</span>
+                </div>
+                <div className="bg-gray-700 rounded p-3">
+                  <p className="text-gray-300 italic">"{feedback.comment}"</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Estadísticas Generales */}
+      <div className="bg-gray-800 text-white rounded-xl shadow-lg p-6">
+        <h2 className="text-xl font-bold mb-6">Estadísticas Generales</h2>
+        <div className="grid md:grid-cols-3 gap-6">
+          <div className="text-center bg-gray-700 rounded-lg p-6">
+            <div className="text-4xl font-bold text-blue-400 mb-2">{stats.totalComments}</div>
+            <div className="text-gray-300">Total Comentarios</div>
+          </div>
+          <div className="text-center bg-gray-700 rounded-lg p-6">
+            <div className="text-4xl font-bold text-green-600 mb-2">{stats.averageRating}</div>
+            <div className="text-gray-300">Calificación Promedio</div>
+          </div>
+          <div className="text-center bg-gray-700 rounded-lg p-6">
+            <div className="text-4xl font-bold text-red-600 mb-2">{stats.myComments}</div>
+            <div className="text-gray-300">Mis Comentarios</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (isLoading) {
+    return <p className="text-center text-white text-xl py-10">Cargando...</p>;
+  }
+
   if (!feedbackTarget.id || !feedbackTarget.name) {
     return (
       <div className="container mx-auto p-4">
-        {/* Botón Volver */}
         <button
           onClick={() => navigate(-1)}
           className="mb-6 text-orange-500 hover:text-orange-600 font-semibold flex items-center"
@@ -156,13 +237,7 @@ const UserFeedback = () => {
           </svg>
           Volver
         </button>
-
-        <h1 className="text-3xl font-semibold text-white mb-8">Feedback de Clases</h1>
-
-        {/* Secciones: Mis Comentarios, Otros Usuarios, Estadísticas */}
-        <div className="flex-1 bg-gray-900 text-white p-8 rounded-lg">
-          {/* tu código existente: Mis Comentarios, Otros, Estadísticas... */}
-        </div>
+        <FeedbackDashboard />
       </div>
     );
   }
@@ -232,86 +307,7 @@ const UserFeedback = () => {
         </div>
       </form>
 
-      <div className="flex-1 bg-gray-900 text-white p-8 rounded-2xl shadow-2xl border border-gray-700">
-        <h1 className="text-3xl font-bold mb-8">Feedback de Clases</h1>
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          {/* Mis Comentarios */}
-          <div className="bg-gray-800 text-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-bold mb-4">Mis Comentarios</h2>
-            {feedbacks && myFeedbacks.length === 0 ? (
-              <div className="text-center py-8">
-                <ChatBubbleLeftIcon className="w-5 h-5 inline-block mr-2" />
-                <p className="text-gray-500">No has dejado ningún feedback aún.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {myFeedbacks.map((feedback) => (
-                  <div key={`${feedback.id}-${feedback.userId}`} className="border-b border-gray-200 pb-4 last:border-b-0">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-semibold text-gray-800">{feedback.className}</h3>
-                      <StarRating rating={feedback.rating} interactive={false} />
-                    </div>
-                    <div className="flex items-center text-sm text-gray-200 mb-2">
-                      <UserIcon className="w-5 h-5 inline-block mr-2" />
-                      <span className="text-white bg-blue-800 px-2 py-1 rounded text-xs mr-2">
-                        {feedback.user}
-                      </span>
-                      <CalendarDaysIcon className="w-5 h-5 inline-block mr-2" />
-                      <span>{feedback.date}</span>
-                    </div>
-                    <div className="bg-gray-700 rounded p-3">
-                      <p className="text-gray-300 italic">"{feedback.comment}"</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Comentarios de Otros Usuarios */}
-          <div className="bg-gray-800 text-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-bold mb-4">Comentarios de Otros Usuarios</h2>
-            <div className="space-y-4">
-              {otherUsersFeedbacks.map((feedback) => (
-                <div key={`${feedback.id}-${feedback.userId}`} className="border-b border-gray-200 pb-4 last:border-b-0">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-gray-800">{feedback.className}</h3>
-                    <StarRating rating={feedback.rating} interactive={false} />
-                  </div>
-                  <div className="flex items-center text-sm text-gray-200 mb-2">
-                    <UserIcon className="w-4 h-4 mr-1" />
-                    <span>{feedback.user}</span>
-                    <CalendarDaysIcon className="w-4 h-4 mr-1 ml-4" />
-                    <span>{feedback.date}</span>
-                  </div>
-                  <div className="bg-gray-700 rounded p-3">
-                    <p className="text-gray-300 italic">"{feedback.comment}"</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Estadísticas Generales */}
-        <div className="bg-gray-800 text-white rounded-xl shadow-lg p-6">
-          <h2 className="text-xl font-bold mb-6">Estadísticas Generales</h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="text-center bg-gray-700 rounded-lg p-6">
-              <div className="text-4xl font-bold text-blue-400 mb-2">{stats.totalComments}</div>
-              <div className="text-gray-300">Total Comentarios</div>
-            </div>
-            <div className="text-center bg-gray-700 rounded-lg p-6">
-              <div className="text-4xl font-bold text-green-600 mb-2">{stats.averageRating}</div>
-              <div className="text-gray-300">Calificación Promedio</div>
-            </div>
-            <div className="text-center bg-gray-700 rounded-lg p-6">
-              <div className="text-4xl font-bold text-red-600 mb-2">{stats.myComments}</div>
-              <div className="text-gray-300">Mis Comentarios</div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <FeedbackDashboard />
     </div>
   );
 };
