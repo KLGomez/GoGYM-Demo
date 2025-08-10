@@ -164,7 +164,7 @@ const UserMembership = () => {
 
   if (!currentUser) {
     return (
-        <div className="text-center py-10 bg-gray-800 min-h-screen">
+        <div className="text-center py-10 bg-gray-900 min-h-screen">
             <p className="text-white text-xl mb-4">Por favor, inicia sesión para ver los detalles de tu membresía.</p>
             <button
                 onClick={() => navigate('/login')}
@@ -189,7 +189,7 @@ const UserMembership = () => {
 
 
   return (
-  <div className="container mx-auto p-4 bg-gray-800 min-h-screen rounded-xl">
+  <div className="container mx-auto p-4 bg-gray-900 min-h-screen rounded-xl">
       <h1 className="text-3xl font-bold text-orange-400 mb-8">Detalles de Mi Membresía</h1>
 
       {/* Alerta de membresía próxima a vencer o vencida */}

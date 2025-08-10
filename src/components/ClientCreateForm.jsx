@@ -1,12 +1,14 @@
 // ClientCreateForm.jsx
-import React from "react";
+import React, { useContext } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import CameraUploader from "./CameraUploader";
-import { getClients, saveClients } from "../utils/storage";
 import { showSuccess } from "../utils/alerts";
+import { SharedDataContext } from "../contexts/SharedDataContext";
 
 const ClientCreateForm = ({ onCancel, onSave, editingClient, membershipPlans = [] }) => {
+  const { addClient: contextAddClient, updateClient: contextUpdateClient } = useContext(SharedDataContext);
+
   const initialValues = editingClient || {
     nombre: "",
     apellido: "",
@@ -38,7 +40,6 @@ const ClientCreateForm = ({ onCancel, onSave, editingClient, membershipPlans = [
   });
 
   const handleSubmit = (values) => {
-    const clients = getClients();
     // Buscar el plan seleccionado
     const selectedPlan = membershipPlans.find(plan => plan.id === values.planAsignadoId);
     // Crear objeto membership si hay plan seleccionado
@@ -60,17 +61,11 @@ const ClientCreateForm = ({ onCancel, onSave, editingClient, membershipPlans = [
 
     if (editingClient) {
       // Editar cliente
-      const updated = clients.map((c) =>
-        c.id === editingClient.id
-          ? { ...mappedValues, id: editingClient.id, membership }
-          : c
-      );
-      saveClients(updated);
+      contextUpdateClient({ ...mappedValues, id: editingClient.id, membership });
       showSuccess("Cliente actualizado", "Los datos del cliente se guardaron correctamente.");
     } else {
       // Alta nuevo cliente
-      const newClient = { ...mappedValues, id: Date.now(), membership };
-      saveClients([...clients, newClient]);
+      contextAddClient({ ...mappedValues, membership });
       showSuccess("Cliente creado", "El cliente fue registrado exitosamente.");
     }
     if (onSave) onSave();
