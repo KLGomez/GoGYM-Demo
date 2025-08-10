@@ -15,12 +15,27 @@ const StatCard = ({ title, value, icon, color, linkTo }) => (
 
 const HomePage = () => {
   const { clients, gymClasses, teachers, attendanceRecords, isLoading } = useContext(SharedDataContext);
+  // Log para depuración: verificar si los datos cambian y si el render se dispara
+  console.log("[HomePage render] clients:", clients);
+  console.log("[HomePage render] gymClasses:", gymClasses);
+  console.log("[HomePage render] teachers:", teachers);
+  console.log("[HomePage render] attendanceRecords:", attendanceRecords);
+  console.log("[HomePage render] isLoading:", isLoading);
 
   if (isLoading) {
     return <div className="text-center py-10"><p className="text-white">Cargando dashboard...</p></div>;
   }
 
-  const activeClients = clients?.filter(c => c.membershipStatusDetails?.status === 'Active').length || 0;
+  // Considera clientes activos según fechas de membresía (sin modificar el DTO ni el formulario)
+  function isMembershipActive(membership) {
+    if (!membership || !membership.membershipStartDate || !membership.membershipDurationDays) return false;
+    const start = new Date(membership.membershipStartDate);
+    const end = new Date(start);
+    end.setDate(start.getDate() + Number(membership.membershipDurationDays));
+    const now = new Date();
+    return now >= start && now <= end;
+  }
+  const activeClients = clients?.filter(c => isMembershipActive(c.membership)).length || 0;
   const totalClassesToday = gymClasses?.filter(c => c.day === new Date().toLocaleDateString('es-ES', { weekday: 'long' })).length || 0;
   const recentCheckIns = attendanceRecords?.slice(-5).reverse() || []; // Últimos 5 check-ins
 
@@ -31,7 +46,7 @@ const HomePage = () => {
     <div className="p-6">
       <h1 className="text-3xl font-bold text-orange-400 mb-8">Dashboard Principal</h1>
 
-      {/* Sección de Estadísticas Rápidas */}
+      {/* Sección de Estadísticas Rápidas .*/}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-10">
         <StatCard title="Clientes Activos" value={activeClients} icon={UsersIcon} color="border-green-500" linkTo="/admin/clients" />
         <StatCard title="Clases Hoy" value={totalClassesToday} icon={CalendarDaysIcon} color="border-blue-500" linkTo="/admin/classes" />
