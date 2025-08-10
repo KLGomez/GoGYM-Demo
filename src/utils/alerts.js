@@ -56,6 +56,23 @@ export const showError = (title, text) => {
 };
 
 /**
+ * Muestra una alerta de advertencia.
+ * @param {string} title - El título de la alerta.
+ * @param {string} text - El texto del cuerpo de la alerta.
+ */
+export const showWarning = (title, text) => {
+  Swal.fire({
+    title,
+    text,
+    icon: 'warning',
+    confirmButtonColor: goGymColors.primary,
+    background: goGymColors.background,
+    color: goGymColors.text,
+    iconColor: goGymColors.iconWarning,
+  });
+};
+
+/**
  * Muestra un modal de confirmación.
  * @param {string} title - El título del modal.
  * @param {string} text - El texto del cuerpo del modal.
