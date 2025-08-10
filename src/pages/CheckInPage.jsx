@@ -180,26 +180,32 @@ const CheckInPage = () => {
           <form onSubmit={handleManualSubmit} className="space-y-4 mb-6">
             <div>
               <label htmlFor="manualCode" className="block text-sm font-medium text-gray-300 mb-1">
-                Ingreso Manual (Código Alfanumérico o DNI):
+                Ingreso Manual (Ingrese el DNI del cliente):
               </label>
               <div className="flex">
-                <input
-                  type="text"
-                  id="manualCode"
-                  value={manualCode}
-                  onChange={(e) => setManualCode(e.target.value)}
-                  placeholder="Ej: JP12345678 o DNI"
-                  className="flex-grow p-3 bg-gray-700 border border-gray-600 text-white rounded-l-md focus:ring-orange-500 focus:border-orange-500"
-                  disabled={processing}
-                />
-                <button
-                  type="submit"
-                  disabled={processing || !manualCode.trim()}
-                  className="bg-orange-500 hover:bg-orange-600 text-white font-semibold p-3 rounded-r-md disabled:opacity-50 flex items-center"
-                >
-                  {processing ? <ArrowPathIcon className="w-5 h-5 animate-spin" /> : <UserIcon className="w-5 h-5" />}
-                  <span className="ml-2">Verificar</span>
-                </button>
+                <div className="flex flex-col xs:flex-row w-full gap-2">
+                  <input
+                    type="text"
+                    id="manualCode"
+                    value={manualCode}
+                    onChange={(e) => setManualCode(e.target.value)}
+                    placeholder="Ej: JP12345678 o DNI"
+                    className="flex-grow p-3 bg-gray-700 border border-gray-600 text-white rounded-md xs:rounded-l-md xs:rounded-r-none focus:ring-orange-500 focus:border-orange-500"
+                    disabled={processing}
+                  />
+                  <button
+                    type="submit"
+                    disabled={processing || !manualCode.trim()}
+                    className="bg-orange-500 hover:bg-orange-600 text-white font-semibold p-3 rounded-md xs:rounded-r-md xs:rounded-l-none disabled:opacity-50 flex items-center justify-center min-w-[90px] sm:min-w-[120px] text-xs sm:text-base"
+                  >
+                    {processing ? (
+                      <ArrowPathIcon className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <UserIcon className="w-5 h-5" />
+                    )}
+                    <span className="ml-1 sm:ml-2 truncate">Verificar</span>
+                  </button>
+                </div>
               </div>
             </div>
           </form>

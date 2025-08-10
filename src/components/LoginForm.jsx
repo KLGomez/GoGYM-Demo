@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 // No se necesita useNavigate aquí si la navegación la maneja el componente padre (Login.jsx)
 // import { useNavigate } from "react-router-dom";
 // No se usa users de data/users.js directamente, la lógica de auth está en el contexto.
@@ -8,6 +9,7 @@ export default function LoginForm({ onLogin, error: propError }) {
     const [email, setEmail] = useState(""); // Cambiado de username a email para coincidir con el contexto
     const [password, setPassword] = useState("");
     const [localError, setLocalError] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -34,13 +36,13 @@ export default function LoginForm({ onLogin, error: propError }) {
 
             <form className="space-y-4 w-full max-w-sm" onSubmit={handleSubmit}>
                 <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-white"> {/* Cambiado htmlFor a "email" */}
-                        Email {/* Cambiado de Usuario a Email */}
+                    <label htmlFor="email" className="block text-sm font-medium text-white">
+                        Email
                     </label>
                     <input
-                        type="email" // Cambiado de text a email
-                        id="email" // Cambiado de username a email
-                        placeholder="Ej: juan@example.com" // Placeholder actualizado
+                        type="email"
+                        id="email"
+                        placeholder="Ej: juan@example.com"
                         className="text-white w-full px-4 py-2 mt-1 border-2 border-gray-300 bg-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-400"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -48,22 +50,31 @@ export default function LoginForm({ onLogin, error: propError }) {
                     />
                 </div>
 
-                <div>
+                <div className="relative">
                     <label htmlFor="password" className="block text-sm font-medium text-white">
                         Contraseña
                     </label>
                     <input
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         id="password"
                         value={password}
                         placeholder="••••••••"
-                        className="text-white w-full px-4 py-2 mt-1 border-2 border-gray-300 bg-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-400"
+                        className="text-white w-full px-4 py-2 mt-1 border-2 border-gray-300 bg-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-400 pr-10"
                         onChange={(e) => setPassword(e.target.value)}
                         autoComplete="current-password"
                     />
+                    <button
+                        type="button"
+                        tabIndex={-1}
+                        className="absolute right-3 top-9 text-gray-400 hover:text-orange-400 focus:outline-none"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    >
+                        {showPassword ? <FaEyeSlash /> : <FaEye />}
+                    </button>
                 </div>
 
-                {(localError || propError) && ( // Mostrar error local o de props
+                {(localError || propError) && (
                     <p className="text-red-500 text-sm text-center">{localError || propError}</p>
                 )}
 
@@ -79,6 +90,6 @@ export default function LoginForm({ onLogin, error: propError }) {
                 ¿Olvidaste tu contraseña?
                 <a href="#" className="text-orange-600 hover:underline ml-1">Recuperala</a>
             </p>
-        </div >
+        </div>
     );
 }
