@@ -17,7 +17,11 @@ import AttendanceView from '../pages/AttendanceView'; // Ya usa contexto
 // Por ahora, ClassesAdmin maneja su propia navegación interna a esas vistas.
 
 const adminRoutes = [
-    {
+  {
+    path: 'home-page',
+    element: <HomePage />
+  },
+  {
     path: 'check-in',
     element: <CheckInPage />
   },

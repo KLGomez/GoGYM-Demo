@@ -1,3 +1,10 @@
+//src/utils/storage.js
+
+// --- Feedbacks ---
+const FEEDBACKS_STORAGE_KEY = 'feedbacks';
+export const getFeedbacks = () => getFromLocalStorage(FEEDBACKS_STORAGE_KEY);
+export const saveFeedbacks = (feedbacks) => saveToLocalStorage(FEEDBACKS_STORAGE_KEY, feedbacks);
+
 // --- Generic LocalStorage Helper Functions ---
 const getFromLocalStorage = (key, defaultValue = []) => {
   try {

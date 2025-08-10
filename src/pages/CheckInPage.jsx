@@ -6,6 +6,9 @@ import { QrCodeIcon, UserIcon, ArrowPathIcon } from '@heroicons/react/24/outline
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { startQRScanner } from '../utils/readQr.js';
+import { processManualEntry } from '../utils/manualEntry';
+
+
 
 
 
@@ -44,13 +47,20 @@ const CheckInPage = () => {
         return;
       }
     } else if (type === 'manual') {
-      if (!identifier.trim()) {
-        showError("Entrada Inválida", "Por favor, ingrese un código de cliente.");
+      const result = processManualEntry({ identifier, clients, addAttendanceRecord });
+
+      if (!result) {
         setProcessing(false);
         return;
       }
-      foundClient = clients.find(c => c.alphanumericCode === identifier.toUpperCase() || c.dni === identifier);
+
+      setClientDetails(result);
+      setProcessing(false);
+      setManualCode('');
+      return;
     }
+
+
 
     if (!foundClient) {
       showError("Cliente No Encontrado", "No se encontró ningún cliente con ese código o DNI.");
@@ -163,33 +173,39 @@ const CheckInPage = () => {
             <p className="text-sm text-gray-400 mt-2 text-center">Colocá el código QR frente a la cámara.</p>
           </div>
         )}
- 
+
 
         {/* Formulario para ingreso manual */}
         {!scannerActive && (
           <form onSubmit={handleManualSubmit} className="space-y-4 mb-6">
             <div>
               <label htmlFor="manualCode" className="block text-sm font-medium text-gray-300 mb-1">
-                Ingreso Manual (Código Alfanumérico o DNI):
+                Ingreso Manual (Ingrese el DNI del cliente):
               </label>
               <div className="flex">
-                <input
-                  type="text"
-                  id="manualCode"
-                  value={manualCode}
-                  onChange={(e) => setManualCode(e.target.value)}
-                  placeholder="Ej: JP12345678 o DNI"
-                  className="flex-grow p-3 bg-gray-700 border border-gray-600 text-white rounded-l-md focus:ring-orange-500 focus:border-orange-500"
-                  disabled={processing}
-                />
-                <button
-                  type="submit"
-                  disabled={processing || !manualCode.trim()}
-                  className="bg-orange-500 hover:bg-orange-600 text-white font-semibold p-3 rounded-r-md disabled:opacity-50 flex items-center"
-                >
-                  {processing ? <ArrowPathIcon className="w-5 h-5 animate-spin" /> : <UserIcon className="w-5 h-5" />}
-                  <span className="ml-2">Verificar</span>
-                </button>
+                <div className="flex flex-col xs:flex-row w-full gap-2">
+                  <input
+                    type="text"
+                    id="manualCode"
+                    value={manualCode}
+                    onChange={(e) => setManualCode(e.target.value)}
+                    placeholder="Ej: JP12345678 o DNI"
+                    className="flex-grow p-3 bg-gray-700 border border-gray-600 text-white rounded-md xs:rounded-l-md xs:rounded-r-none focus:ring-orange-500 focus:border-orange-500"
+                    disabled={processing}
+                  />
+                  <button
+                    type="submit"
+                    disabled={processing || !manualCode.trim()}
+                    className="bg-orange-500 hover:bg-orange-600 text-white font-semibold p-3 rounded-md xs:rounded-r-md xs:rounded-l-none disabled:opacity-50 flex items-center justify-center min-w-[90px] sm:min-w-[120px] text-xs sm:text-base"
+                  >
+                    {processing ? (
+                      <ArrowPathIcon className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <UserIcon className="w-5 h-5" />
+                    )}
+                    <span className="ml-1 sm:ml-2 truncate">Verificar</span>
+                  </button>
+                </div>
               </div>
             </div>
           </form>
@@ -198,20 +214,32 @@ const CheckInPage = () => {
         {/* Resultados del Check-in */}
         {clientDetails && (
           <div className={`mt-6 p-4 rounded-md border-l-4 ${clientDetails.membershipStatusDetails.status === "Active" ? 'bg-green-900 border-green-500' : 'bg-red-900 border-red-500'}`}>
-            <h3 className="text-xl font-semibold mb-2">{clientDetails.firstName} {clientDetails.lastName}</h3>
-            <p>Email: {clientDetails.email}</p>
-            <p>DNI: {clientDetails.dni}</p>
-            <p>Código: {clientDetails.alphanumericCode}</p>
-            <p>Plan: {clientDetails.membership?.planName || 'N/A'}</p>
-            <p>Estado Membresía: <span className={`font-bold ${clientDetails.membershipStatusDetails.status === "Active" ? 'text-green-400' : 'text-red-400'}`}>
-              {clientDetails.membershipStatusDetails.status}
-            </span></p>
-            {clientDetails.membershipStatusDetails.status !== "Active" && clientDetails.membership?.endDate && (
-              <p>Venció el: {new Date(clientDetails.membership.endDate).toLocaleDateString()}</p>
-            )}
-            {clientDetails.membershipStatusDetails.status === "Active" && clientDetails.membership?.endDate && (
-              <p>Vence el: {new Date(clientDetails.membership.endDate).toLocaleDateString()} ({clientDetails.membershipStatusDetails.daysRemaining} días restantes)</p>
-            )}
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              {clientDetails.fotoUrl && (
+                <img
+                  src={clientDetails.fotoUrl}
+                  alt="Foto del cliente"
+                  className="w-32 h-32 object-cover rounded-lg border-2 border-gray-600 mb-4 md:mb-0"
+                  style={{ background: '#222' }}
+                />
+              )}
+              <div className="flex-1">
+                <h3 className="text-xl font-semibold mb-2">{clientDetails.firstName} {clientDetails.lastName}</h3>
+                <p>Email: {clientDetails.email}</p>
+                <p>DNI: {clientDetails.dni}</p>
+                <p>Código: {clientDetails.alphanumericCode}</p>
+                <p>Plan: {clientDetails.membership?.planName || 'N/A'}</p>
+                <p>Estado Membresía: <span className={`font-bold ${clientDetails.membershipStatusDetails.status === "Active" ? 'text-green-400' : 'text-red-400'}`}>
+                  {clientDetails.membershipStatusDetails.status}
+                </span></p>
+                {clientDetails.membershipStatusDetails.status !== "Active" && clientDetails.membership?.endDate && (
+                  <p>Venció el: {new Date(clientDetails.membership.endDate).toLocaleDateString()}</p>
+                )}
+                {clientDetails.membershipStatusDetails.status === "Active" && clientDetails.membership?.endDate && (
+                  <p>Vence el: {new Date(clientDetails.membership.endDate).toLocaleDateString()} ({clientDetails.membershipStatusDetails.daysRemaining} días restantes)</p>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>
