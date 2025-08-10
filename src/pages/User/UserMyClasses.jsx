@@ -85,21 +85,19 @@ const UserMyClasses = () => {
 
 
   const ClassCard = ({ clase }) => {
-    const isUpcoming = new Date(clase.date) >= new Date().setHours(0,0,0,0); // Y no cancelada, etc.
-    // Simular un estado para la clase si no viene del backend/contexto
+    const isUpcoming = new Date(clase.date) >= new Date().setHours(0,0,0,0);
     const simulatedStatus = clase.status || (isUpcoming ? 'Confirmada' : 'Completada');
-
     return (
-      <div className="bg-white shadow-lg rounded-lg p-5 flex flex-col justify-between hover:shadow-xl transition-shadow">
+      <div className="bg-gray-800 shadow-lg rounded-xl p-5 flex flex-col justify-between hover:bg-gray-700 transition-all border border-gray-700">
         <div>
-          <h3 className="text-xl font-bold text-orange-600 mb-2">{clase.nombre || clase.name || 'Nombre de Clase no Disponible'}</h3>
-          <p className="text-sm text-gray-600 mb-1 flex items-center"><UserGroupIcon className="h-4 w-4 mr-2 text-gray-400" />Profesor: {clase.profName || 'N/A'}</p>
-          <p className="text-sm text-gray-600 mb-1 flex items-center"><CalendarDaysIcon className="h-4 w-4 mr-2 text-gray-400" />Fecha: {formatDate(clase.date)}</p>
-          <p className="text-sm text-gray-600 mb-1 flex items-center"><ClockIcon className="h-4 w-4 mr-2 text-gray-400" />Hora: {clase.horaInicio || clase.time || 'N/A'}{clase.horaFin ? ` - ${clase.horaFin}` : ''}</p>
+          <h3 className="text-xl font-bold text-orange-400 mb-2">{clase.nombre || clase.name || 'Nombre de Clase no Disponible'}</h3>
+          <p className="text-sm text-gray-400 mb-1 flex items-center"><UserGroupIcon className="h-4 w-4 mr-2 text-gray-400" />Profesor: {clase.profName || 'N/A'}</p>
+          <p className="text-sm text-gray-400 mb-1 flex items-center"><CalendarDaysIcon className="h-4 w-4 mr-2 text-gray-400" />Fecha: {formatDate(clase.date)}</p>
+          <p className="text-sm text-gray-400 mb-1 flex items-center"><ClockIcon className="h-4 w-4 mr-2 text-gray-400" />Hora: {clase.horaInicio || clase.time || 'N/A'}{clase.horaFin ? ` - ${clase.horaFin}` : ''}</p>
           {clase.description && <p className="text-xs text-gray-500 mt-1 mb-3">{clase.description}</p>}
         </div>
-        <div className="mt-auto pt-3 border-t border-gray-200">
-          {isUpcoming && simulatedStatus === 'Confirmada' ? ( // Asumimos que se puede cancelar si es futura y confirmada
+        <div className="mt-auto pt-3 border-t border-gray-700">
+          {isUpcoming && simulatedStatus === 'Confirmada' ? (
             <button
               onClick={() => handleCancelEnrollment(clase.enrollmentId, clase.nombre || clase.name)}
               className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-3 rounded-lg transition-colors flex items-center justify-center text-sm"
@@ -109,12 +107,11 @@ const UserMyClasses = () => {
             </button>
           ) : (
             <div className="text-center">
-              <p className="text-sm font-semibold text-gray-500 mb-2">Estado: {simulatedStatus}</p>
-              {/* Lógica para permitir feedback en clases pasadas o con cierto estado */}
+              <p className="text-sm font-semibold text-gray-400 mb-2">Estado: {simulatedStatus}</p>
               {(simulatedStatus === 'Completada' || simulatedStatus === 'Asistida') && (
                    <button
                       onClick={() => handleLeaveFeedback(clase.id, clase.nombre || clase.name)}
-                      className="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-3 rounded-lg transition-colors flex items-center justify-center text-sm"
+                      className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-3 rounded-lg transition-colors flex items-center justify-center text-sm"
                   >
                       <ChatBubbleLeftRightIcon className="h-5 w-5 mr-2" />
                       Dejar Feedback
@@ -143,10 +140,10 @@ const UserMyClasses = () => {
 
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-semibold text-white mb-6">Mis Clases Inscritas</h1>
+  <div className="container mx-auto p-4 bg-gray-800 min-h-screen rounded-xl">
+      <h1 className="text-3xl font-bold text-orange-400 mb-6">Mis Clases Inscritas</h1>
 
-      <h2 className="text-2xl font-semibold text-orange-500 mb-4">Próximas Clases</h2>
+      <h2 className="text-2xl font-semibold text-orange-400 mb-4">Próximas Clases</h2>
       {upcomingClasses.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {upcomingClasses.map((clase) => <ClassCard key={clase.enrollmentId} clase={clase} />)}
@@ -158,7 +155,7 @@ const UserMyClasses = () => {
       <div className="mb-6">
         <button
           onClick={() => setShowPastClasses(!showPastClasses)}
-          className="text-orange-500 hover:text-orange-600 font-semibold"
+          className="text-orange-400 hover:text-orange-500 font-semibold"
         >
           {showPastClasses ? 'Ocultar Clases Pasadas/Canceladas' : 'Mostrar Clases Pasadas/Canceladas'}
         </button>
@@ -166,7 +163,7 @@ const UserMyClasses = () => {
 
       {showPastClasses && (
         <>
-          <h2 className="text-2xl font-semibold text-orange-500 mb-4">Clases Pasadas o Canceladas</h2>
+          <h2 className="text-2xl font-semibold text-orange-400 mb-4">Clases Pasadas o Canceladas</h2>
           {pastClasses.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {pastClasses.map((clase) => <ClassCard key={clase.enrollmentId} clase={clase} />)}

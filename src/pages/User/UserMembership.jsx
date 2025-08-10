@@ -159,12 +159,12 @@ const UserMembership = () => {
   };
 
   if (isLoading) {
-    return <p className="text-center text-white text-xl py-10">Cargando información de tu membresía...</p>;
+    return <p className="text-center text-white text-xl py-10 bg-gray-800 min-h-screen">Cargando información de tu membresía...</p>;
   }
 
   if (!currentUser) {
     return (
-        <div className="text-center py-10">
+        <div className="text-center py-10 bg-gray-800 min-h-screen">
             <p className="text-white text-xl mb-4">Por favor, inicia sesión para ver los detalles de tu membresía.</p>
             <button
                 onClick={() => navigate('/login')}
@@ -179,7 +179,7 @@ const UserMembership = () => {
   // Si el usuario está logueado pero no tiene datos de membresía (currentUser.membership es null o undefined)
   if (currentUser && !currentUser.membership) {
     return (
-        <div className="text-center py-10">
+        <div className="text-center py-10 bg-gray-800 min-h-screen">
             <p className="text-white text-xl mb-4">Aún no tienes una membresía asignada.</p>
             <p className="text-gray-400 mb-6">Contacta con administración para activar un plan.</p>
             {/* Podríamos añadir un botón para ver planes si existiera esa página */}
@@ -189,14 +189,14 @@ const UserMembership = () => {
 
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-semibold text-white mb-8">Detalles de Mi Membresía</h1>
+  <div className="container mx-auto p-4 bg-gray-800 min-h-screen rounded-xl">
+      <h1 className="text-3xl font-bold text-orange-400 mb-8">Detalles de Mi Membresía</h1>
 
       {/* Alerta de membresía próxima a vencer o vencida */}
       {(membershipData.status === 'Próxima a vencer' || membershipData.status === 'Vencida') && (
         <div className={`p-4 mb-6 rounded-md flex items-start ${
-            membershipData.status === 'Vencida' ? 'bg-red-100 border-l-4 border-red-500 text-red-700'
-                                               : 'bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700'
+            membershipData.status === 'Vencida' ? 'bg-red-900 border-l-4 border-red-500 text-red-200'
+                                               : 'bg-yellow-900 border-l-4 border-yellow-500 text-yellow-200'
             }`}
             role="alert"
         >
@@ -211,12 +211,12 @@ const UserMembership = () => {
                 : `Tu membresía ${membershipData.planName} está próxima a vencer el ${formatDate(membershipData.endDate)}.`}
               {' '}
               {membershipData.status === 'Vencida' && (
-                <button onClick={handleRenewNow} className="font-semibold underline hover:text-red-800">
+                <button onClick={handleRenewNow} className="font-semibold underline hover:text-red-300">
                   ¡Renuévala ahora para no perder tus beneficios!
                 </button>
               )}
                {membershipData.status === 'Próxima a vencer' && !membershipData.autoRenew && (
-                <button onClick={handleRenewNow} className="font-semibold underline hover:text-yellow-800">
+                <button onClick={handleRenewNow} className="font-semibold underline hover:text-yellow-300">
                   Considera renovarla pronto.
                 </button>
               )}
@@ -226,33 +226,33 @@ const UserMembership = () => {
       )}
 
 
-      <div className="bg-white shadow-xl rounded-lg overflow-hidden">
-        <div className={`p-6 ${getStatusColor(membershipData.status).split(' ')[1].replace('bg-', 'border-b-4 border-')}${membershipData.status?.toLowerCase()}`}>
+      <div className="bg-gray-800 shadow-lg rounded-xl overflow-hidden border border-gray-700">
+        <div className="p-6 border-b-4 border-gray-700">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-700">{membershipData.planName}</h2>
-            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(membershipData.status)}`}>
+            <h2 className="text-2xl font-bold text-orange-400">{membershipData.planName}</h2>
+            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(membershipData.status)}`}> {/* Mantener color de status */}
               {membershipData.status}
             </span>
           </div>
         </div>
 
-        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 text-gray-700">
+        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 text-gray-200">
           <div>
-            <h3 className="text-lg font-semibold text-orange-600 mb-2 flex items-center">
+            <h3 className="text-lg font-semibold text-orange-400 mb-2 flex items-center">
               <CalendarDaysIcon className="h-6 w-6 mr-2" /> Periodo de Vigencia
             </h3>
             <p><strong>Inicio:</strong> {formatDate(membershipData.startDate)}</p>
             <p><strong>Fin / Próxima Renovación:</strong> {formatDate(membershipData.endDate)}</p>
             <p className="mt-1">
               <strong>Renovación Automática:</strong>
-              <span className={membershipData.autoRenew ? 'text-green-600' : 'text-red-600'}>
+              <span className={membershipData.autoRenew ? 'text-green-400' : 'text-red-400'}>
                 {membershipData.autoRenew ? ' Activada' : ' Desactivada'}
               </span>
             </p>
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold text-orange-600 mb-2 flex items-center">
+            <h3 className="text-lg font-semibold text-orange-400 mb-2 flex items-center">
               <CreditCardIcon className="h-6 w-6 mr-2" /> Información de Pago
             </h3>
             <p><strong>Método de Pago:</strong> {membershipData.paymentMethod}</p>
@@ -260,10 +260,10 @@ const UserMembership = () => {
           </div>
 
           <div className="md:col-span-2">
-            <h3 className="text-lg font-semibold text-orange-600 mb-2 flex items-center">
+            <h3 className="text-lg font-semibold text-orange-400 mb-2 flex items-center">
               <InformationCircleIcon className="h-6 w-6 mr-2" /> Beneficios del Plan
             </h3>
-            <ul className="list-disc list-inside space-y-1 text-gray-600">
+            <ul className="list-disc list-inside space-y-1 text-gray-400">
               {membershipData.benefits.map((benefit, index) => (
                 <li key={index}>{benefit}</li>
               ))}
@@ -271,7 +271,7 @@ const UserMembership = () => {
           </div>
         </div>
 
-        <div className="p-6 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3">
+        <div className="p-6 bg-gray-900 border-t border-gray-700 flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3">
           {membershipData.status === 'Vencida' && (
             <button
               onClick={handleRenewNow}
@@ -285,7 +285,7 @@ const UserMembership = () => {
               onClick={handleToggleAutoRenew}
               className={`w-full sm:w-auto font-semibold py-2 px-4 rounded-lg transition-colors ${
                 membershipData.autoRenew
-                  ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                  ? 'bg-gray-700 hover:bg-gray-600 text-white'
                   : 'bg-green-500 hover:bg-green-600 text-white'
               }`}
             >
@@ -294,7 +294,7 @@ const UserMembership = () => {
           )}
           <button
             onClick={handleViewPaymentHistory}
-            className="w-full sm:w-auto bg-gray-800 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+            className="w-full sm:w-auto bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
           >
             Ver Historial de Pagos
           </button>

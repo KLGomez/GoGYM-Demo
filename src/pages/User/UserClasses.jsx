@@ -64,11 +64,11 @@ const UserClasses = () => {
   });
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-semibold text-white mb-6">Clases Disponibles</h1>
+  <div className="container mx-auto p-4 bg-gray-800 min-h-screen rounded-xl">
+      <h1 className="text-3xl font-bold text-orange-400 mb-6">Clases Disponibles</h1>
 
       {/* Filtros */}
-      <div className="mb-8 p-4 bg-white shadow rounded-lg">
+      <div className="mb-8 p-4 bg-gray-800 shadow-lg rounded-xl border border-gray-700">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
           <div>
             <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
@@ -79,7 +79,7 @@ const UserClasses = () => {
               type="text"
               id="search"
               placeholder="Nombre de la clase..."
-              className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+              className="w-full p-2 bg-gray-900 text-white border border-gray-700 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 placeholder-gray-400"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -91,7 +91,7 @@ const UserClasses = () => {
             </label>
             <select
               id="filterDay"
-              className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+              className="w-full p-2 bg-gray-900 text-white border border-gray-700 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
               value={filterDay}
               onChange={(e) => setFilterDay(e.target.value)}
             >
@@ -106,7 +106,7 @@ const UserClasses = () => {
             </label>
             <select
               id="filterInstructor"
-              className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+              className="w-full p-2 bg-gray-900 text-white border border-gray-700 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
               value={filterInstructor}
               onChange={(e) => setFilterInstructor(e.target.value)}
             >
@@ -116,7 +116,7 @@ const UserClasses = () => {
           </div>
           <button
             onClick={() => { setSearchTerm(''); setFilterDay(''); setFilterInstructor(''); }}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-md flex items-center justify-center"
+            className="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-md flex items-center justify-center"
             title="Limpiar filtros"
           >
             <AdjustmentsHorizontalIcon className="h-5 w-5 mr-2" /> Limpiar
@@ -131,18 +131,17 @@ const UserClasses = () => {
             const prof = teachers?.find(t => t.id === clase.profesor);
             const profName = prof ? `${prof.nombre} ${prof.apellido}` : 'N/A';
             return (
-              <div key={clase.id} className="bg-white shadow-lg rounded-lg p-6 flex flex-col justify-between hover:shadow-xl transition-shadow">
+              <div key={clase.id} className="bg-gray-800 shadow-lg rounded-xl p-6 flex flex-col justify-between hover:bg-gray-700 transition-all border border-gray-700">
                 <div>
-                  <h2 className="text-xl font-bold text-orange-600 mb-2">{clase.nombre}</h2>
-                  <p className="text-sm text-gray-600 mb-1 flex items-center"><UserGroupIcon className="h-4 w-4 mr-2 text-gray-400" />Profesor: {profName}</p>
-                  <p className="text-sm text-gray-600 mb-1 flex items-center"><CalendarIcon className="h-4 w-4 mr-2 text-gray-400" />Día: {clase.dia}</p>
-                  <p className="text-sm text-gray-600 mb-1 flex items-center"><ClockIcon className="h-4 w-4 mr-2 text-gray-400" />Hora: {clase.horaInicio} - {clase.horaFin}</p>
-                  {/* <p className="text-xs text-gray-500 mt-2 mb-3">{clase.description}</p> */}
+                  <h2 className="text-xl font-bold text-orange-400 mb-2">{clase.nombre}</h2>
+                  <p className="text-sm text-gray-400 mb-1 flex items-center"><UserGroupIcon className="h-4 w-4 mr-2 text-gray-400" />Profesor: {profName}</p>
+                  <p className="text-sm text-gray-400 mb-1 flex items-center"><CalendarIcon className="h-4 w-4 mr-2 text-gray-400" />Día: {clase.dia}</p>
+                  <p className="text-sm text-gray-400 mb-1 flex items-center"><ClockIcon className="h-4 w-4 mr-2 text-gray-400" />Hora: {clase.horaInicio} - {clase.horaFin}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-700 mb-3">
+                  <p className="text-sm text-gray-300 mb-3">
                     Cupos: {clase.enrolled || 0} / {clase.capacidad}
-                    <span className={`ml-2 font-semibold ${(clase.enrolled || 0) >= clase.capacidad ? 'text-red-500' : 'text-green-500'}`}>
+                    <span className={`ml-2 font-semibold ${(clase.enrolled || 0) >= clase.capacidad ? 'text-red-400' : 'text-green-400'}`}>
                       {(clase.enrolled || 0) >= clase.capacidad ? '(Llena)' : `(${clase.capacidad - (clase.enrolled || 0)} disponibles)`}
                     </span>
                   </p>
@@ -151,7 +150,7 @@ const UserClasses = () => {
                     disabled={(clase.enrolled || 0) >= clase.capacidad}
                     className={`w-full font-semibold py-2 px-4 rounded-lg transition-colors ${
                       (clase.enrolled || 0) >= clase.capacidad
-                        ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                        ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
                         : 'bg-orange-500 hover:bg-orange-600 text-white'
                     }`}
                   >
@@ -163,7 +162,7 @@ const UserClasses = () => {
           })}
         </div>
       ) : (
-        <p className="text-center text-gray-500 text-xl py-10">No hay clases que coincidan con tus filtros.</p>
+        <p className="text-center text-gray-400 text-xl py-10">No hay clases que coincidan con tus filtros.</p>
       )}
     </div>
   );

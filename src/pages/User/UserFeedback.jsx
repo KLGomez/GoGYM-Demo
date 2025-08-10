@@ -68,15 +68,15 @@ const UserFeedback = () => {
   };
 
   if (isLoading) {
-    return <p className="text-center text-white text-xl py-10">Cargando...</p>;
+    return <p className="text-center text-white text-xl py-10 bg-gray-800 min-h-screen">Cargando...</p>;
   }
 
   // El useEffect ya maneja la redirección si no hay currentUser.
   // Si no hay feedbackTarget.id o name (porque no se pasaron por URL y el usuario está logueado), mostrar mensaje.
   if (!feedbackTarget.id || !feedbackTarget.name) {
     return (
-      <div className="container mx-auto p-4 text-center">
-        <h1 className="text-3xl font-semibold text-white mb-6">Dejar Feedback</h1>
+      <div className="container mx-auto p-4 text-center bg-gray-800 min-h-screen">
+        <h1 className="text-3xl font-bold text-orange-400 mb-6">Dejar Feedback</h1>
         <p className="text-gray-400">
           Para dejar feedback, primero selecciona una clase de tu historial en "Mis Clases".
         </p>
@@ -91,10 +91,10 @@ const UserFeedback = () => {
   }
 
   return (
-    <div className="container mx-auto p-4">
+  <div className="container mx-auto p-4 bg-gray-800 min-h-screen rounded-xl">
       <button
-        onClick={() => navigate(-1)} // Volver a la página anterior
-        className="mb-6 text-orange-500 hover:text-orange-600 font-semibold flex items-center"
+        onClick={() => navigate(-1)}
+        className="mb-6 text-orange-400 hover:text-orange-500 font-semibold flex items-center"
       >
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-2">
           <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -102,12 +102,12 @@ const UserFeedback = () => {
         Volver
       </button>
 
-      <h1 className="text-3xl font-semibold text-white mb-2">Feedback para la Clase</h1>
-      <p className="text-xl text-orange-400 mb-8">{feedbackTarget.name}</p>
+      <h1 className="text-3xl font-bold text-orange-400 mb-2">Feedback para la Clase</h1>
+      <p className="text-xl text-white mb-8">{feedbackTarget.name}</p>
 
-      <form onSubmit={handleSubmitFeedback} className="bg-white shadow-xl rounded-lg p-8 max-w-2xl mx-auto">
+      <form onSubmit={handleSubmitFeedback} className="bg-gray-800 shadow-lg rounded-xl p-8 max-w-2xl mx-auto border border-gray-700">
         <div className="mb-6">
-          <label className="block text-gray-700 text-lg font-semibold mb-2">Calificación General:</label>
+          <label className="block text-gray-200 text-lg font-semibold mb-2">Calificación General:</label>
           <div className="flex items-center">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
@@ -125,19 +125,19 @@ const UserFeedback = () => {
                 )}
               </button>
             ))}
-            {rating > 0 && <span className="ml-3 text-gray-600">({rating} de 5 estrellas)</span>}
+            {rating > 0 && <span className="ml-3 text-gray-400">({rating} de 5 estrellas)</span>}
           </div>
         </div>
 
         <div className="mb-6">
-          <label htmlFor="comment" className="block text-gray-700 text-lg font-semibold mb-2">
+          <label htmlFor="comment" className="block text-gray-200 text-lg font-semibold mb-2">
             Tu Comentario:
           </label>
           <textarea
             id="comment"
             name="comment"
             rows="5"
-            className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 text-gray-700"
+            className="w-full p-3 bg-gray-900 text-white border border-gray-700 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 placeholder-gray-400"
             placeholder={`¿Qué te pareció la clase "${feedbackTarget.name}"?`}
             value={comment}
             onChange={(e) => setComment(e.target.value)}
