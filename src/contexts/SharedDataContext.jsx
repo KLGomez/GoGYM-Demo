@@ -5,7 +5,8 @@ import {
   getGymClasses, saveGymClasses,
   getClassEnrollments, saveClassEnrollments,
   getAttendanceRecords, saveAttendanceRecords,
-  getArticles, saveArticles // Importar getArticles y saveArticles
+  getArticles, saveArticles,
+  getFeedbacks, saveFeedbacks
 } from '../utils/storage';
 import { showSuccess, showError } from '../utils/alerts';
 import { generateClientCode } from '../utils/codeUtils';
@@ -23,6 +24,7 @@ const initialSimulatedEnrollments = [
 ];
 
 
+
 export const SharedDataProvider = ({ children }) => {
   const [clients, setClients] = useState([]);
   const [gymClasses, setGymClasses] = useState([]);
@@ -35,6 +37,7 @@ export const SharedDataProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [feedbacks, setFeedbacks] = useState([]);
 
 
   // --- Carga Inicial de Datos ---
@@ -46,6 +49,7 @@ export const SharedDataProvider = ({ children }) => {
     const storedEnrollments = getClassEnrollments();
     const storedAttendance = getAttendanceRecords();
     const storedArticles = getArticles();
+    const storedFeedbacks = getFeedbacks();
     let storedCurrentUser = null;
     try {
       const raw = localStorage.getItem('currentUserSession');
@@ -56,21 +60,28 @@ export const SharedDataProvider = ({ children }) => {
       storedCurrentUser = null;
     }
 
-  setClients(storedClients);
-  setGymClasses(Array.isArray(storedGymClasses) ? storedGymClasses : initialSimulatedClasses);
-  setTeachers(Array.isArray(storedTeachers) ? storedTeachers : []);
+    setClients(storedClients);
+    setGymClasses(Array.isArray(storedGymClasses) ? storedGymClasses : initialSimulatedClasses);
+    setTeachers(Array.isArray(storedTeachers) ? storedTeachers : []);
     setEnrollments(storedEnrollments.length > 0 ? storedEnrollments : initialSimulatedEnrollments);
     setAttendanceRecords(storedAttendance);
     setArticles(storedArticles);
+    setFeedbacks(Array.isArray(storedFeedbacks) ? storedFeedbacks : []);
 
     // Asegurar usuarios por defecto si no existen
     let finalClients = [...storedClients];
     const adminExists = finalClients.some(c => c.role === 'admin' && c.email === 'admin@gogym.com');
+
     if (!adminExists) {
       const adminUser = {
         id: 'admin_default_001',
-        firstName: 'Admin', lastName: 'GoGym', email: 'admin@gogym.com', password: 'adminpass', role: 'admin',
-        dni: '00000000', alphanumericCode: generateClientCode('Admin', 'GoGym', '00000000'),
+        firstName: 'Admin',
+        lastName: 'GoGym',
+        email: 'admin@gogym.com',
+        password: 'adminpass',
+        role: 'admin',
+        dni: '00000000',
+        alphanumericCode: generateClientCode('Admin', 'GoGym', '00000000'),
         membership: { planName: 'Premium', membershipStartDate: new Date().toISOString(), membershipDurationDays: 365, autoRenew: true }
       };
       finalClients.push(adminUser);
@@ -87,17 +98,13 @@ export const SharedDataProvider = ({ children }) => {
       finalClients.push(testUser);
     }
 
-    // Si se añadieron usuarios por defecto, actualizar el estado y localStorage
-    // Esta comparación es importante para no disparar un save innecesario si no hubo cambios.
     if (finalClients.length > storedClients.length) {
       setClients(finalClients);
-      // La persistencia se manejará por el useEffect de `clients`
     } else {
-      setClients(storedClients); // Si no hubo cambios, usar los originales de localStorage
+      setClients(storedClients);
     }
 
     if (storedCurrentUser) {
-      // Buscar en finalClients que podría tener los usuarios por defecto recién añadidos
       const liveClientData = finalClients.find(c => c.id === storedCurrentUser.id);
       if (liveClientData) {
         setCurrentUser(liveClientData);
@@ -109,7 +116,7 @@ export const SharedDataProvider = ({ children }) => {
     }
 
     setIsLoading(false);
-    console.log("SharedDataContext: Datos cargados.", { storedClients, storedGymClasses, storedTeachers, storedEnrollments, storedAttendance, storedCurrentUser });
+    console.log("SharedDataContext: Datos cargados.", { storedClients, storedGymClasses, storedTeachers, storedEnrollments, storedAttendance, storedCurrentUser, storedFeedbacks });
   }, []);
 
   // --- Persistencia en localStorage ---
@@ -118,6 +125,7 @@ export const SharedDataProvider = ({ children }) => {
   useEffect(() => { if (!isLoading) saveTeachers(teachers); }, [teachers, isLoading]);
   useEffect(() => { if (!isLoading) saveClassEnrollments(enrollments); }, [enrollments, isLoading]);
   useEffect(() => { if (!isLoading) saveAttendanceRecords(attendanceRecords); }, [attendanceRecords, isLoading]);
+  useEffect(() => { if (!isLoading) saveFeedbacks(feedbacks); }, [feedbacks, isLoading]);
   useEffect(() => { if (!isLoading) saveArticles(articles); }, [articles, isLoading]);
   useEffect(() => { if (!isLoading) saveClients(clients); }, [clients, isLoading]);
 
@@ -227,41 +235,20 @@ export const SharedDataProvider = ({ children }) => {
       updatedClientData.alphanumericCode = generateClientCode(updatedClientData.firstName, updatedClientData.lastName, updatedClientData.dni);
       addNotification(`Código de cliente para "${updatedClientData.firstName}" regenerado a ${updatedClientData.alphanumericCode} debido a cambio de datos.`, 'info', 'admin');
     }
-
-    setClients(prev => {
-      const newClients = prev.map(c => c.id === updatedClientData.id ? updatedClientData : c);
-      // saveClients(newClients);
-      return newClients;
-    });
-    // Si el cliente actualizado es el currentUser, actualizarlo también
-    if (currentUser && currentUser.id === updatedClientData.id) {
-      setCurrentUser(updatedClientData);
-      localStorage.setItem('currentUserSession', JSON.stringify(updatedClientData));
-    }
-    addNotification(`Cliente "${updatedClientData.firstName}" actualizado.`, 'info', 'admin');
-  }, [currentUser, addNotification]);
+  }, [clients, addNotification]);
 
   const deleteClient = useCallback((clientId) => {
     const clientToDelete = clients.find(c => c.id === clientId);
-    setClients(prev => {
-      const newClients = prev.filter(c => c.id !== clientId);
-      // saveClients(newClients);
-      return newClients;
-    });
     if (clientToDelete) {
+      setClients(prev => prev.filter(c => c.id !== clientId));
       addNotification(`Cliente "${clientToDelete.firstName}" eliminado.`, 'warning', 'admin');
     }
-    if (currentUser && currentUser.id === clientId) { // Si el admin se autoelimina o elimina al user actual
-      logoutUser(); // Forzar logout
-    }
-  }, [clients, currentUser, logoutUser, addNotification]);
+  }, [clients, addNotification]);
 
-
-  // --- CRUD Clases (Admin) ---
   const addGymClass = useCallback((classData) => {
-    // Usar los nuevos nombres de campos
-    setGymClasses(prev => [...prev, { ...classData, id: `class_${Date.now()}` }]);
-    addNotification(`Nueva clase "${classData.nombre}" agregada.`, 'success', 'admin');
+    const newClass = { ...classData, id: `class_${Date.now()}` };
+    setGymClasses(prev => [...prev, newClass]);
+    addNotification(`Nueva clase "${newClass.nombre}" creada.`, 'success', 'admin');
   }, [addNotification]);
 
   const updateGymClass = useCallback((updatedClassData) => {
@@ -362,12 +349,12 @@ export const SharedDataProvider = ({ children }) => {
 
   // --- Feedback (Usuario) ---
   const submitFeedback = useCallback((feedbackData) => {
-    // feedbackData: { classId, className, rating, comment, userId }
-    // En una app real, esto se guardaría en localStorage o se enviaría a un backend.
-    console.log("Feedback Recibido (SharedDataContext):", feedbackData);
-    // Guardar en localStorage (ejemplo, no implementado en storage.js aún)
-    // const feedbacks = getFromLocalStorage('feedbacks', []);
-    // saveToLocalStorage('feedbacks', [...feedbacks, feedbackData]);
+    // feedbackData: { classId, className, rating, comment, userId, user, date }
+    const newFeedback = {
+      ...feedbackData,
+      id: `fb_${Date.now()}_${Math.floor(Math.random()*10000)}`
+    };
+    setFeedbacks(prev => [...prev, newFeedback]);
     addNotification(`Gracias por tu feedback sobre "${feedbackData.className}".`, 'success', feedbackData.userId);
   }, [addNotification]);
 
@@ -399,7 +386,8 @@ export const SharedDataProvider = ({ children }) => {
     enrollToClass,
     cancelEnrollment,
     updateClientMembership,
-    submitFeedback,
+  submitFeedback,
+  feedbacks,
     isLoggingOut, 
     setIsLoggingOut,
     addTeacher: (teacherData) => {
