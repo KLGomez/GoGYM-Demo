@@ -8,12 +8,13 @@ import {
 } from '@heroicons/react/24/outline';
 import { SharedDataContext } from '../../contexts/SharedDataContext';
 import { calculateMembershipDetails } from '../../utils/calculateMembershipDetails';
+import { useNavigate } from 'react-router-dom';
+
 
 const UserDashboard = () => {
-
   const { currentUser, isLoading } = useContext(SharedDataContext);
-
   const [userData, setUserData] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (currentUser) {
@@ -41,6 +42,9 @@ const UserDashboard = () => {
       : 'text-red-500';
   };
 
+  const handleViewMyClasses = () => {
+    navigate('/user/mis-clases');
+  };
 
   if (isLoading || !userData) {
     return <div className="text-center text-white mt-8">Cargando datos del usuario...</div>;
@@ -95,7 +99,10 @@ const UserDashboard = () => {
             <h2 className="text-xl font-semibold text-orange-400">Actividad Reciente</h2>
           </div>
           <p className="mb-2">Tienes <strong>{userData.upcomingClasses}</strong> clases programadas.</p>
-          <button className="mt-2 w-full bg-green-700 hover:bg-green-500 text-white font-semibold py-2 px-4 rounded-lg">
+          <button
+            className="mt-2 w-full bg-green-700 hover:bg-green-500 text-white font-semibold py-2 px-4 rounded-lg"
+            onClick={handleViewMyClasses}
+          >
             Ver Mis Clases
           </button>
         </div>
