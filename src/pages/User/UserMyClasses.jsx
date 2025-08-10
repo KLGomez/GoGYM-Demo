@@ -140,7 +140,7 @@ const UserMyClasses = () => {
 
 
   return (
-  <div className="container mx-auto p-4 bg-gray-950 min-h-screen rounded-xl">
+  <div className="container mx-auto p-4 bg-gray-900 min-h-screen rounded-xl">
       <h1 className="text-3xl font-bold text-orange-400 mb-6">Mis Clases Inscritas</h1>
 
       <h2 className="text-2xl font-semibold text-orange-400 mb-4">Próximas Clases</h2>
