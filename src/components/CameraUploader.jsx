@@ -2,7 +2,7 @@
 
 import React, { useRef, useState, useCallback } from "react";
 import Webcam from "react-webcam";
-import { CloudArrowUpIcon, CameraIcon } from "@heroicons/react/24/outline";
+import { CloudArrowUpIcon, CameraIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 // Cargamos la variable de entorno
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
@@ -75,7 +75,7 @@ const CameraUploader = ({ onUploadComplete }) => {
   };
 
   return (
-    <div className="bg-gray-800 text-white p-4 rounded-lg shadow-md w-full max-w-md mx-auto">
+    <div className="bg-gray-800 text-white p-4 rounded-lg shadow-md w-full max-w-md mx-auto flex flex-col items-center justify-center">
       {!imgSrc ? (
         <>
           {!showCamera ? (
@@ -96,7 +96,7 @@ const CameraUploader = ({ onUploadComplete }) => {
                 videoConstraints={videoConstraints}
                 className="rounded-md w-full"
               />
-              <div className="flex flex-col sm:flex-row gap-2 mt-4 w-full">
+              <div className="flex flex-col items-center justify-center sm:flex-row sm:flex-wrap gap-2 mt-4 w-full">
                 <button
                   onClick={capture}
                   className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded inline-flex items-center w-full sm:w-auto justify-center transition-colors duration-200"
@@ -106,9 +106,9 @@ const CameraUploader = ({ onUploadComplete }) => {
                 </button>
                 <button
                   onClick={() => setShowCamera(false)}
-                  className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded w-full sm:w-auto transition-colors duration-200"
+                  className="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-2 rounded-4xl transition-colors duration-200"
                 >
-                  Cerrar cámara
+                  <XMarkIcon className="h-5 w-5 m-2" />
                 </button>
               </div>
               {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
