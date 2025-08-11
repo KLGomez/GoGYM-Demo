@@ -21,12 +21,145 @@ const goGymColors = {
   iconError: '#ef4444', // Rojo para errores
 };
 
+
 /**
- * Muestra una alerta de éxito.
- * @param {string} title - El título de la alerta.
- * @param {string} text - El texto del cuerpo de la alerta.
+ * Genera el mensaje de alerta según el contexto de la acción.
+ * @param {string} actionType - Tipo de acción (ej: 'addClient', 'addMembership', 'addClass', 'errorLogin', etc.)
+ * @param {object} data - Datos relevantes para el mensaje.
+ * @returns {{title: string, text: string}}
  */
-export const showSuccess = (title, text) => {
+export function getAlertMessage(actionType, data = {}) {
+  switch (actionType) {
+    case 'addClient':
+      return {
+        title: 'Cliente agregado',
+        text: `El cliente ${data.firstName || ''} ${data.lastName || ''} ha sido creado exitosamente.`
+      };
+    case 'updateClient':
+      return {
+        title: 'Cliente actualizado',
+        text: `El cliente ${data.firstName || ''} ${data.lastName || ''} ha sido actualizado.`
+      };
+    case 'deleteClient':
+      return {
+        title: 'Cliente eliminado',
+        text: `El cliente ${data.firstName || ''} ${data.lastName || ''} ha sido eliminado.`
+      };
+    case 'addMembership':
+      return {
+        title: 'Membresía creada',
+        text: `El plan de membresía "${data.planName || data.name || ''}" ha sido creado.`
+      };
+    case 'updateMembership':
+      return {
+        title: 'Membresía actualizada',
+        text: `El plan de membresía "${data.planName || data.name || ''}" ha sido actualizado.`
+      };
+    case 'deleteMembership':
+      return {
+        title: 'Membresía eliminada',
+        text: `El plan de membresía "${data.planName || data.name || ''}" ha sido eliminado.`
+      };
+    case 'addClass':
+      return {
+        title: 'Clase creada',
+        text: `La clase "${data.nombre || data.name || ''}" ha sido creada.`
+      };
+    case 'updateClass':
+      return {
+        title: 'Clase actualizada',
+        text: `La clase "${data.nombre || data.name || ''}" ha sido actualizada.`
+      };
+    case 'deleteClass':
+      return {
+        title: 'Clase eliminada',
+        text: `La clase "${data.nombre || data.name || ''}" ha sido eliminada.`
+      };
+    case 'addTeacher':
+      return {
+        title: 'Profesor agregado',
+        text: `El profesor ${data.nombre || ''} ${data.apellido || ''} ha sido agregado.`
+      };
+    case 'updateTeacher':
+      return {
+        title: 'Profesor actualizado',
+        text: `El profesor ${data.nombre || ''} ${data.apellido || ''} ha sido actualizado.`
+      };
+    case 'deleteTeacher':
+      return {
+        title: 'Profesor eliminado',
+        text: `El profesor ${data.nombre || ''} ${data.apellido || ''} ha sido eliminado.`
+      };
+    case 'addArticle':
+      return {
+        title: 'Artículo creado',
+        text: `El artículo "${data.title || ''}" ha sido creado.`
+      };
+    case 'updateArticle':
+      return {
+        title: 'Artículo actualizado',
+        text: `El artículo "${data.title || ''}" ha sido actualizado.`
+      };
+    case 'deleteArticle':
+      return {
+        title: 'Artículo eliminado',
+        text: `El artículo "${data.title || ''}" ha sido eliminado.`
+      };
+    case 'successLogin':
+      return {
+        title: 'Inicio de sesión exitoso',
+        text: `Bienvenido/a ${data.firstName || data.email || ''}!`
+      };
+    case 'errorLogin':
+      return {
+        title: 'Error de inicio de sesión',
+        text: 'Email o contraseña incorrectos.'
+      };
+    case 'logout':
+      return {
+        title: 'Sesión cerrada',
+        text: `¡Hasta pronto, ${data.firstName || data.email || ''}!`
+      };
+    case 'addFeedback':
+      return {
+        title: 'Feedback enviado',
+        text: `Gracias por tu feedback sobre "${data.className || ''}".`
+      };
+    case 'addEnrollment':
+      return {
+        title: 'Inscripción exitosa',
+        text: `Inscripción exitosa a "${data.className || ''}".`
+      };
+    case 'cancelEnrollment':
+      return {
+        title: 'Inscripción cancelada',
+        text: `Has cancelado tu inscripción a "${data.className || ''}".`
+      };
+    case 'error':
+      return {
+        title: 'Error',
+        text: data.message || 'Ha ocurrido un error.'
+      };
+    case 'warning':
+      return {
+        title: 'Advertencia',
+        text: data.message || 'Advertencia.'
+      };
+    default:
+      return {
+        title: data.title || 'Notificación',
+        text: data.text || data.message || ''
+      };
+  }
+}
+
+/**
+ * Muestra una alerta de éxito contextual.
+ * @param {string} actionType - Tipo de acción.
+ * @param {object} data - Datos relevantes.
+ */
+export const showSuccess = (actionType, data = {}) => {
+  const { title, text } = getAlertMessage(actionType, data);
   Swal.fire({
     title,
     text,
@@ -39,11 +172,12 @@ export const showSuccess = (title, text) => {
 };
 
 /**
- * Muestra una alerta de error.
- * @param {string} title - El título de la alerta.
- * @param {string} text - El texto del cuerpo de la alerta.
+ * Muestra una alerta de error contextual.
+ * @param {string} actionType - Tipo de acción.
+ * @param {object} data - Datos relevantes.
  */
-export const showError = (title, text) => {
+export const showError = (actionType, data = {}) => {
+  const { title, text } = getAlertMessage(actionType, data);
   Swal.fire({
     title,
     text,
@@ -56,11 +190,12 @@ export const showError = (title, text) => {
 };
 
 /**
- * Muestra una alerta de advertencia.
- * @param {string} title - El título de la alerta.
- * @param {string} text - El texto del cuerpo de la alerta.
+ * Muestra una alerta de advertencia contextual.
+ * @param {string} actionType - Tipo de acción.
+ * @param {object} data - Datos relevantes.
  */
-export const showWarning = (title, text) => {
+export const showWarning = (actionType, data = {}) => {
+  const { title, text } = getAlertMessage(actionType, data);
   Swal.fire({
     title,
     text,
@@ -79,7 +214,16 @@ export const showWarning = (title, text) => {
  * @param {string} confirmButtonText - El texto para el botón de confirmación.
  * @param {function} callback - La función a ejecutar si el usuario confirma.
  */
-export const confirmAction = (title, text, confirmButtonText = 'Sí, continuar', callback) => {
+
+/**
+ * Muestra un modal de confirmación contextual.
+ * @param {string} actionType - Tipo de acción (ej: 'deleteClient', 'deleteClass', etc.)
+ * @param {object} data - Datos relevantes para el mensaje.
+ * @param {string} confirmButtonText - Texto para el botón de confirmación.
+ * @param {function} callback - Función a ejecutar si el usuario confirma.
+ */
+export const confirmAction = (actionType, data = {}, confirmButtonText = 'Sí, continuar', callback) => {
+  const { title, text } = getAlertMessage(actionType, data);
   Swal.fire({
     title,
     text,

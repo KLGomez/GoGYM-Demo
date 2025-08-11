@@ -9,7 +9,7 @@ import {
   getFeedbacks, saveFeedbacks,
   getMembershipPlans, saveMembershipPlans
 } from '../utils/storage';
-import { showSuccess, showError } from '../utils/alerts';
+import { showSuccess, showError, showWarning } from '../utils/alerts';
 import { generateClientCode } from '../utils/codeUtils';
 
 export const SharedDataContext = createContext(null);
@@ -151,9 +151,9 @@ export const SharedDataProvider = ({ children }) => {
 
     // Lógica para mostrar alerta si es para el usuario actual y está logueado
     if (currentUser && forUserId === currentUser.id && !isGlobal) {
-      if (type === 'success') showSuccess(title, message);
-      else if (type === 'error') showError(title, message);
-      else showSuccess(title, message); // Default to success type for display
+      if (type === 'success') showSuccess(notification.actionType || 'notification', notification.data || { title, text: message });
+      else if (type === 'error') showError(notification.actionType || 'notification', notification.data || { title, text: message });
+      else showSuccess(notification.actionType || 'notification', notification.data || { title, text: message }); // Default to success type for display
     }
     // Las notificaciones globales o para otros usuarios/admin se gestionarán en sus respectivos paneles.
   }, [currentUser]);
@@ -162,7 +162,7 @@ export const SharedDataProvider = ({ children }) => {
   const loginUser = useCallback((userData) => {
     const clientData = clients.find(c => c.email === userData.email); // Asumiendo login por email
     if (!clientData) {
-      showError("Error de Inicio de Sesión", "Email o contraseña incorrectos.");
+      showError('errorLogin');
       return null;
     }
     // Admin y usuario de prueba: contraseña hardcodeada
@@ -172,6 +172,7 @@ export const SharedDataProvider = ({ children }) => {
     ) {
       setCurrentUser(clientData);
       localStorage.setItem('currentUserSession', JSON.stringify(clientData));
+      showSuccess('successLogin', clientData);
       addNotification({
         title: 'Inicio de Sesión Exitoso',
         message: `Bienvenido/a ${clientData.firstName || clientData.email}!`, 
@@ -186,17 +187,18 @@ export const SharedDataProvider = ({ children }) => {
       if (userData.password === String(clientData.dni)) {
         setCurrentUser(clientData);
         localStorage.setItem('currentUserSession', JSON.stringify(clientData));
+        showSuccess('successLogin', clientData);
         addNotification({
-        title: 'Inicio de Sesión Exitoso',
-        message: `Bienvenido/a ${clientData.firstName || clientData.email}!`, 
-        type: 'success', 
-        forUserId: clientData.id, 
-        isGlobal: true
-      });
+          title: 'Inicio de Sesión Exitoso',
+          message: `Bienvenido/a ${clientData.firstName || clientData.email}!`, 
+          type: 'success', 
+          forUserId: clientData.id, 
+          isGlobal: true
+        });
         return clientData;
       }
     }
-    showError("Error de Inicio de Sesión", "Email o contraseña incorrectos.");
+    showError('errorLogin');
     return null;
   }, [clients, addNotification]);
 
@@ -205,8 +207,7 @@ export const SharedDataProvider = ({ children }) => {
     setIsLoggingOut(true); // 
     setCurrentUser(null);
     localStorage.removeItem('currentUserSession');
-    if (userName) showSuccess("Sesión Cerrada", `¡Hasta pronto, ${userName}!`);
-    else showSuccess("Sesión Cerrada", "Has cerrado sesión exitosamente.");
+  showSuccess('logout', { firstName: userName });
   }, [currentUser]);
 
 
@@ -230,6 +231,7 @@ export const SharedDataProvider = ({ children }) => {
       alphanumericCode: generateClientCode(clientDataFromForm.firstName, clientDataFromForm.lastName, clientDataFromForm.dni)
     };
     setClients(prev => [...prev, clientWithCode]);
+    showSuccess('addClient', clientWithCode);
     addNotification({
       title: 'Cliente Agregado exitosamente',
       message: `El cliente ${clientWithCode.firstName} ha sido agregado exitosamente con código ${clientWithCode.alphanumericCode}.`,
@@ -250,6 +252,7 @@ export const SharedDataProvider = ({ children }) => {
         originalClient.lastName !== updatedClientData.lastName ||
         originalClient.dni !== updatedClientData.dni)) {
       updatedClientData.alphanumericCode = generateClientCode(updatedClientData.firstName, updatedClientData.lastName, updatedClientData.dni);
+      showSuccess('updateClient', updatedClientData);
       addNotification({
         title: 'Código de Cliente Regenerado',
         message: `Código de cliente para "${updatedClientData.firstName}" regenerado a ${updatedClientData.alphanumericCode} debido a cambio de datos.`,
@@ -264,6 +267,7 @@ export const SharedDataProvider = ({ children }) => {
     const clientToDelete = clients.find(c => c.id === clientId);
     if (clientToDelete) {
       setClients(prev => prev.filter(c => c.id !== clientId));
+      showWarning('deleteClient', clientToDelete);
       addNotification({
         title: 'Cliente Eliminado',
         message: `Cliente "${clientToDelete.firstName}" eliminado.`,
@@ -277,6 +281,7 @@ export const SharedDataProvider = ({ children }) => {
   const addGymClass = useCallback((classData) => {
     const newClass = { ...classData, id: `class_${Date.now()}` };
     setGymClasses(prev => [...prev, newClass]);
+    showSuccess('addClass', newClass);
     addNotification({
       title: 'Clase Creada',
       message: `Nueva clase "${newClass.nombre}" creada.`,
@@ -288,6 +293,7 @@ export const SharedDataProvider = ({ children }) => {
 
   const updateGymClass = useCallback((updatedClassData) => {
     setGymClasses(prev => prev.map(c => c.id === updatedClassData.id ? updatedClassData : c));
+    showSuccess('updateClass', updatedClassData);
     addNotification({
       title: 'Clase Actualizada',
       message: `Clase "${updatedClassData.nombre}" actualizada.`,
@@ -302,6 +308,7 @@ export const SharedDataProvider = ({ children }) => {
     setGymClasses(prev => prev.filter(c => c.id !== classId));
     setEnrollments(prev => prev.filter(e => e.classId !== classId));
     if (classToDelete) {
+      showWarning('deleteClass', classToDelete);
       addNotification({
         title: 'Clase Eliminada',
         message: `Clase "${classToDelete.nombre || classToDelete.name}" eliminada. Inscripciones asociadas también eliminadas.`,
@@ -312,12 +319,12 @@ export const SharedDataProvider = ({ children }) => {
       const enrolledUsers = enrollments.filter(e => e.classId === classId).map(e => e.userId);
       enrolledUsers.forEach(userId => {
         addNotification({
-        title: 'Clase Cancelada',
-        message: `La clase "${classToDelete.nombre || classToDelete.name}" ha sido cancelada por el administrador.`,
-        type: 'warning',
-        forUserId: userId,
-        isGlobal: false
-      });
+          title: 'Clase Cancelada',
+          message: `La clase "${classToDelete.nombre || classToDelete.name}" ha sido cancelada por el administrador.`,
+          type: 'warning',
+          forUserId: userId,
+          isGlobal: false
+        });
       });
     }
   }, [gymClasses, enrollments, addNotification]);
@@ -329,11 +336,11 @@ export const SharedDataProvider = ({ children }) => {
     const user = clients.find(u => u.id === userId);
 
     if (!clase || !user) {
-      showError("Error de Inscripción", "Usuario o clase no encontrados.");
+      showError('error', { message: 'Usuario o clase no encontrados.' });
       return false;
     }
     if (clase.enrolled >= clase.capacity) {
-      showError("Clase Llena", `La clase "${clase.name}" no tiene cupos disponibles.`);
+      showError('error', { message: `La clase "${clase.name}" no tiene cupos disponibles.` });
       return false;
     }
     // TODO: Verificar membresía activa del usuario (requiere estructura de membresía en el objeto client)
@@ -347,6 +354,7 @@ export const SharedDataProvider = ({ children }) => {
     setGymClasses(prevClasses =>
       prevClasses.map(c => c.id === classId ? { ...c, enrolled: c.enrolled + 1 } : c)
     );
+    showSuccess('addEnrollment', { className: clase.name });
     addNotification({
       title: 'Inscripción Exitosa',
       message: `Inscripción exitosa a "${clase.name}".`,
@@ -369,7 +377,7 @@ export const SharedDataProvider = ({ children }) => {
   const cancelEnrollment = useCallback((enrollmentId) => {
     const enrollment = enrollments.find(e => e.id === enrollmentId);
     if (!enrollment) {
-      showError("Error", "Inscripción no encontrada.");
+      showError('error', { message: 'Inscripción no encontrada.' });
       return false;
     }
     const clase = gymClasses.find(c => c.id === enrollment.classId);
@@ -379,6 +387,7 @@ export const SharedDataProvider = ({ children }) => {
       setGymClasses(prevClasses =>
         prevClasses.map(c => c.id === enrollment.classId ? { ...c, enrolled: Math.max(0, c.enrolled - 1) } : c)
       );
+      showSuccess('cancelEnrollment', { className: clase.name });
       addNotification({
         title: 'Inscripción Cancelada',
         message: `Has cancelado tu inscripción a "${clase.name}".`,
@@ -389,12 +398,12 @@ export const SharedDataProvider = ({ children }) => {
       if (currentUser?.id !== enrollment.userId && currentUser?.role === 'admin') { // Si un admin cancela para otro
         const user = clients.find(u => u.id === enrollment.userId);
         addNotification({
-        title: 'Inscripción de Usuario Cancelada',
-        message: `Cancelaste la inscripción de ${user?.firstName || 'un usuario'} a "${clase.name}".`,
-        type: 'info',
-        forUserId: 'admin',
-        isGlobal: false
-      });
+          title: 'Inscripción de Usuario Cancelada',
+          message: `Cancelaste la inscripción de ${user?.firstName || 'un usuario'} a "${clase.name}".`,
+          type: 'info',
+          forUserId: 'admin',
+          isGlobal: false
+        });
       }
     }
     return true;
@@ -406,7 +415,7 @@ export const SharedDataProvider = ({ children }) => {
   const updateClientMembership = useCallback((clientId, membershipDetails) => {
     const client = clients.find(c => c.id === clientId);
     if (!client) {
-      showError("Error", "Cliente no encontrado para actualizar membresía.");
+      showError('error', { message: 'Cliente no encontrado para actualizar membresía.' });
       return;
     }
     const updatedClient = {
@@ -415,6 +424,7 @@ export const SharedDataProvider = ({ children }) => {
       // Asumimos que membershipDetails es un objeto como { planName, status, startDate, endDate, autoRenew }
     };
     updateClient(updatedClient); // Reutiliza la función de actualizar cliente
+    showSuccess('updateMembership', membershipDetails);
     addNotification({
       title: 'Membresía Actualizada',
       message: `Membresía de ${client.firstName} actualizada.`,
@@ -423,7 +433,13 @@ export const SharedDataProvider = ({ children }) => {
       isGlobal: false
     });
     if (client.id === currentUser?.id) { // Si es el usuario actual
-      addNotification(`Tu membresía ha sido actualizada: ${membershipDetails.planName || ''} (${membershipDetails.status || ''})`, 'info', client.id);
+      addNotification({
+        title: 'Membresía actualizada',
+        message: `Tu membresía ha sido actualizada: ${membershipDetails.planName || ''} (${membershipDetails.status || ''})`,
+        type: 'info',
+        forUserId: client.id,
+        isGlobal: false
+      });
     }
   }, [clients, updateClient, currentUser, addNotification]);
 
@@ -436,6 +452,7 @@ export const SharedDataProvider = ({ children }) => {
       id: `fb_${Date.now()}_${Math.floor(Math.random()*10000)}`
     };
     setFeedbacks(prev => [...prev, newFeedback]);
+    showSuccess('addFeedback', feedbackData);
     addNotification({
       title: 'Feedback Enviado',
       message: `Gracias por tu feedback sobre "${feedbackData.className}".`,
@@ -479,6 +496,7 @@ export const SharedDataProvider = ({ children }) => {
     setIsLoggingOut,
     addTeacher: (teacherData) => {
       setTeachers(prev => [...prev, { ...teacherData, id: teacherData.id || `teach_${Date.now()}` }]);
+      showSuccess('addTeacher', teacherData);
       addNotification({
         title: 'Profesor Agregado',
         message: `Profesor "${teacherData.nombre} ${teacherData.apellido}" agregado.`,
@@ -489,6 +507,7 @@ export const SharedDataProvider = ({ children }) => {
     },
     updateTeacher: (updatedTeacherData) => {
       setTeachers(prev => prev.map(t => t.id === updatedTeacherData.id ? updatedTeacherData : t));
+      showSuccess('updateTeacher', updatedTeacherData);
       addNotification({
         title: 'Profesor Actualizado',
         message: `Profesor "${updatedTeacherData.nombre} ${updatedTeacherData.apellido}" actualizado.`,
@@ -501,7 +520,14 @@ export const SharedDataProvider = ({ children }) => {
       const teacherToDelete = teachers.find(t => t.id === teacherId);
       if (teacherToDelete) {
         setTeachers(prev => prev.filter(t => t.id !== teacherId));
-        addNotification(`Profesor "${teacherToDelete.nombre} ${teacherToDelete.apellido}" eliminado.`, 'warning', 'admin');
+        showWarning('deleteTeacher', teacherToDelete);
+        addNotification({
+          title: 'Profesor eliminado',
+          message: `Profesor "${teacherToDelete.nombre} ${teacherToDelete.apellido}" eliminado.`,
+          type: 'warning',
+          forUserId: 'admin',
+          isGlobal: false
+        });
       }
     },
     // CRUD MembershipPlans
@@ -509,6 +535,7 @@ export const SharedDataProvider = ({ children }) => {
       const newPlan = { ...planData, id: `plan_${Date.now()}` };
       const planName = newPlan.name || 'Nuevo plan'; // Utilizar un valor por defecto si el nombre es undefined
       setMembershipPlans(prev => [...prev, newPlan]);
+      showSuccess('addMembership', newPlan);
       addNotification({
         title: 'Nuevo Tipo de Membresía Creado',
         message: `Nuevo tipo de membresía "${planName}" creado.`,
@@ -519,19 +546,27 @@ export const SharedDataProvider = ({ children }) => {
     },
     updateMembershipPlan: (updatedPlanData) => {
       setMembershipPlans(prev => prev.map(p => p.id === updatedPlanData.id ? updatedPlanData : p));
-      addNotification(`Tipo de membresía "${updatedPlanData.name}" actualizado.`, 'info', 'admin');
+      showSuccess('updateMembership', updatedPlanData);
+      addNotification({
+        title: 'Tipo de membresía actualizado',
+        message: `Tipo de membresía "${updatedPlanData.name}" actualizado.`,
+        type: 'info',
+        forUserId: 'admin',
+        isGlobal: false
+      });
     },
     deleteMembershipPlan: (planId) => {
       const planToDelete = membershipPlans.find(p => p.id === planId);
       if (planToDelete) {
         setMembershipPlans(prev => prev.filter(p => p.id !== planId));
+        showWarning('deleteMembership', planToDelete);
         addNotification({
-        title: 'Tipo de Membresía Eliminado',
-        message: `Tipo de membresía "${planToDelete.name}" eliminado.`,
-        type: 'warning',
-        forUserId: 'admin',
-        isGlobal: false
-      });
+          title: 'Tipo de Membresía Eliminado',
+          message: `Tipo de membresía "${planToDelete.name}" eliminado.`,
+          type: 'warning',
+          forUserId: 'admin',
+          isGlobal: false
+        });
         // TODO: Considerar qué sucede con los clientes que tienen este plan asignado.
       }
     },
@@ -564,6 +599,7 @@ export const SharedDataProvider = ({ children }) => {
     addArticle: (articleData) => {
       const newArticle = { ...articleData, id: `art_${Date.now()}`, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
       setArticles(prev => [...prev, newArticle]);
+      showSuccess('addArticle', newArticle);
       addNotification({
         title: 'Artículo Creado',
         message: `Artículo "${newArticle.title}" creado.`,
@@ -575,19 +611,27 @@ export const SharedDataProvider = ({ children }) => {
     updateArticle: (updatedArticleData) => {
       const articleWithUpdateDate = { ...updatedArticleData, updatedAt: new Date().toISOString() };
       setArticles(prev => prev.map(a => a.id === articleWithUpdateDate.id ? articleWithUpdateDate : a));
-      addNotification(`Artículo "${articleWithUpdateDate.title}" actualizado.`, 'info', 'admin');
+      showSuccess('updateArticle', articleWithUpdateDate);
+      addNotification({
+        title: 'Artículo actualizado',
+        message: `Artículo "${articleWithUpdateDate.title}" actualizado.`,
+        type: 'info',
+        forUserId: 'admin',
+        isGlobal: false
+      });
     },
     deleteArticle: (articleId) => {
       const articleToDelete = articles.find(a => a.id === articleId);
       if (articleToDelete) {
         setArticles(prev => prev.filter(a => a.id !== articleId));
+        showWarning('deleteArticle', articleToDelete);
         addNotification({
-        title: 'Artículo Eliminado',
-        message: `Artículo "${articleToDelete.title}" eliminado.`,
-        type: 'warning',
-        forUserId: 'admin',
-        isGlobal: false
-      });
+          title: 'Artículo Eliminado',
+          message: `Artículo "${articleToDelete.title}" eliminado.`,
+          type: 'warning',
+          forUserId: 'admin',
+          isGlobal: false
+        });
       }
     }
   }), [clients, gymClasses, teachers, enrollments, attendanceRecords, articles, membershipPlans, currentUser, notifications, isLoading, loginUser, logoutUser, addNotification, markNotificationAsRead, clearUserNotifications, addClient, updateClient, deleteClient, addGymClass, updateGymClass, deleteGymClass, enrollToClass, cancelEnrollment, updateClientMembership, submitFeedback, isLoggingOut, setIsLoggingOut]);

@@ -55,6 +55,18 @@ const CheckInPage = () => {
       }
 
       setClientDetails(result);
+      // Personalizar el alert para ingreso manual
+      if (result.membershipStatusDetails?.status === 'Active') {
+        showSuccess('checkinSuccess', {
+          title: `¡Acceso concedido a ${result.firstName} ${result.lastName}!`,
+          text: `Bienvenido/a, ${result.firstName} ${result.lastName}. Tu membresía está activa.`
+        });
+      } else {
+        showError('checkinDenied', {
+          title: `Acceso denegado para ${result.firstName} ${result.lastName}`,
+          text: `Tu membresía está ${result.membershipStatusDetails?.status?.toLowerCase() || 'inactiva'}. Por favor, regulariza tu situación para ingresar.`
+        });
+      }
       setProcessing(false);
       setManualCode('');
       return;
@@ -89,9 +101,15 @@ const CheckInPage = () => {
         type: type,
         // classId: selectedClassId, // Si aplica
       });
-      showSuccess("¡Acceso Concedido!", `${foundClient.firstName} ${foundClient.lastName}, ¡bienvenido/a! Membresía: ${membershipInfo.status}.`);
+      showSuccess('checkinSuccess', {
+        title: `¡Acceso concedido a ${foundClient.firstName} ${foundClient.lastName}!`,
+        text: `Bienvenido/a, ${foundClient.firstName} ${foundClient.lastName}. Tu membresía está ${membershipInfo.status === 'Active' ? 'activa' : membershipInfo.status.toLowerCase()}.`
+      });
     } else {
-      showError("Acceso Denegado", `Membresía ${membershipInfo.status}. ${foundClient.firstName}, por favor, regulariza tu situación.`);
+      showError('checkinDenied', {
+        title: `Acceso denegado para ${foundClient.firstName} ${foundClient.lastName}`,
+        text: `Tu membresía está ${membershipInfo.status.toLowerCase()}. Por favor, regulariza tu situación para ingresar.`
+      });
     }
     setProcessing(false);
     setManualCode(''); // Limpiar input manual

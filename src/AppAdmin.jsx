@@ -32,9 +32,9 @@ const AdminLayout = () => {
         n => !n.read && (n.forUserId === 'admin' || n.isGlobal) // Admin ve las suyas y las globales
       );
       adminNotifications.forEach(n => {
-        if (n.type === 'success') showSuccess(n.title, n.message);
-        else if (n.type === 'error') showError(n.title, n.message);
-        else if (n.type === 'warning') showWarning(n.title, n.message);
+        if (n.type === 'success') showSuccess(n.actionType || 'notification', n.data || { title: n.title, text: n.message });
+        else if (n.type === 'error') showError(n.actionType || 'notification', n.data || { title: n.title, text: n.message });
+        else if (n.type === 'warning') showWarning(n.actionType || 'warning', n.data || { title: n.title, text: n.message });
 
         markNotificationAsRead(n.id);
       });
