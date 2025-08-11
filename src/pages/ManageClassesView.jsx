@@ -57,16 +57,16 @@ const ManageClassesView = ({ onBack }) => {
       capacidad: Number(formData.capacidad)
     };
 
-    setClasses(prevClasses => [...prevClasses, newClass]);
-    showSuccess('Clase Agregada', `${newClass.nombre} ha sido agregada exitosamente.`);
-    setIsFormVisible(false);
-    setFormData({ nombre: '', profesor: '', dia: 'Lunes', horaInicio: '', horaFin: '', capacidad: '', activo: true });
+  setClasses(prevClasses => [...prevClasses, newClass]);
+  showSuccess('addClass', newClass);
+  setIsFormVisible(false);
+  setFormData({ nombre: '', profesor: '', dia: 'Lunes', horaInicio: '', horaFin: '', capacidad: '', activo: true });
   };
 
   const handleDeleteClass = (classId, className) => {
-    confirmAction(`¿Eliminar Clase "${className}"?`, `Estás a punto de eliminar la clase ${className}. Esta acción es irreversible.`, "Sí, eliminar", () => {
+    confirmAction('deleteClass', { nombre: className }, "Sí, eliminar", () => {
       setClasses(prevClasses => prevClasses.filter(cls => cls.id !== classId));
-      showSuccess('Clase Eliminada', `La clase ${className} ha sido eliminada.`);
+      showSuccess('deleteClass', { nombre: className });
     });
   };
 

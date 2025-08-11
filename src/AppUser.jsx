@@ -26,10 +26,10 @@ const UserLayout = () => {
         n => !n.read && (n.forUserId === currentUser.id || (n.isGlobal && n.forUserId !== 'admin'))
       );
       userNotifications.forEach(n => {
-        if (n.type === 'success') showSuccess("Notificación", n.message);
-        else if (n.type === 'error') showError("Notificación", n.message);
-        else if (n.type === 'warning') confirmAction("Atención", n.message, "Entendido", () => { }); // confirmAction para warnings
-        else showSuccess("Info", n.message); // Default
+        if (n.type === 'success') showSuccess(n.actionType || 'notification', n.data || { title: n.title, text: n.message });
+        else if (n.type === 'error') showError(n.actionType || 'notification', n.data || { title: n.title, text: n.message });
+        else if (n.type === 'warning') confirmAction(n.actionType || 'warning', n.data || { title: n.title, text: n.message }, "Entendido", () => { });
+        else showSuccess('info', n.data || { title: n.title, text: n.message });
 
         markNotificationAsRead(n.id);
       });

@@ -17,17 +17,17 @@ const Header = () => {
       : 'Usuario';
 
   const handleLogout = () => {
-  confirmAction(
-    '¿Estás segura/o de cerrar sesión?',
-    'Vas a ser redirigida/o al login.',
-    'Sí, cerrar sesión',
-    async () => {
-      logoutUser();
-      await showSuccess('Sesión cerrada', 'Nos vemos pronto 💪🏽');
-      navigate('/login');
-    }
-  );
-};
+    confirmAction(
+      'logout',
+      { firstName: currentUser?.firstName, email: currentUser?.email },
+      'Sí, cerrar sesión',
+      async () => {
+        logoutUser();
+        showSuccess('logout', { firstName: currentUser?.firstName, email: currentUser?.email });
+        navigate('/login');
+      }
+    );
+  };
 
 
 

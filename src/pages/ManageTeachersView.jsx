@@ -52,35 +52,35 @@ const ManageTeachersView = ({ onBack }) => {
     e.preventDefault();
     // Validaciones requeridas
     if (!formData.nombre.trim() || !formData.apellido.trim() || !formData.dni.trim() || !formData.email.trim() || !formData.telefono.trim() || !formData.descripcion.trim() || !formData.especialidades.trim()) {
-      showError('Campos Obligatorios', 'Todos los campos son obligatorios excepto "activo".');
+      showError('error', { message: 'Todos los campos son obligatorios excepto "activo".' });
       return;
     }
     // Validación de email
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      showError('Email Inválido', 'Por favor, ingrese un email válido.');
+      showError('error', { message: 'Por favor, ingrese un email válido.' });
       return;
     }
     // Validación de unicidad de email y dni
     const emailExists = teachers.some(t => t.email === formData.email && (!editingTeacher || t.id !== editingTeacher.id));
     if (emailExists) {
-      showError('Email Duplicado', 'Ya existe un profesor con ese email.');
+      showError('error', { message: 'Ya existe un profesor con ese email.' });
       return;
     }
     const dniExists = teachers.some(t => t.dni === formData.dni && (!editingTeacher || t.id !== editingTeacher.id));
     if (dniExists) {
-      showError('DNI Duplicado', 'Ya existe un profesor con ese DNI.');
+      showError('error', { message: 'Ya existe un profesor con ese DNI.' });
       return;
     }
 
     if (editingTeacher) {
       // Lógica de actualización (solo campos enviados)
       setTeachers(teachers.map(t => t.id === editingTeacher.id ? { ...t, ...formData } : t));
-      showSuccess('Profesor Actualizado', `${formData.nombre} ${formData.apellido} ha sido actualizado exitosamente.`);
+      showSuccess('updateTeacher', formData);
     } else {
       // Lógica de creación
       const newTeacher = { id: `teach_${Date.now().toString()}`, ...formData };
       setTeachers(prevTeachers => [...prevTeachers, newTeacher]);
-      showSuccess('Profesor Añadido', `${formData.nombre} ${formData.apellido} ha sido añadido exitosamente.`);
+      showSuccess('addTeacher', newTeacher);
     }
     resetForm();
   };
@@ -101,9 +101,9 @@ const ManageTeachersView = ({ onBack }) => {
   };
 
   const handleDeleteTeacher = (teacherId, teacherName) => {
-    confirmAction(`¿Eliminar Profesor "${teacherName}"?`, `Esta acción es irreversible.`, "Sí, eliminar", () => {
+    confirmAction('deleteTeacher', { nombre: teacherName }, "Sí, eliminar", () => {
       setTeachers(prevTeachers => prevTeachers.filter(t => t.id !== teacherId));
-      showSuccess('Profesor Eliminado', `El profesor ${teacherName} ha sido eliminado.`);
+      showSuccess('deleteTeacher', { nombre: teacherName });
       if(editingTeacher && editingTeacher.id === teacherId) { // Si se elimina el profesor que se está editando
         resetForm();
       }
