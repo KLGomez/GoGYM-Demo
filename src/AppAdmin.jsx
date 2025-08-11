@@ -17,7 +17,7 @@ const AdminLayout = () => {
       if (!currentUser) {
         showError("Acceso Denegado", "Debes iniciar sesión para acceder al panel de administración.");
         navigate('/login');
-      } else if (currentUser.role !== 'admin') {
+      } else if (currentUser.rol !== 'administrador' && currentUser.rol !== 'admin') {
         showError("Acceso Denegado", "No tienes permisos para acceder a esta área.");
         navigate('/user');
       }

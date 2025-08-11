@@ -1,6 +1,5 @@
 import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
 import {
-  getClients, saveClients,
   getTeachers, saveTeachers,
   getGymClasses, saveGymClasses,
   getClassEnrollments, saveClassEnrollments,
@@ -9,6 +8,9 @@ import {
   getFeedbacks, saveFeedbacks,
   getMembershipPlans, saveMembershipPlans
 } from '../utils/storage';
+import { getUsers, createUser, updateUser, deleteUser } from '../api/users';
+import { getClasses, createClass, updateClass, deleteClass } from '../api/classes';
+import { login as apiLogin, getProfile } from '../api/auth';
 import { showSuccess, showError, showWarning } from '../utils/alerts';
 import { generateClientCode } from '../utils/codeUtils';
 
@@ -44,7 +46,7 @@ export const SharedDataProvider = ({ children }) => {
   // --- Carga Inicial de Datos ---
   useEffect(() => {
     console.log("SharedDataContext: Cargando datos iniciales...");
-    const storedClients = getClients();
+    // Cargar datos locales
     const storedGymClasses = getGymClasses();
     const storedTeachers = getTeachers();
     const storedEnrollments = getClassEnrollments();
@@ -61,75 +63,77 @@ export const SharedDataProvider = ({ children }) => {
       localStorage.removeItem('currentUserSession');
       storedCurrentUser = null;
     }
-
-    setClients(storedClients);
     setGymClasses(Array.isArray(storedGymClasses) ? storedGymClasses : initialSimulatedClasses);
     setTeachers(Array.isArray(storedTeachers) ? storedTeachers : []);
     setEnrollments(storedEnrollments.length > 0 ? storedEnrollments : initialSimulatedEnrollments);
     setAttendanceRecords(storedAttendance);
     setArticles(storedArticles);
     setFeedbacks(Array.isArray(storedFeedbacks) ? storedFeedbacks : []);
-
-    // Asegurar usuarios por defecto si no existen
-    let finalClients = [...storedClients];
-    const adminExists = finalClients.some(c => c.role === 'admin' && c.email === 'admin@gogym.com');
-
-    if (!adminExists) {
-      const adminUser = {
-        id: 'admin_default_001',
-        firstName: 'Admin',
-        lastName: 'GoGym',
-        email: 'admin@gogym.com',
-        password: 'adminpass',
-        role: 'admin',
-        dni: '00000000',
-        alphanumericCode: generateClientCode('Admin', 'GoGym', '00000000'),
-        membership: { planName: 'Premium', membershipStartDate: new Date().toISOString(), membershipDurationDays: 365, autoRenew: true }
-      };
-      finalClients.push(adminUser);
-    }
-
-    const testUserExists = finalClients.some(c => c.email === 'user@gogym.com');
-    if (!testUserExists) {
-      const testUser = {
-        id: 'user_default_001',
-        firstName: 'Test', lastName: 'User', email: 'user@gogym.com', password: 'userpass', role: 'user',
-        dni: '11111111', alphanumericCode: generateClientCode('Test', 'User', '11111111'),
-        membership: { planName: 'Básico', membershipStartDate: new Date().toISOString(), membershipDurationDays: 30, autoRenew: false }
-      };
-      finalClients.push(testUser);
-    }
-
-    if (finalClients.length > storedClients.length) {
-      setClients(finalClients);
+    // Solo cargar clientes si el usuario está autenticado
+    if (storedCurrentUser && storedCurrentUser.token) {
+      getUsers()
+        .then(apiClients => {
+          let finalClients = Array.isArray(apiClients) ? apiClients : [];
+          // Asegurar usuarios por defecto si no existen
+          const adminExists = finalClients.some(c => c.role === 'admin' && c.email === 'admin@gogym.com');
+          if (!adminExists) {
+            const adminUser = {
+              id: 'admin_default_001',
+              firstName: 'Admin',
+              lastName: 'GoGym',
+              email: 'admin@gogym.com',
+              password: 'adminpass',
+              role: 'admin',
+              dni: '00000000',
+              alphanumericCode: generateClientCode('Admin', 'GoGym', '00000000'),
+              membership: { planName: 'Premium', membershipStartDate: new Date().toISOString(), membershipDurationDays: 365, autoRenew: true }
+            };
+            finalClients.push(adminUser);
+          }
+          const testUserExists = finalClients.some(c => c.email === 'user@gogym.com');
+          if (!testUserExists) {
+            const testUser = {
+              id: 'user_default_001',
+              firstName: 'Test', lastName: 'User', email: 'user@gogym.com', password: 'userpass', role: 'user',
+              dni: '11111111', alphanumericCode: generateClientCode('Test', 'User', '11111111'),
+              membership: { planName: 'Básico', membershipStartDate: new Date().toISOString(), membershipDurationDays: 30, autoRenew: false }
+            };
+            finalClients.push(testUser);
+          }
+          setClients(finalClients);
+          if (storedCurrentUser) {
+            const liveClientData = finalClients.find(c => c.id === storedCurrentUser.id);
+            if (liveClientData) {
+              setCurrentUser(liveClientData);
+              localStorage.setItem('currentUserSession', JSON.stringify(liveClientData));
+            } else {
+              localStorage.removeItem('currentUserSession');
+              setCurrentUser(null);
+            }
+          }
+          setIsLoading(false);
+          console.log("SharedDataContext: Datos cargados.", { finalClients, storedGymClasses, storedTeachers, storedEnrollments, storedAttendance, storedCurrentUser, storedFeedbacks });
+        })
+        .catch(error => {
+          console.error('Error al cargar clientes desde la API:', error);
+          setClients([]);
+          setIsLoading(false);
+        });
     } else {
-      setClients(storedClients);
+      setClients([]);
+      setIsLoading(false);
     }
-
-    if (storedCurrentUser) {
-      const liveClientData = finalClients.find(c => c.id === storedCurrentUser.id);
-      if (liveClientData) {
-        setCurrentUser(liveClientData);
-        localStorage.setItem('currentUserSession', JSON.stringify(liveClientData));
-      } else {
-        localStorage.removeItem('currentUserSession');
-        setCurrentUser(null);
-      }
-    }
-
-    setIsLoading(false);
-    console.log("SharedDataContext: Datos cargados.", { storedClients, storedGymClasses, storedTeachers, storedEnrollments, storedAttendance, storedCurrentUser, storedFeedbacks });
   }, []);
 
   // --- Persistencia en localStorage ---
-  useEffect(() => { if (!isLoading) saveClients(clients); }, [clients, isLoading]);
+  // ...existing code...
   useEffect(() => { if (!isLoading) saveGymClasses(gymClasses); }, [gymClasses, isLoading]);
   useEffect(() => { if (!isLoading) saveTeachers(teachers); }, [teachers, isLoading]);
   useEffect(() => { if (!isLoading) saveClassEnrollments(enrollments); }, [enrollments, isLoading]);
   useEffect(() => { if (!isLoading) saveAttendanceRecords(attendanceRecords); }, [attendanceRecords, isLoading]);
   useEffect(() => { if (!isLoading) saveFeedbacks(feedbacks); }, [feedbacks, isLoading]);
   useEffect(() => { if (!isLoading) saveArticles(articles); }, [articles, isLoading]);
-  useEffect(() => { if (!isLoading) saveClients(clients); }, [clients, isLoading]);
+  // ...existing code...
   useEffect(() => { if (!isLoading) saveMembershipPlans(membershipPlans); }, [membershipPlans, isLoading]);
 
 
@@ -159,55 +163,41 @@ export const SharedDataProvider = ({ children }) => {
   }, [currentUser]);
 
   // --- MANEJO DE CURRENTUSER (LOGIN/LOGOUT) ---
-  const loginUser = useCallback((userData) => {
-    const clientData = clients.find(c => c.email === userData.email); // Asumiendo login por email
-    if (!clientData) {
+  const loginUser = useCallback(async (userData) => {
+    try {
+      const result = await apiLogin(userData.email, userData.password);
+      if (result && result.access_token) {
+        localStorage.setItem('token', result.access_token);
+        // Obtener perfil del usuario desde el backend
+        const profile = await getProfile();
+        setCurrentUser(profile);
+        localStorage.setItem('currentUserSession', JSON.stringify(profile));
+        showSuccess('successLogin', profile);
+        addNotification({
+          title: 'Inicio de Sesión Exitoso',
+          message: `Bienvenido/a ${profile.nombre ? profile.nombre + ' ' + (profile.apellido || '') : profile.email}!`,
+          type: 'success',
+          forUserId: profile._id || profile.id,
+          isGlobal: true
+        });
+        return profile;
+      } else {
+        showError('errorLogin');
+        return null;
+      }
+    } catch (error) {
       showError('errorLogin');
       return null;
     }
-    // Admin y usuario de prueba: contraseña hardcodeada
-    if (
-      (clientData.email === 'admin@gogym.com' && userData.password === 'admin123') ||
-      (clientData.email === 'user@gogym.com' && userData.password === 'user123')
-    ) {
-      setCurrentUser(clientData);
-      localStorage.setItem('currentUserSession', JSON.stringify(clientData));
-      showSuccess('successLogin', clientData);
-      addNotification({
-        title: 'Inicio de Sesión Exitoso',
-        message: `Bienvenido/a ${clientData.firstName || clientData.email}!`, 
-        type: 'success', 
-        forUserId: clientData.id, 
-        isGlobal: true
-      });
-      return clientData;
-    }
-    // Para otros clientes: contraseña = dni
-    if (clientData.role !== 'admin' && clientData.role !== 'user') {
-      if (userData.password === String(clientData.dni)) {
-        setCurrentUser(clientData);
-        localStorage.setItem('currentUserSession', JSON.stringify(clientData));
-        showSuccess('successLogin', clientData);
-        addNotification({
-          title: 'Inicio de Sesión Exitoso',
-          message: `Bienvenido/a ${clientData.firstName || clientData.email}!`, 
-          type: 'success', 
-          forUserId: clientData.id, 
-          isGlobal: true
-        });
-        return clientData;
-      }
-    }
-    showError('errorLogin');
-    return null;
-  }, [clients, addNotification]);
+  }, [addNotification]);
 
   const logoutUser = useCallback(() => {
     const userName = currentUser?.firstName;
-    setIsLoggingOut(true); // 
+    setIsLoggingOut(true);
     setCurrentUser(null);
     localStorage.removeItem('currentUserSession');
-  showSuccess('logout', { firstName: userName });
+    localStorage.removeItem('token');
+    showSuccess('logout', { firstName: userName });
   }, [currentUser]);
 
 
@@ -224,108 +214,145 @@ export const SharedDataProvider = ({ children }) => {
 
 
   // --- CRUD Clientes ---
-  const addClient = useCallback((clientDataFromForm) => {
-    // Generar código alfanumérico aquí antes de guardar
-    const clientWithCode = {
-      ...clientDataFromForm,
-      alphanumericCode: generateClientCode(clientDataFromForm.firstName, clientDataFromForm.lastName, clientDataFromForm.dni)
-    };
-    setClients(prev => [...prev, clientWithCode]);
-    showSuccess('addClient', clientWithCode);
-    addNotification({
-      title: 'Cliente Agregado exitosamente',
-      message: `El cliente ${clientWithCode.firstName} ha sido agregado exitosamente con código ${clientWithCode.alphanumericCode}.`,
-      type: 'success',
-      forUserId: 'admin',
-      isGlobal: false
-    });
-  }, [addNotification]);
-
-  const updateClient = useCallback((updatedClientData) => {
-    // Si se actualizan los datos que componen el alphanumericCode, se debería regenerar.
-    // Por ahora, asumimos que el alphanumericCode es fijo una vez creado o se actualiza manualmente si es necesario.
-    // Si el DNI, nombre o apellido cambian, el código alfanumérico basado en ellos también debería cambiar.
-    // Podríamos añadir lógica aquí para regenerarlo si es necesario.
-    const originalClient = clients.find(c => c.id === updatedClientData.id);
-    if (originalClient &&
-      (originalClient.firstName !== updatedClientData.firstName ||
-        originalClient.lastName !== updatedClientData.lastName ||
-        originalClient.dni !== updatedClientData.dni)) {
-      updatedClientData.alphanumericCode = generateClientCode(updatedClientData.firstName, updatedClientData.lastName, updatedClientData.dni);
-      showSuccess('updateClient', updatedClientData);
+  const addClient = useCallback(async (clientDataFromForm) => {
+    try {
+      const clientWithCode = {
+        ...clientDataFromForm,
+        alphanumericCode: generateClientCode(clientDataFromForm.firstName, clientDataFromForm.lastName, clientDataFromForm.dni)
+      };
+      const newUser = await createUser(clientWithCode);
+      setClients(prev => [...prev, newUser]);
+      showSuccess('addClient', newUser);
       addNotification({
-        title: 'Código de Cliente Regenerado',
-        message: `Código de cliente para "${updatedClientData.firstName}" regenerado a ${updatedClientData.alphanumericCode} debido a cambio de datos.`,
-        type: 'info',
+        title: 'Cliente Agregado exitosamente',
+        message: `El cliente ${newUser.firstName} ha sido agregado exitosamente con código ${newUser.alphanumericCode}.`,
+        type: 'success',
         forUserId: 'admin',
         isGlobal: false
       });
+      return newUser;
+    } catch (error) {
+      showError('errorAddClient');
+      return null;
+    }
+  }, [addNotification]);
+
+  const updateClient = useCallback(async (updatedClientData) => {
+    try {
+      // Regenerar código si cambian datos clave
+      const originalClient = clients.find(c => c.id === updatedClientData.id);
+      let updated = { ...updatedClientData };
+      if (originalClient &&
+        (originalClient.firstName !== updatedClientData.firstName ||
+          originalClient.lastName !== updatedClientData.lastName ||
+          originalClient.dni !== updatedClientData.dni)) {
+        updated.alphanumericCode = generateClientCode(updatedClientData.firstName, updatedClientData.lastName, updatedClientData.dni);
+      }
+      const result = await updateUser(updated.id, updated);
+      setClients(prev => prev.map(c => c.id === result.id ? result : c));
+      showSuccess('updateClient', result);
+      addNotification({
+        title: 'Cliente actualizado',
+        message: `Cliente ${result.firstName} actualizado exitosamente.`,
+        type: 'success',
+        forUserId: 'admin',
+        isGlobal: false
+      });
+      return result;
+    } catch (error) {
+      showError('errorUpdateClient');
+      return null;
     }
   }, [clients, addNotification]);
 
-  const deleteClient = useCallback((clientId) => {
-    const clientToDelete = clients.find(c => c.id === clientId);
-    if (clientToDelete) {
+  const deleteClient = useCallback(async (clientId) => {
+    try {
+      const clientToDelete = clients.find(c => c.id === clientId);
+      await deleteUser(clientId);
       setClients(prev => prev.filter(c => c.id !== clientId));
       showWarning('deleteClient', clientToDelete);
       addNotification({
         title: 'Cliente Eliminado',
-        message: `Cliente "${clientToDelete.firstName}" eliminado.`,
+        message: `Cliente "${clientToDelete?.firstName || clientId}" eliminado.`,
         type: 'warning',
         forUserId: 'admin',
         isGlobal: false
       });
+      return clientToDelete;
+    } catch (error) {
+      showError('errorDeleteClient');
+      return null;
     }
   }, [clients, addNotification]);
 
-  const addGymClass = useCallback((classData) => {
-    const newClass = { ...classData, id: `class_${Date.now()}` };
-    setGymClasses(prev => [...prev, newClass]);
-    showSuccess('addClass', newClass);
-    addNotification({
-      title: 'Clase Creada',
-      message: `Nueva clase "${newClass.nombre}" creada.`,
-      type: 'success',
-      forUserId: 'admin',
-      isGlobal: false
-    });
-  }, [addNotification]);
-
-  const updateGymClass = useCallback((updatedClassData) => {
-    setGymClasses(prev => prev.map(c => c.id === updatedClassData.id ? updatedClassData : c));
-    showSuccess('updateClass', updatedClassData);
-    addNotification({
-      title: 'Clase Actualizada',
-      message: `Clase "${updatedClassData.nombre}" actualizada.`,
-      type: 'info',
-      forUserId: 'admin',
-      isGlobal: false
-    });
-  }, [addNotification]);
-
-  const deleteGymClass = useCallback((classId) => {
-    const classToDelete = gymClasses.find(c => c.id === classId);
-    setGymClasses(prev => prev.filter(c => c.id !== classId));
-    setEnrollments(prev => prev.filter(e => e.classId !== classId));
-    if (classToDelete) {
-      showWarning('deleteClass', classToDelete);
+  const addGymClass = useCallback(async (classData) => {
+    try {
+      const newClass = await createClass(classData);
+      setGymClasses(prev => [...prev, newClass]);
+      showSuccess('addClass', newClass);
       addNotification({
-        title: 'Clase Eliminada',
-        message: `Clase "${classToDelete.nombre || classToDelete.name}" eliminada. Inscripciones asociadas también eliminadas.`,
-        type: 'warning',
+        title: 'Clase Creada',
+        message: `Nueva clase "${newClass.nombre}" creada.`,
+        type: 'success',
         forUserId: 'admin',
         isGlobal: false
       });
-      const enrolledUsers = enrollments.filter(e => e.classId === classId).map(e => e.userId);
-      enrolledUsers.forEach(userId => {
+      return newClass;
+    } catch (error) {
+      showError('errorAddClass');
+      return null;
+    }
+  }, [addNotification]);
+
+  const updateGymClass = useCallback(async (updatedClassData) => {
+    try {
+      const updated = await updateClass(updatedClassData.id, updatedClassData);
+      setGymClasses(prev => prev.map(c => c.id === updated.id ? updated : c));
+      showSuccess('updateClass', updated);
+      addNotification({
+        title: 'Clase Actualizada',
+        message: `Clase "${updated.nombre}" actualizada.`,
+        type: 'info',
+        forUserId: 'admin',
+        isGlobal: false
+      });
+      return updated;
+    } catch (error) {
+      showError('errorUpdateClass');
+      return null;
+    }
+  }, [addNotification]);
+
+  const deleteGymClass = useCallback(async (classId) => {
+    try {
+      const classToDelete = gymClasses.find(c => c.id === classId);
+      await deleteClass(classId);
+      setGymClasses(prev => prev.filter(c => c.id !== classId));
+      setEnrollments(prev => prev.filter(e => e.classId !== classId));
+      if (classToDelete) {
+        showWarning('deleteClass', classToDelete);
         addNotification({
-          title: 'Clase Cancelada',
-          message: `La clase "${classToDelete.nombre || classToDelete.name}" ha sido cancelada por el administrador.`,
+          title: 'Clase Eliminada',
+          message: `Clase "${classToDelete.nombre || classToDelete.name}" eliminada. Inscripciones asociadas también eliminadas.`,
           type: 'warning',
-          forUserId: userId,
+          forUserId: 'admin',
           isGlobal: false
         });
-      });
+        const enrolledUsers = enrollments.filter(e => e.classId === classId).map(e => e.userId);
+        enrolledUsers.forEach(userId => {
+          addNotification({
+            title: 'Clase Cancelada',
+            message: `La clase "${classToDelete.nombre || classToDelete.name}" ha sido cancelada por el administrador.`,
+            type: 'warning',
+            forUserId: userId,
+            isGlobal: false
+          });
+        });
+      }
+      return classToDelete;
+    } catch (error) {
+      showError('errorDeleteClass');
+      return null;
     }
   }, [gymClasses, enrollments, addNotification]);
 
@@ -449,7 +476,7 @@ export const SharedDataProvider = ({ children }) => {
     // feedbackData: { classId, className, rating, comment, userId, user, date }
     const newFeedback = {
       ...feedbackData,
-      id: `fb_${Date.now()}_${Math.floor(Math.random()*10000)}`
+      id: `fb_${Date.now()}_${Math.floor(Math.random() * 10000)}`
     };
     setFeedbacks(prev => [...prev, newFeedback]);
     showSuccess('addFeedback', feedbackData);
@@ -490,74 +517,107 @@ export const SharedDataProvider = ({ children }) => {
     enrollToClass,
     cancelEnrollment,
     updateClientMembership,
-  submitFeedback,
-  feedbacks,
-    isLoggingOut, 
+    submitFeedback,
+    feedbacks,
+    isLoggingOut,
     setIsLoggingOut,
-    addTeacher: (teacherData) => {
-      setTeachers(prev => [...prev, { ...teacherData, id: teacherData.id || `teach_${Date.now()}` }]);
-      showSuccess('addTeacher', teacherData);
-      addNotification({
-        title: 'Profesor Agregado',
-        message: `Profesor "${teacherData.nombre} ${teacherData.apellido}" agregado.`,
-        type: 'success',
-        forUserId: 'admin',
-        isGlobal: false
-      });
+    addTeacher: async (teacherData) => {
+      try {
+        const newTeacher = await createTeacher(teacherData);
+        setTeachers(prev => [...prev, newTeacher]);
+        showSuccess('addTeacher', newTeacher);
+        addNotification({
+          title: 'Profesor Agregado',
+          message: `Profesor "${newTeacher.nombre} ${newTeacher.apellido}" agregado.`,
+          type: 'success',
+          forUserId: 'admin',
+          isGlobal: false
+        });
+        return newTeacher;
+      } catch (error) {
+        showError('errorAddTeacher');
+        return null;
+      }
     },
-    updateTeacher: (updatedTeacherData) => {
-      setTeachers(prev => prev.map(t => t.id === updatedTeacherData.id ? updatedTeacherData : t));
-      showSuccess('updateTeacher', updatedTeacherData);
-      addNotification({
-        title: 'Profesor Actualizado',
-        message: `Profesor "${updatedTeacherData.nombre} ${updatedTeacherData.apellido}" actualizado.`,
-        type: 'info',
-        forUserId: 'admin',
-        isGlobal: false
-      });
+    updateTeacher: async (updatedTeacherData) => {
+      try {
+        const updated = await apiUpdateTeacher(updatedTeacherData.id, updatedTeacherData);
+        setTeachers(prev => prev.map(t => t.id === updated.id ? updated : t));
+        showSuccess('updateTeacher', updated);
+        addNotification({
+          title: 'Profesor Actualizado',
+          message: `Profesor "${updated.nombre} ${updated.apellido}" actualizado.`,
+          type: 'info',
+          forUserId: 'admin',
+          isGlobal: false
+        });
+        return updated;
+      } catch (error) {
+        showError('errorUpdateTeacher');
+        return null;
+      }
     },
-    deleteTeacher: (teacherId) => {
-      const teacherToDelete = teachers.find(t => t.id === teacherId);
-      if (teacherToDelete) {
+    deleteTeacher: async (teacherId) => {
+      try {
+        const teacherToDelete = teachers.find(t => t.id === teacherId);
+        await apiDeleteTeacher(teacherId);
         setTeachers(prev => prev.filter(t => t.id !== teacherId));
         showWarning('deleteTeacher', teacherToDelete);
         addNotification({
           title: 'Profesor eliminado',
-          message: `Profesor "${teacherToDelete.nombre} ${teacherToDelete.apellido}" eliminado.`,
+          message: `Profesor "${teacherToDelete?.nombre} ${teacherToDelete?.apellido}" eliminado.`,
           type: 'warning',
           forUserId: 'admin',
           isGlobal: false
         });
+        return teacherToDelete;
+      } catch (error) {
+        showError('errorDeleteTeacher');
+        return null;
       }
     },
     // CRUD MembershipPlans
-    addMembershipPlan: (planData) => {
-      const newPlan = { ...planData, id: `plan_${Date.now()}` };
-      const planName = newPlan.name || 'Nuevo plan'; // Utilizar un valor por defecto si el nombre es undefined
-      setMembershipPlans(prev => [...prev, newPlan]);
-      showSuccess('addMembership', newPlan);
-      addNotification({
-        title: 'Nuevo Tipo de Membresía Creado',
-        message: `Nuevo tipo de membresía "${planName}" creado.`,
-        type: 'success',
-        forUserId: 'admin',
-        isGlobal: false
-      });
+    addMembershipPlan: async (planData) => {
+      try {
+        const newPlan = await createMembership(planData);
+        const planName = newPlan.name || 'Nuevo plan';
+        setMembershipPlans(prev => [...prev, newPlan]);
+        showSuccess('addMembership', newPlan);
+        addNotification({
+          title: 'Nuevo Tipo de Membresía Creado',
+          message: `Nuevo tipo de membresía "${planName}" creado.`,
+          type: 'success',
+          forUserId: 'admin',
+          isGlobal: false
+        });
+        return newPlan;
+      } catch (error) {
+        showError('errorAddMembership');
+        return null;
+      }
     },
-    updateMembershipPlan: (updatedPlanData) => {
-      setMembershipPlans(prev => prev.map(p => p.id === updatedPlanData.id ? updatedPlanData : p));
-      showSuccess('updateMembership', updatedPlanData);
-      addNotification({
-        title: 'Tipo de membresía actualizado',
-        message: `Tipo de membresía "${updatedPlanData.name}" actualizado.`,
-        type: 'info',
-        forUserId: 'admin',
-        isGlobal: false
-      });
+    updateMembershipPlan: async (updatedPlanData) => {
+      try {
+        const updated = await updateMembership(updatedPlanData.id, updatedPlanData);
+        setMembershipPlans(prev => prev.map(p => p.id === updated.id ? updated : p));
+        showSuccess('updateMembership', updated);
+        addNotification({
+          title: 'Tipo de membresía actualizado',
+          message: `Tipo de membresía "${updated.name}" actualizado.`,
+          type: 'info',
+          forUserId: 'admin',
+          isGlobal: false
+        });
+        return updated;
+      } catch (error) {
+        showError('errorUpdateMembership');
+        return null;
+      }
     },
-    deleteMembershipPlan: (planId) => {
-      const planToDelete = membershipPlans.find(p => p.id === planId);
-      if (planToDelete) {
+    deleteMembershipPlan: async (planId) => {
+      try {
+        const planToDelete = membershipPlans.find(p => p.id === planId);
+        await deleteMembership(planId);
         setMembershipPlans(prev => prev.filter(p => p.id !== planId));
         showWarning('deleteMembership', planToDelete);
         addNotification({
@@ -568,6 +628,10 @@ export const SharedDataProvider = ({ children }) => {
           isGlobal: false
         });
         // TODO: Considerar qué sucede con los clientes que tienen este plan asignado.
+        return planToDelete;
+      } catch (error) {
+        showError('errorDeleteMembership');
+        return null;
       }
     },
     // Attendance Records

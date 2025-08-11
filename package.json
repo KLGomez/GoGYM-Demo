@@ -13,6 +13,7 @@
     "@heroicons/react": "^2.2.0",
     "@tailwindcss/vite": "^4.1.8",
     "@zxing/browser": "^0.1.5",
+    "axios": "^1.11.0",
     "formik": "^2.4.6",
     "html2canvas": "^1.4.1",
     "html5-qrcode": "^2.3.8",

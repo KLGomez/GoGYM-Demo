@@ -10,10 +10,10 @@ export default function Login() {
 
     // Redirigir si ya hay un usuario en el contexto (ej. recarga de página)
     useEffect(() => {
-        if (currentUser) {
-            // Asumimos que currentUser tiene una propiedad 'role' o la inferimos
-            const role = currentUser.role || (currentUser.email === 'admin@gogym.com' ? 'admin' : 'user'); // Ejemplo de inferencia
-            if (role === "admin") {
+        if (currentUser && currentUser.rol) {
+            console.log('Usuario autenticado:', currentUser);
+            const role = currentUser.rol;
+            if (role === "administrador" || role === "admin") {
                 navigate("/admin", { replace: true });
             } else {
                 navigate("/user", { replace: true });
@@ -23,22 +23,15 @@ export default function Login() {
 
     const handleLoginSubmit = async (formData) => { // formData es {email, password}
         setLoginError(''); // Limpiar errores de login anteriores
-        const loggedInUser = loginUser(formData); // loginUser del contexto maneja la lógica y SweetAlerts
-
-        if (loggedInUser) {
-            const role = loggedInUser.role || (loggedInUser.email === 'admin@gogym.com' ? 'admin' : 'user'); // Ejemplo
-            if (role === 'admin') {
-                navigate('/admin');
-            } else if (role === 'user') {
-                navigate('/user');
+        try {
+            const loggedInUser = await loginUser(formData); // loginUser ahora es asíncrono
+            if (loggedInUser && loggedInUser.rol) {
+                // La redirección la maneja el useEffect para evitar duplicidad y asegurar que el usuario esté cargado
             } else {
-                // esto no deberia pasar si loginUser funciona bien y devuelve un usuario con rol
-                setLoginError('Rol de usuario no reconocido tras el login.');
+                setLoginError("Credenciales incorrectas.");
             }
-        } else {
-            // loginUser ya mostró un SweetAlert de error.
-            // Establecer un error para pasarlo a LoginForm.
-            setLoginError("Credenciales incorrectas.");
+        } catch (error) {
+            setLoginError("Error de conexión o credenciales incorrectas.");
         }
     };
 
