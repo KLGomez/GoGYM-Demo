@@ -15,7 +15,7 @@ const SidebarUser = () => {
     { to: 'mi-qr', text: 'MiQR', icon: QrCodeIcon }, // Añadir enlace a Mi QR
     { to: 'clases', text: 'Cronograma', icon: RectangleStackIcon },
     { to: 'mis-clases', text: 'Clases', icon: UserGroupIcon },
-    { to: 'mi-membresia', text: 'Membresía', icon: CreditCardIcon },
+    { to: 'mi-membresia', text: 'Membresías', icon: CreditCardIcon },
     { to: 'feedback', text: 'Feedback', icon: ChatBubbleLeftRightIcon },
   ];
 

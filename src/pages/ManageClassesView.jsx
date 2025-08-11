@@ -90,9 +90,9 @@ const ManageClassesView = ({ onBack }) => {
         <h2 className="text-2xl font-bold text-orange-400">Añadir/Eliminar Clases</h2>
         <button
           onClick={() => setIsFormVisible(!isFormVisible)}
-          className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-md shadow flex items-center gap-2"
+          className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-2 rounded-md shadow flex items-center gap-2"
         >
-          <PlusIcon className="w-5 h-5" />
+          {/* <PlusIcon className="w-5 h-5" /> */}
           {isFormVisible ? 'Cancelar Alta' : 'Añadir Nueva Clase'}
         </button>
       </div>

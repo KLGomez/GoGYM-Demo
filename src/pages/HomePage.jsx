@@ -58,11 +58,11 @@ const HomePage = () => {
       {/* Accesos Rápidos */}
       <div className="bg-gray-800 p-6 rounded-xl shadow-lg mb-10">
         <h2 className="text-xl font-semibold text-orange-400 mb-4">Accesos Rápidos</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          <Link to="/admin/clients" className="bg-orange-500 hover:bg-orange-600 text-white text-center font-medium py-3 px-4 rounded-lg transition-colors">Gestionar Clientes</Link>
-          <Link to="/admin/classes" className="bg-orange-500 hover:bg-orange-600 text-white text-center font-medium py-3 px-4 rounded-lg transition-colors">Gestionar Clases</Link>
-          <Link to="/admin/memberships" className="bg-orange-500 hover:bg-orange-600 text-white text-center font-medium py-3 px-4 rounded-lg transition-colors">Membresías</Link>
-          <Link to="/admin/check-in" className="bg-teal-500 hover:bg-teal-600 text-white text-center font-medium py-3 px-4 rounded-lg transition-colors">Página de Check-In</Link>
+        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
+          <Link to="/admin/clients" className="w-full min-w-0 bg-orange-500 hover:bg-orange-600 text-white text-center font-medium py-3 px-2 sm:px-4 rounded-lg transition-colors break-words">Gestionar Clientes</Link>
+          <Link to="/admin/classes" className="w-full min-w-0 bg-orange-500 hover:bg-orange-600 text-white text-center font-medium py-3 px-2 sm:px-4 rounded-lg transition-colors break-words">Gestionar Clases</Link>
+          <Link to="/admin/memberships" className="w-full min-w-0 bg-orange-500 hover:bg-orange-600 text-white text-center font-medium py-3 px-2 sm:px-4 rounded-lg transition-colors break-words">Membresías</Link>
+          <Link to="/admin/check-in" className="w-full min-w-0 bg-teal-500 hover:bg-teal-600 text-white text-center font-medium py-3 px-2 sm:px-4 rounded-lg transition-colors break-words">Página de Check-In</Link>
         </div>
       </div>
 

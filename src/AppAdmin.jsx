@@ -4,7 +4,7 @@ import Sidebar from "./components/SidebarAdmin";
 import Header from "./components/Header";
 import FooterAdmin from "./components/Footer";
 import { SharedDataContext } from './contexts/SharedDataContext'; // Importar el contexto
-import { showSuccess, showError } from './utils/alerts'; // Para mostrar notificaciones del contexto
+import { showSuccess, showError, showWarning } from './utils/alerts'; // Para mostrar notificaciones del contexto
 
 // Layout principal para el panel de Admin
 const AdminLayout = () => {
@@ -32,10 +32,9 @@ const AdminLayout = () => {
         n => !n.read && (n.forUserId === 'admin' || n.isGlobal) // Admin ve las suyas y las globales
       );
       adminNotifications.forEach(n => {
-        if (n.type === 'success') showSuccess("Admin Notificación", n.message);
-        else if (n.type === 'error') showError("Admin Notificación", n.message);
-        else if (n.type === 'warning') showError("Admin Advertencia", n.message); // Usar showError para warnings por ahora
-        else showSuccess("Admin Info", n.message);
+        if (n.type === 'success') showSuccess(n.actionType || 'notification', n.data || { title: n.title, text: n.message });
+        else if (n.type === 'error') showError(n.actionType || 'notification', n.data || { title: n.title, text: n.message });
+        else if (n.type === 'warning') showWarning(n.actionType || 'warning', n.data || { title: n.title, text: n.message });
 
         markNotificationAsRead(n.id);
       });
