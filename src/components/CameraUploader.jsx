@@ -4,7 +4,7 @@ import React, { useRef, useState, useCallback } from "react";
 import Webcam from "react-webcam";
 import { CloudArrowUpIcon, CameraIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
-// Cargamos la variable de entorno
+// variable de entorno
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 
 const videoConstraints = {
@@ -19,7 +19,7 @@ const CameraUploader = ({ onUploadComplete }) => {
   const [imgSrc, setImgSrc] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadedUrl, setUploadedUrl] = useState(null);
-  const [error, setError] = useState(null); // 💥 Por si algo falla
+  const [error, setError] = useState(null); // por si algo falla
   const [showCamera, setShowCamera] = useState(false);
 
   const capture = useCallback(() => {
@@ -62,7 +62,7 @@ const CameraUploader = ({ onUploadComplete }) => {
 
       if (data.secure_url) {
         setUploadedUrl(data.secure_url);
-        onUploadComplete(data.secure_url); // ✅ pasamos la URL al formulario
+        onUploadComplete(data.secure_url); // pasamos la URL al formulario
       } else {
         setError("Error al subir la imagen. Intenta nuevamente.");
       }
