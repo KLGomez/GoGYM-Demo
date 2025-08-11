@@ -57,16 +57,16 @@ const ManageClassesView = ({ onBack }) => {
       capacidad: Number(formData.capacidad)
     };
 
-  setClasses(prevClasses => [...prevClasses, newClass]);
-  showSuccess('addClass', newClass);
-  setIsFormVisible(false);
-  setFormData({ nombre: '', profesor: '', dia: 'Lunes', horaInicio: '', horaFin: '', capacidad: '', activo: true });
+    setClasses(prevClasses => [...prevClasses, newClass]);
+    showSuccess('Clase Agregada', `${newClass.nombre} ha sido agregada exitosamente.`);
+    setIsFormVisible(false);
+    setFormData({ nombre: '', profesor: '', dia: 'Lunes', horaInicio: '', horaFin: '', capacidad: '', activo: true });
   };
 
   const handleDeleteClass = (classId, className) => {
-    confirmAction('deleteClass', { nombre: className }, "Sí, eliminar", () => {
+    confirmAction(`¿Eliminar Clase "${className}"?`, `Estás a punto de eliminar la clase ${className}. Esta acción es irreversible.`, "Sí, eliminar", () => {
       setClasses(prevClasses => prevClasses.filter(cls => cls.id !== classId));
-      showSuccess('deleteClass', { nombre: className });
+      showSuccess('Clase Eliminada', `La clase ${className} ha sido eliminada.`);
     });
   };
 
@@ -90,9 +90,9 @@ const ManageClassesView = ({ onBack }) => {
         <h2 className="text-2xl font-bold text-orange-400">Añadir/Eliminar Clases</h2>
         <button
           onClick={() => setIsFormVisible(!isFormVisible)}
-          className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-md shadow flex items-center gap-2"
+          className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-2 rounded-md shadow flex items-center gap-2"
         >
-          <PlusIcon className="w-5 h-5" />
+          {/* <PlusIcon className="w-5 h-5" /> */}
           {isFormVisible ? 'Cancelar Alta' : 'Añadir Nueva Clase'}
         </button>
       </div>
