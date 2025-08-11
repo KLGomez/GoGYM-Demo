@@ -6,7 +6,8 @@ import {
   getClassEnrollments, saveClassEnrollments,
   getAttendanceRecords, saveAttendanceRecords,
   getArticles, saveArticles,
-  getFeedbacks, saveFeedbacks
+  getFeedbacks, saveFeedbacks,
+  getMembershipPlans, saveMembershipPlans
 } from '../utils/storage';
 import { showSuccess, showError } from '../utils/alerts';
 import { generateClientCode } from '../utils/codeUtils';
@@ -50,6 +51,7 @@ export const SharedDataProvider = ({ children }) => {
     const storedAttendance = getAttendanceRecords();
     const storedArticles = getArticles();
     const storedFeedbacks = getFeedbacks();
+    const storedMembershipPlans = getMembershipPlans();
     let storedCurrentUser = null;
     try {
       const raw = localStorage.getItem('currentUserSession');
@@ -128,6 +130,7 @@ export const SharedDataProvider = ({ children }) => {
   useEffect(() => { if (!isLoading) saveFeedbacks(feedbacks); }, [feedbacks, isLoading]);
   useEffect(() => { if (!isLoading) saveArticles(articles); }, [articles, isLoading]);
   useEffect(() => { if (!isLoading) saveClients(clients); }, [clients, isLoading]);
+  useEffect(() => { if (!isLoading) saveMembershipPlans(membershipPlans); }, [membershipPlans, isLoading]);
 
 
   // --- NOTIFICACIONES ---

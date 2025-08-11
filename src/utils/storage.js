@@ -54,6 +54,11 @@ const ARTICLES_STORAGE_KEY = 'articles';
 export const getArticles = () => getFromLocalStorage(ARTICLES_STORAGE_KEY);
 export const saveArticles = (articles) => saveToLocalStorage(ARTICLES_STORAGE_KEY, articles);
 
+// --- Membership Plans ---
+const MEMBERSHIP_PLANS_STORAGE_KEY = 'membershipPlans';
+export const getMembershipPlans = () => getFromLocalStorage(MEMBERSHIP_PLANS_STORAGE_KEY);
+export const saveMembershipPlans = (plans) => saveToLocalStorage(MEMBERSHIP_PLANS_STORAGE_KEY, plans);
+
 
 // --- User Session ---
 // Aunque el objeto currentUser completo se guarda en 'currentUserSession' desde el contexto,
