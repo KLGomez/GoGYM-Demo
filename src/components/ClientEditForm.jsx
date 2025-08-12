@@ -21,19 +21,32 @@ const ClientEditForm = ({ initialClient, onCancel, onSave, CameraUploader, membe
   });
 
   const handleSubmit = (values) => {
-    // Buscar el plan seleccionado
-    const selectedPlan = membershipPlans.find(plan => plan.id === values.planAsignadoId);
-    // Crear objeto membership si hay plan seleccionado
-    const membership = selectedPlan
-      ? {
-          planName: selectedPlan.name || selectedPlan.nombre || selectedPlan.planName,
-          membershipStartDate: new Date().toISOString(),
-          membershipDurationDays: selectedPlan.duracionEnDias || selectedPlan.durationDays || selectedPlan.membershipDurationDays || 30,
-          autoRenew: false
-        }
-      : initialClient.membership;
-    // Mantener el id y los campos no editables
-    contextUpdateClient({ ...initialClient, ...values, membership });
+    const selectedPlan = membershipPlans.find(plan => (plan.id || plan._id) === values.planAsignadoId);
+    const clientId = initialClient._id || initialClient.id;
+    // Si el plan no cambió, mantener fechas y planAsignadoId
+    let planAsignadoId = initialClient.planAsignadoId;
+    let fechaInicioMembresia = initialClient.fechaInicioMembresia;
+    let fechaFinMembresia = initialClient.fechaFinMembresia;
+    if (selectedPlan && values.planAsignadoId !== initialClient.planAsignadoId) {
+      planAsignadoId = selectedPlan.id || selectedPlan._id;
+      fechaInicioMembresia = new Date().toISOString();
+      const end = new Date();
+      end.setDate(end.getDate() + (selectedPlan.duracionEnDias || selectedPlan.durationDays || selectedPlan.membershipDurationDays || 30));
+      fechaFinMembresia = end.toISOString();
+    }
+    const clientToUpdate = {
+      ...initialClient,
+      ...values,
+      id: clientId,
+      planAsignadoId,
+      fechaInicioMembresia,
+      fechaFinMembresia
+    };
+    delete clientToUpdate.membership;
+    if ('rol' in clientToUpdate) {
+      delete clientToUpdate.rol;
+    }
+    contextUpdateClient(clientToUpdate);
     showSuccess("Cliente actualizado", "Los datos del cliente se guardaron correctamente.");
     if (onSave) onSave();
   };
@@ -51,7 +64,12 @@ const ClientEditForm = ({ initialClient, onCancel, onSave, CameraUploader, membe
       <Formik
         initialValues={{
           ...initialClient,
-          planAsignadoId: initialClient.membership?.planId || initialClient.planAsignadoId || ""
+          fechaNacimiento: initialClient.fechaNacimiento
+            ? (typeof initialClient.fechaNacimiento === 'string' && initialClient.fechaNacimiento.includes('T')
+              ? initialClient.fechaNacimiento.slice(0, 10)
+              : initialClient.fechaNacimiento)
+            : "",
+          planAsignadoId: initialClient.planAsignadoId || ""
         }}
         validationSchema={EditSchema}
         onSubmit={handleSubmit}

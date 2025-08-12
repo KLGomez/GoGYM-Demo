@@ -114,19 +114,38 @@ const ClientsAdmin = () => {
         ) : (
           <div className="space-y-3">
             {contextClients.map((client) => {
+              // Adaptar nombre
+              const clientName = `${client.nombre || ""} ${client.apellido || ""}`.trim();
+              // Adaptar membresía
+              let planName = "N/A";
+              let membershipStartDate = client.fechaInicioMembresia;
+              let membershipEndDate = client.fechaFinMembresia;
+              let membershipDurationDays = null;
+              // Buscar nombre del plan por id
+              const planObj = contextMembershipPlans.find(p => (p.id || p._id) === client.planAsignadoId);
+              if (planObj) {
+                planName = planObj.nombre || planObj.name || planObj.planName;
+                if (membershipStartDate && membershipEndDate) {
+                  // Calcular duración en días
+                  const start = new Date(membershipStartDate);
+                  const end = new Date(membershipEndDate);
+                  membershipDurationDays = Math.round((end - start) / (1000 * 60 * 60 * 24));
+                }
+              }
+              // Calcular estado de membresía
               const { daysRemaining, status } = calculateMembershipDetails(
-                client.membership?.membershipStartDate,
-                client.membership?.membershipDurationDays
+                membershipStartDate,
+                membershipDurationDays
               );
-              const clientName = `${client.firstName || ""} ${client.lastName || ""}`.trim();
+              const clientId = client._id || client.id;
               return (
-                <div key={client.id} className="bg-gray-800 p-4 rounded-lg shadow">
+                <div key={clientId} className="bg-gray-800 p-4 rounded-lg shadow">
                   <div className="flex justify-between items-start">
                     <div className="flex-grow">
                       <p className="font-semibold text-white">{clientName}</p>
                       <p className="text-sm text-gray-300">Email: {client.email}</p>
                       <p className="text-sm text-gray-300">DNI: {client.dni}</p>
-                      <p className="text-sm text-gray-300">Plan: {client.membership?.planName || "N/A"}</p>
+                      <p className="text-sm text-gray-300">Plan: {planName}</p>
                       <p className={`text-sm ${status === "Active" ? "text-green-400" : "text-red-400"}`}>
                         Estado Membresía: {status} ({daysRemaining} días restantes)
                       </p>
@@ -138,7 +157,7 @@ const ClientsAdmin = () => {
                       <button onClick={() => handleShowQR(client)} title="QR" className="text-teal-400 hover:text-teal-600">
                         <MenuQrCodeIcon className="w-5 h-5" />
                       </button>
-                      <button onClick={() => handleDeleteClient(client.id, client.firstName, client.lastName)} title="Eliminar" className="text-red-500 hover:text-red-700">
+                      <button onClick={() => handleDeleteClient(clientId, client.nombre, client.apellido)} title="Eliminar" className="text-red-500 hover:text-red-700">
                         <TrashIcon className="w-5 h-5" />
                       </button>
                     </div>

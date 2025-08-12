@@ -211,7 +211,7 @@ export const SharedDataProvider = ({ children }) => {
   const updateClient = useCallback(async (updatedClientData) => {
     try {
       // Regenerar código si cambian datos clave
-      const originalClient = clients.find(c => c.id === updatedClientData.id);
+      const originalClient = clients.find(c => (c._id || c.id) === (updatedClientData._id || updatedClientData.id));
       let updated = { ...updatedClientData };
       if (originalClient &&
         (originalClient.firstName !== updatedClientData.firstName ||
@@ -220,7 +220,7 @@ export const SharedDataProvider = ({ children }) => {
         updated.alphanumericCode = generateClientCode(updatedClientData.firstName, updatedClientData.lastName, updatedClientData.dni);
       }
       const result = await updateUser(updated.id, updated);
-      setClients(prev => prev.map(c => c.id === result.id ? result : c));
+      setClients(prev => prev.map(c => (c._id || c.id) === (result._id || result.id) ? result : c));
       showSuccess('updateClient', result);
       addNotification({
         title: 'Cliente actualizado',
