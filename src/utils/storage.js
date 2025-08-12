@@ -1,9 +1,30 @@
 //src/utils/storage.js
 
+// --- Helper para headers con token ---
+const getAuthHeaders = (extra = {}) => {
+  const token = localStorage.getItem('token');
+  return token
+    ? { ...extra, Authorization: `Bearer ${token}` }
+    : extra;
+};
+
 // --- Feedbacks ---
-const FEEDBACKS_STORAGE_KEY = 'feedbacks';
-export const getFeedbacks = () => getFromLocalStorage(FEEDBACKS_STORAGE_KEY);
-export const saveFeedbacks = (feedbacks) => saveToLocalStorage(FEEDBACKS_STORAGE_KEY, feedbacks);
+export const getFeedbacks = async () => {
+  const res = await fetch('/feedbacks', {
+    headers: getAuthHeaders()
+  });
+  if (!res.ok) throw new Error('Error fetching feedbacks');
+  return await res.json();
+};
+export const saveFeedbacks = async (feedbacks) => {
+  const res = await fetch('/feedbacks', {
+    method: 'POST',
+    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(feedbacks),
+  });
+  if (!res.ok) throw new Error('Error saving feedbacks');
+  return await res.json();
+};
 
 // --- Generic LocalStorage Helper Functions ---
 const getFromLocalStorage = (key, defaultValue = []) => {
@@ -25,45 +46,143 @@ const saveToLocalStorage = (key, data) => {
 };
 
 // --- Clients (Alumnos) ---
-const CLIENTS_STORAGE_KEY = 'clients';
-export const getClients = () => getFromLocalStorage(CLIENTS_STORAGE_KEY);
-export const saveClients = (clients) => saveToLocalStorage(CLIENTS_STORAGE_KEY, clients);
+export const getClients = async () => {
+  const res = await fetch('/users', {
+    headers: getAuthHeaders()
+  });
+  if (!res.ok) throw new Error('Error fetching clients');
+  return await res.json();
+};
+export const saveClients = async (client) => {
+  const res = await fetch('/users', {
+    method: 'POST',
+    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(client),
+  });
+  if (!res.ok) throw new Error('Error saving client');
+  return await res.json();
+};
 
 // --- Gym Classes ---
-const GYM_CLASSES_STORAGE_KEY = 'gymClasses';
-export const getGymClasses = () => getFromLocalStorage(GYM_CLASSES_STORAGE_KEY);
-export const saveGymClasses = (classes) => saveToLocalStorage(GYM_CLASSES_STORAGE_KEY, classes);
+export const getGymClasses = async () => {
+  const res = await fetch('/gym-classes', {
+    headers: getAuthHeaders()
+  });
+  if (!res.ok) throw new Error('Error fetching gym classes');
+  return await res.json();
+};
+export const saveGymClasses = async (gymClass) => {
+  const res = await fetch('/gym-classes', {
+    method: 'POST',
+    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(gymClass),
+  });
+  if (!res.ok) throw new Error('Error saving gym class');
+  return await res.json();
+};
 
 // --- Teachers ---
-const GYM_TEACHERS_STORAGE_KEY = 'gymTeachers';
-export const getTeachers = () => getFromLocalStorage(GYM_TEACHERS_STORAGE_KEY);
-export const saveTeachers = (teachers) => saveToLocalStorage(GYM_TEACHERS_STORAGE_KEY, teachers);
+export const getTeachers = async () => {
+  const res = await fetch('/teachers', {
+    headers: getAuthHeaders()
+  });
+  if (!res.ok) throw new Error('Error fetching teachers');
+  return await res.json();
+};
+export const saveTeachers = async (teacher) => {
+  const res = await fetch('/teachers', {
+    method: 'POST',
+    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(teacher),
+  });
+  if (!res.ok) throw new Error('Error saving teacher');
+  return await res.json();
+};
 
 // --- Class Enrollments ---
-const CLASS_ENROLLMENTS_STORAGE_KEY = 'classEnrollments';
-export const getClassEnrollments = () => getFromLocalStorage(CLASS_ENROLLMENTS_STORAGE_KEY);
-export const saveClassEnrollments = (enrollments) => saveToLocalStorage(CLASS_ENROLLMENTS_STORAGE_KEY, enrollments);
+export const getClassEnrollments = async () => {
+  const res = await fetch('/gym-classes/enrollments', {
+    headers: getAuthHeaders()
+  });
+  if (!res.ok) throw new Error('Error fetching enrollments');
+  return await res.json();
+};
+export const saveClassEnrollments = async (enrollment) => {
+  const res = await fetch('/gym-classes/enrollments', {
+    method: 'POST',
+    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(enrollment),
+  });
+  if (!res.ok) throw new Error('Error saving enrollment');
+  return await res.json();
+};
 
 // --- Attendance Records ---
-const ATTENDANCE_RECORDS_STORAGE_KEY = 'attendanceRecords';
-export const getAttendanceRecords = () => getFromLocalStorage(ATTENDANCE_RECORDS_STORAGE_KEY);
-export const saveAttendanceRecords = (records) => saveToLocalStorage(ATTENDANCE_RECORDS_STORAGE_KEY, records);
+export const getAttendanceRecords = async () => {
+  const res = await fetch('/access-logs', {
+    headers: getAuthHeaders()
+  });
+  if (!res.ok) throw new Error('Error fetching attendance records');
+  return await res.json();
+};
+export const saveAttendanceRecords = async (record) => {
+  const res = await fetch('/access-logs', {
+    method: 'POST',
+    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(record),
+  });
+  if (!res.ok) throw new Error('Error saving attendance record');
+  return await res.json();
+};
 
 // --- Articles ---
-const ARTICLES_STORAGE_KEY = 'articles';
-export const getArticles = () => getFromLocalStorage(ARTICLES_STORAGE_KEY);
-export const saveArticles = (articles) => saveToLocalStorage(ARTICLES_STORAGE_KEY, articles);
+export const getArticles = async () => {
+  const res = await fetch('/articles', {
+    headers: getAuthHeaders()
+  });
+  if (!res.ok) throw new Error('Error fetching articles');
+  return await res.json();
+};
+export const saveArticles = async (article) => {
+  const res = await fetch('/articles', {
+    method: 'POST',
+    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(article),
+  });
+  if (!res.ok) throw new Error('Error saving article');
+  return await res.json();
+};
 
 // --- Membership Plans ---
-const MEMBERSHIP_PLANS_STORAGE_KEY = 'membershipPlans';
-export const getMembershipPlans = () => getFromLocalStorage(MEMBERSHIP_PLANS_STORAGE_KEY);
-export const saveMembershipPlans = (plans) => saveToLocalStorage(MEMBERSHIP_PLANS_STORAGE_KEY, plans);
+export const getMembershipPlans = async () => {
+  // Cambia la ruta a /planes y agrega el parámetro para incluir inactivos
+  console.log('[getMembershipPlans] Fetching /planes?includeInactive=true');
+  const res = await fetch('/planes?includeInactive=true', {
+    headers: getAuthHeaders()
+  });
+  console.log('[getMembershipPlans] Response status:', res.status);
+  if (!res.ok) {
+    const errorText = await res.text();
+    console.error('[getMembershipPlans] Error response:', errorText);
+    throw new Error('Error fetching membership plans');
+  }
+  const data = await res.json();
+  console.log('[getMembershipPlans] Data received:', data);
+  return data;
+};
+export const saveMembershipPlans = async (plan) => {
+  const res = await fetch('/plans', {
+    method: 'POST',
+    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(plan),
+  });
+  if (!res.ok) throw new Error('Error saving membership plan');
+  return await res.json();
+};
 
 
 // --- User Session ---
-// Aunque el objeto currentUser completo se guarda en 'currentUserSession' desde el contexto,
-// estas funciones podrían ser útiles si se necesita manejar el token o rol por separado en algún momento.
-// Por ahora, el contexto maneja la sesión de forma más integral.
+// Mantener el token en localStorage para autenticación
 const USER_TOKEN_KEY = 'userToken';
 const USER_ROLE_KEY = 'userRole';
 
@@ -80,5 +199,5 @@ export const getUserSession = () => ({
 export const clearUserSession = () => {
   localStorage.removeItem(USER_TOKEN_KEY);
   localStorage.removeItem(USER_ROLE_KEY);
-  localStorage.removeItem('currentUserSession'); // Asegurar que se limpie la sesión del contexto
+  localStorage.removeItem('currentUserSession');
 };

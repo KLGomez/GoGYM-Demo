@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeftIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { showSuccess, showError, confirmAction } from '../utils/alerts';
-import { getGymClasses, saveGymClasses, getTeachers } from '../utils/storage'; // Importar desde utils
+import { getGymClasses, saveGymClasses, getTeachers } from '../utils/storage';
 
 
 const ManageClassesView = ({ onBack }) => {
@@ -19,13 +19,20 @@ const ManageClassesView = ({ onBack }) => {
   });
 
   useEffect(() => {
-    setClasses(getGymClasses()); // Usar la función importada
-    setTeachers(getTeachers()); // Usar la función importada
+    const fetchData = async () => {
+      try {
+        const [classesData, teachersData] = await Promise.all([
+          getGymClasses(),
+          getTeachers()
+        ]);
+        setClasses(Array.isArray(classesData) ? classesData : []);
+        setTeachers(Array.isArray(teachersData) ? teachersData : []);
+      } catch (error) {
+        showError('Error al cargar datos de clases o profesores');
+      }
+    };
+    fetchData();
   }, []);
-
-  useEffect(() => {
-    saveGymClasses(classes); // Usar la función importada
-  }, [classes]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -35,7 +42,7 @@ const ManageClassesView = ({ onBack }) => {
 
   const validateTime = (time) => /^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/.test(time);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     // Validaciones requeridas
     if (!formData.nombre.trim() || !formData.profesor || !formData.dia || !formData.horaInicio || !formData.horaFin || isNaN(formData.capacidad) || formData.capacidad < 1) {
@@ -51,22 +58,30 @@ const ManageClassesView = ({ onBack }) => {
       return;
     }
 
-    const newClass = {
-      id: Date.now().toString(),
-      ...formData,
-      capacidad: Number(formData.capacidad)
-    };
-
-    setClasses(prevClasses => [...prevClasses, newClass]);
-    showSuccess('Clase Agregada', `${newClass.nombre} ha sido agregada exitosamente.`);
-    setIsFormVisible(false);
-    setFormData({ nombre: '', profesor: '', dia: 'Lunes', horaInicio: '', horaFin: '', capacidad: '', activo: true });
+    try {
+      const newClass = await saveGymClasses({
+        ...formData,
+        capacidad: Number(formData.capacidad)
+      });
+      setClasses(prevClasses => [...prevClasses, newClass]);
+      showSuccess('Clase Agregada', `${newClass.nombre} ha sido agregada exitosamente.`);
+      setIsFormVisible(false);
+      setFormData({ nombre: '', profesor: '', dia: 'Lunes', horaInicio: '', horaFin: '', capacidad: '', activo: true });
+    } catch (error) {
+      showError('Error al guardar la clase');
+    }
   };
 
-  const handleDeleteClass = (classId, className) => {
-    confirmAction(`¿Eliminar Clase "${className}"?`, `Estás a punto de eliminar la clase ${className}. Esta acción es irreversible.`, "Sí, eliminar", () => {
-      setClasses(prevClasses => prevClasses.filter(cls => cls.id !== classId));
-      showSuccess('Clase Eliminada', `La clase ${className} ha sido eliminada.`);
+  const handleDeleteClass = async (classId, className) => {
+    confirmAction(`¿Eliminar Clase "${className}"?`, `Estás a punto de eliminar la clase ${className}. Esta acción es irreversible.`, "Sí, eliminar", async () => {
+      try {
+        // Aquí deberías llamar a un método de borrado en el backend si existe
+        // Por ahora, solo eliminamos localmente
+        setClasses(prevClasses => prevClasses.filter(cls => cls.id !== classId));
+        showSuccess('Clase Eliminada', `La clase ${className} ha sido eliminada.`);
+      } catch (error) {
+        showError('Error al eliminar la clase');
+      }
     });
   };
 

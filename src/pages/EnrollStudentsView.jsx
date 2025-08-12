@@ -13,14 +13,22 @@ const EnrollStudentsView = ({ onBack }) => {
   const [selectedClassId, setSelectedClassId] = useState('');
 
   useEffect(() => {
-    setAllClasses(getGymClasses());
-    setAllClients(getClients());
-    setEnrollments(getClassEnrollments());
+    const fetchData = async () => {
+      try {
+        const [classesData, clientsData, enrollmentsData] = await Promise.all([
+          getGymClasses(),
+          getClients(),
+          getClassEnrollments()
+        ]);
+        setAllClasses(Array.isArray(classesData) ? classesData : []);
+        setAllClients(Array.isArray(clientsData) ? clientsData : []);
+        setEnrollments(Array.isArray(enrollmentsData) ? enrollmentsData : []);
+      } catch (error) {
+        showError('Error al cargar datos de inscripciones, clases o clientes');
+      }
+    };
+    fetchData();
   }, []);
-
-  useEffect(() => {
-    saveClassEnrollments(enrollments);
-  }, [enrollments]);
 
   const selectedClassDetails = useMemo(() =>
     allClasses.find(c => c.id === selectedClassId),
@@ -58,7 +66,7 @@ const EnrollStudentsView = ({ onBack }) => {
   );
 
 
-  const handleEnrollStudent = (clientId) => {
+  const handleEnrollStudent = async (clientId) => {
     if (!selectedClassId || !selectedClassDetails) {
       showError("Error", "Por favor, seleccione una clase primero.");
       return;
@@ -71,26 +79,29 @@ const EnrollStudentsView = ({ onBack }) => {
     }
 
     if (enrolledClientIdsInSelectedClass.length >= selectedClassDetails.capacity) {
-        showError("Clase Llena", `La clase "${selectedClassDetails.name}" ya ha alcanzado su capacidad máxima de ${selectedClassDetails.capacity} alumnos.`);
+        showError("Clase Llena", `La clase \"${selectedClassDetails.nombre || selectedClassDetails.name}\" ya ha alcanzado su capacidad máxima de ${selectedClassDetails.capacidad || selectedClassDetails.capacity} alumnos.`);
         return;
     }
 
-    const newEnrollment = {
-      id: `enroll_${clientId}_${selectedClassId}`,
-      clientId,
-      classId: selectedClassId,
-      enrollmentDate: new Date().toISOString()
-    };
-    setEnrollments(prev => [...prev, newEnrollment]);
-    showSuccess("Alumno Inscrito", `${clientToEnroll?.name || 'El alumno'} ha sido inscrito en ${selectedClassDetails?.name || 'la clase'}.`);
+    try {
+      const newEnrollment = await saveClassEnrollments({
+        clientId,
+        classId: selectedClassId,
+        enrollmentDate: new Date().toISOString()
+      });
+      setEnrollments(prev => [...prev, newEnrollment]);
+      showSuccess("Alumno Inscrito", `${clientToEnroll?.name || clientToEnroll?.firstName || 'El alumno'} ha sido inscrito en ${selectedClassDetails?.nombre || selectedClassDetails?.name || 'la clase'}.`);
+    } catch (error) {
+      showError('Error al inscribir alumno');
+    }
   };
 
-  const handleUnenrollStudent = (clientId) => {
+  const handleUnenrollStudent = async (clientId) => {
     if (!selectedClassId) return;
-
+    // Aquí deberías llamar a un método de borrado en el backend si existe
     setEnrollments(prev => prev.filter(e => !(e.clientId === clientId && e.classId === selectedClassId)));
-    const client = allClients.find(c => c.id === clientId); // Para el mensaje
-    showSuccess("Alumno Desinscrito", `${client?.name || 'El alumno'} ha sido desinscrito de ${selectedClassDetails?.name || 'la clase'}.`);
+    const client = allClients.find(c => c.id === clientId);
+    showSuccess("Alumno Desinscrito", `${client?.name || client?.firstName || 'El alumno'} ha sido desinscrito de ${selectedClassDetails?.nombre || selectedClassDetails?.name || 'la clase'}.`);
   };
 
 

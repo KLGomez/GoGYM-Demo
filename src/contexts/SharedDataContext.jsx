@@ -11,6 +11,7 @@ import {
 import { getUsers, createUser, updateUser, deleteUser } from '../api/users';
 import { getClasses, createClass, updateClass, deleteClass } from '../api/classes';
 import { login as apiLogin, getProfile } from '../api/auth';
+import { getMemberships, createMembership, updateMembership, deleteMembership } from '../api/memberships';
 import { showSuccess, showError, showWarning } from '../utils/alerts';
 import { generateClientCode } from '../utils/codeUtils';
 
@@ -45,96 +46,58 @@ export const SharedDataProvider = ({ children }) => {
 
   // --- Carga Inicial de Datos ---
   useEffect(() => {
-    console.log("SharedDataContext: Cargando datos iniciales...");
-    // Cargar datos locales
-    const storedGymClasses = getGymClasses();
-    const storedTeachers = getTeachers();
-    const storedEnrollments = getClassEnrollments();
-    const storedAttendance = getAttendanceRecords();
-    const storedArticles = getArticles();
-    const storedFeedbacks = getFeedbacks();
-    const storedMembershipPlans = getMembershipPlans();
-    let storedCurrentUser = null;
-    try {
-      const raw = localStorage.getItem('currentUserSession');
-      storedCurrentUser = raw ? JSON.parse(raw) : null;
-    } catch (error) {
-      console.error('Error parsing currentUserSession from localStorage:', error);
-      localStorage.removeItem('currentUserSession');
-      storedCurrentUser = null;
-    }
-    setGymClasses(Array.isArray(storedGymClasses) ? storedGymClasses : initialSimulatedClasses);
-    setTeachers(Array.isArray(storedTeachers) ? storedTeachers : []);
-    setEnrollments(storedEnrollments.length > 0 ? storedEnrollments : initialSimulatedEnrollments);
-    setAttendanceRecords(storedAttendance);
-    setArticles(storedArticles);
-    setFeedbacks(Array.isArray(storedFeedbacks) ? storedFeedbacks : []);
-    // Solo cargar clientes si el usuario está autenticado
-    if (storedCurrentUser && storedCurrentUser.token) {
-      getUsers()
-        .then(apiClients => {
-          let finalClients = Array.isArray(apiClients) ? apiClients : [];
-          // Asegurar usuarios por defecto si no existen
-          const adminExists = finalClients.some(c => c.role === 'admin' && c.email === 'admin@gogym.com');
-          if (!adminExists) {
-            const adminUser = {
-              id: 'admin_default_001',
-              firstName: 'Admin',
-              lastName: 'GoGym',
-              email: 'admin@gogym.com',
-              password: 'adminpass',
-              role: 'admin',
-              dni: '00000000',
-              alphanumericCode: generateClientCode('Admin', 'GoGym', '00000000'),
-              membership: { planName: 'Premium', membershipStartDate: new Date().toISOString(), membershipDurationDays: 365, autoRenew: true }
-            };
-            finalClients.push(adminUser);
-          }
-          const testUserExists = finalClients.some(c => c.email === 'user@gogym.com');
-          if (!testUserExists) {
-            const testUser = {
-              id: 'user_default_001',
-              firstName: 'Test', lastName: 'User', email: 'user@gogym.com', password: 'userpass', role: 'user',
-              dni: '11111111', alphanumericCode: generateClientCode('Test', 'User', '11111111'),
-              membership: { planName: 'Básico', membershipStartDate: new Date().toISOString(), membershipDurationDays: 30, autoRenew: false }
-            };
-            finalClients.push(testUser);
-          }
-          setClients(finalClients);
-          if (storedCurrentUser) {
-            const liveClientData = finalClients.find(c => c.id === storedCurrentUser.id);
-            if (liveClientData) {
-              setCurrentUser(liveClientData);
-              localStorage.setItem('currentUserSession', JSON.stringify(liveClientData));
-            } else {
-              localStorage.removeItem('currentUserSession');
-              setCurrentUser(null);
-            }
-          }
-          setIsLoading(false);
-          console.log("SharedDataContext: Datos cargados.", { finalClients, storedGymClasses, storedTeachers, storedEnrollments, storedAttendance, storedCurrentUser, storedFeedbacks });
-        })
-        .catch(error => {
-          console.error('Error al cargar clientes desde la API:', error);
+    const fetchData = async () => {
+      setIsLoading(true);
+      let storedCurrentUser = null;
+      try {
+  const raw = localStorage.getItem('currentUserSession');
+  storedCurrentUser = raw ? JSON.parse(raw) : null;
+      } catch (error) {
+  // ...existing code...
+        localStorage.removeItem('currentUserSession');
+      }
+      setCurrentUser(storedCurrentUser);
+      try {
+        if (storedCurrentUser && localStorage.getItem('token')) {
+          const [classes, teachers, enrollments, attendance, articles, feedbacks, membershipPlans, apiClients] = await Promise.all([
+            getGymClasses().catch(e => {console.error('[SharedDataContext] Error getGymClasses:', e); return [];}),
+            getTeachers().catch(e => {console.error('[SharedDataContext] Error getTeachers:', e); return [];}),
+            getClassEnrollments().catch(e => {console.error('[SharedDataContext] Error getClassEnrollments:', e); return [];}),
+            getAttendanceRecords().catch(e => {console.error('[SharedDataContext] Error getAttendanceRecords:', e); return [];}),
+            getArticles().catch(e => {console.error('[SharedDataContext] Error getArticles:', e); return [];}),
+            getFeedbacks().catch(e => {console.error('[SharedDataContext] Error getFeedbacks:', e); return [];}),
+            getMembershipPlans().catch(e => {console.error('[SharedDataContext] Error getMembershipPlans:', e); return [];}),
+            getUsers().catch(e => {console.error('[SharedDataContext] Error getUsers:', e); return [];})
+          ]);
+          console.log('[SharedDataContext] membershipPlans received:', membershipPlans);
+          setGymClasses(Array.isArray(classes) ? classes : []);
+          setTeachers(Array.isArray(teachers) ? teachers : []);
+          setEnrollments(Array.isArray(enrollments) ? enrollments : []);
+          setAttendanceRecords(Array.isArray(attendance) ? attendance : []);
+          setArticles(Array.isArray(articles) ? articles : []);
+          setFeedbacks(Array.isArray(feedbacks) ? feedbacks : []);
+          setMembershipPlans(Array.isArray(membershipPlans) ? membershipPlans : []);
+          setClients(Array.isArray(apiClients) ? apiClients : []);
+        } else {
+          setGymClasses([]);
+          setTeachers([]);
+          setEnrollments([]);
+          setAttendanceRecords([]);
+          setArticles([]);
+          setFeedbacks([]);
+          setMembershipPlans([]);
           setClients([]);
-          setIsLoading(false);
-        });
-    } else {
-      setClients([]);
+        }
+      } catch (error) {
+  // ...existing code...
+      }
       setIsLoading(false);
-    }
+    };
+    fetchData();
   }, []);
 
-  // --- Persistencia en localStorage ---
-  // ...existing code...
-  useEffect(() => { if (!isLoading) saveGymClasses(gymClasses); }, [gymClasses, isLoading]);
-  useEffect(() => { if (!isLoading) saveTeachers(teachers); }, [teachers, isLoading]);
-  useEffect(() => { if (!isLoading) saveClassEnrollments(enrollments); }, [enrollments, isLoading]);
-  useEffect(() => { if (!isLoading) saveAttendanceRecords(attendanceRecords); }, [attendanceRecords, isLoading]);
-  useEffect(() => { if (!isLoading) saveFeedbacks(feedbacks); }, [feedbacks, isLoading]);
-  useEffect(() => { if (!isLoading) saveArticles(articles); }, [articles, isLoading]);
-  // ...existing code...
-  useEffect(() => { if (!isLoading) saveMembershipPlans(membershipPlans); }, [membershipPlans, isLoading]);
+  // --- Persistencia en backend (ya no localStorage) ---
+  // Los métodos save* ya usan el backend, pero solo se llaman en los CRUD, no en cada cambio de estado.
 
 
   // --- NOTIFICACIONES ---
@@ -151,7 +114,6 @@ export const SharedDataProvider = ({ children }) => {
       isGlobal
     };
     setNotifications(prev => [...prev, newNotif]);
-    console.log("Notificación añadida:", newNotif);
 
     // Lógica para mostrar alerta si es para el usuario actual y está logueado
     if (currentUser && forUserId === currentUser.id && !isGlobal) {
@@ -165,10 +127,18 @@ export const SharedDataProvider = ({ children }) => {
   // --- MANEJO DE CURRENTUSER (LOGIN/LOGOUT) ---
   const loginUser = useCallback(async (userData) => {
     try {
-      const result = await apiLogin(userData.email, userData.password);
+  const result = await apiLogin(userData.email, userData.password);
       if (result && result.access_token) {
         localStorage.setItem('token', result.access_token);
-        // Obtener perfil del usuario desde el backend
+        // Esperar a que el token esté realmente en localStorage antes de pedir el perfil
+        await new Promise(res => setTimeout(res, 150));
+        const tokenCheck = localStorage.getItem('token');
+  if (!tokenCheck) {
+          setCurrentUser(null);
+          localStorage.removeItem('currentUserSession');
+          localStorage.removeItem('token');
+          return null;
+        }
         const profile = await getProfile();
         setCurrentUser(profile);
         localStorage.setItem('currentUserSession', JSON.stringify(profile));
@@ -187,6 +157,7 @@ export const SharedDataProvider = ({ children }) => {
       }
     } catch (error) {
       showError('errorLogin');
+  // ...existing code...
       return null;
     }
   }, [addNotification]);
@@ -579,8 +550,10 @@ export const SharedDataProvider = ({ children }) => {
     // CRUD MembershipPlans
     addMembershipPlan: async (planData) => {
       try {
+        console.log('[addMembershipPlan] Enviando plan al backend:', planData);
         const newPlan = await createMembership(planData);
-        const planName = newPlan.name || 'Nuevo plan';
+        console.log('[addMembershipPlan] Respuesta del backend:', newPlan);
+        const planName = newPlan.nombre || newPlan.name || 'Nuevo plan';
         setMembershipPlans(prev => [...prev, newPlan]);
         showSuccess('addMembership', newPlan);
         addNotification({
@@ -592,6 +565,7 @@ export const SharedDataProvider = ({ children }) => {
         });
         return newPlan;
       } catch (error) {
+        console.error('[addMembershipPlan] Error al crear plan:', error);
         showError('errorAddMembership');
         return null;
       }

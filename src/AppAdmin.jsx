@@ -17,9 +17,12 @@ const AdminLayout = () => {
       if (!currentUser) {
         showError("Acceso Denegado", "Debes iniciar sesión para acceder al panel de administración.");
         navigate('/login');
-      } else if (currentUser.rol !== 'administrador' && currentUser.rol !== 'admin') {
-        showError("Acceso Denegado", "No tienes permisos para acceder a esta área.");
-        navigate('/user');
+      } else {
+        const role = currentUser.rol || currentUser.role;
+        if (role !== 'administrador' && role !== 'admin') {
+          showError("Acceso Denegado", "No tienes permisos para acceder a esta área.");
+          navigate('/user');
+        }
       }
     }
   }, [currentUser, isLoading, isLoggingOut, navigate]);
@@ -45,7 +48,7 @@ const AdminLayout = () => {
     return <div className="min-h-screen flex items-center justify-center bg-black text-white text-xl">Cargando...</div>;
   }
 
-  if (!currentUser || currentUser.role !== 'admin') {
+  if (!currentUser || ((currentUser.rol || currentUser.role) !== 'admin' && (currentUser.rol || currentUser.role) !== 'administrador')) {
     // Ya se redirige en el useEffect, esto es un fallback o para evitar renderizar el layout.
     return null;
   }

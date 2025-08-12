@@ -12,9 +12,17 @@ const UserLayout = () => {
 
   // Efecto para redirigir si no hay usuario o no está cargando
   useEffect(() => {
-    if (!isLoading && !currentUser && !isLoggingOut) {
-      showError("Acceso Denegado", "Debes iniciar sesión para acceder a esta área.");
-      navigate('/login');
+    if (!isLoading && !isLoggingOut) {
+      if (!currentUser) {
+        showError("Acceso Denegado", "Debes iniciar sesión para acceder a esta área.");
+        navigate('/login');
+      } else {
+        const role = currentUser.rol || currentUser.role;
+        if (role === 'admin' || role === 'administrador') {
+          showError("Acceso Denegado", "No tienes permisos para acceder a esta área de usuario.");
+          navigate('/admin');
+        }
+      }
     }
   }, [currentUser, isLoading, isLoggingOut, navigate]);
 

@@ -10,9 +10,9 @@ export default function Login() {
 
     // Redirigir si ya hay un usuario en el contexto (ej. recarga de página)
     useEffect(() => {
-        if (currentUser && currentUser.rol) {
+        if (currentUser && (currentUser.rol || currentUser.role)) {
             console.log('Usuario autenticado:', currentUser);
-            const role = currentUser.rol;
+            const role = currentUser.rol || currentUser.role;
             if (role === "administrador" || role === "admin") {
                 navigate("/admin", { replace: true });
             } else {
@@ -25,7 +25,7 @@ export default function Login() {
         setLoginError(''); // Limpiar errores de login anteriores
         try {
             const loggedInUser = await loginUser(formData); // loginUser ahora es asíncrono
-            if (loggedInUser && loggedInUser.rol) {
+            if (loggedInUser && (loggedInUser.rol || loggedInUser.role)) {
                 // La redirección la maneja el useEffect para evitar duplicidad y asegurar que el usuario esté cargado
             } else {
                 setLoginError("Credenciales incorrectas.");
@@ -65,4 +65,5 @@ export default function Login() {
             </div>
         </div>
     );
+
 }
