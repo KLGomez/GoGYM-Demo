@@ -551,7 +551,7 @@ export const SharedDataProvider = ({ children }) => {
     addMembershipPlan: async (planData) => {
       try {
         console.log('[addMembershipPlan] Enviando plan al backend:', planData);
-        const newPlan = await createMembership(planData);
+    const newPlan = await createMembership({ ...planData, id: planData.id || Date.now() });
         console.log('[addMembershipPlan] Respuesta del backend:', newPlan);
         const planName = newPlan.nombre || newPlan.name || 'Nuevo plan';
         setMembershipPlans(prev => [...prev, newPlan]);
@@ -590,21 +590,36 @@ export const SharedDataProvider = ({ children }) => {
     },
     deleteMembershipPlan: async (planId) => {
       try {
-        const planToDelete = membershipPlans.find(p => p.id === planId);
-        await deleteMembership(planId);
-        setMembershipPlans(prev => prev.filter(p => p.id !== planId));
+        if (!planId || typeof planId !== 'string') {
+          console.error('[deleteMembershipPlan] ID de plan inválido:', planId);
+          showError('errorDeleteMembership', 'ID de plan inválido');
+          return null;
+        }
+        const planToDelete = membershipPlans.find(p => p.id === planId || p._id === planId);
+        if (!planToDelete) {
+          console.error('[deleteMembershipPlan] No se encontró el plan a eliminar:', planId);
+          showError('errorDeleteMembership', 'No se encontró el plan a eliminar');
+          return null;
+        }
+        const resp = await deleteMembership(planId);
+        if (resp && resp.error) {
+          console.error('[deleteMembershipPlan] Error desde backend:', resp.error);
+          showError('errorDeleteMembership', resp.error);
+          return null;
+        }
+        setMembershipPlans(prev => prev.filter(p => p.id !== planId && p._id !== planId));
         showWarning('deleteMembership', planToDelete);
         addNotification({
           title: 'Tipo de Membresía Eliminado',
-          message: `Tipo de membresía "${planToDelete.name}" eliminado.`,
+          message: `Tipo de membresía "${planToDelete.nombre || planToDelete.name}" eliminado.`,
           type: 'warning',
           forUserId: 'admin',
           isGlobal: false
         });
-        // TODO: Considerar qué sucede con los clientes que tienen este plan asignado.
         return planToDelete;
       } catch (error) {
-        showError('errorDeleteMembership');
+        console.error('[deleteMembershipPlan] Error inesperado:', error);
+        showError('errorDeleteMembership', error?.message || 'Error inesperado');
         return null;
       }
     },

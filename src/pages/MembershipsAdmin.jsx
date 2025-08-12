@@ -20,7 +20,7 @@ const MembershipPlanSchema = Yup.object().shape({
 });
 
 const MembershipPlanForm = ({ onSubmit, initialData, onCancel }) => {
-  const isEdit = Boolean(initialData?.id);
+  const isEdit = Boolean(initialData?.id || initialData?._id);
   return (
     <Formik
       initialValues={{
@@ -29,7 +29,7 @@ const MembershipPlanForm = ({ onSubmit, initialData, onCancel }) => {
         duracionEnDias: initialData?.duracionEnDias || 30,
         descripcion: initialData?.descripcion || '',
         activo: typeof initialData?.activo === 'boolean' ? initialData.activo : true,
-        id: initialData?.id || null
+        id: initialData?.id || initialData?._id || null // Asegura que el id esté presente
       }}
       validationSchema={isEdit ? undefined : MembershipPlanSchema}
       onSubmit={(values, { setSubmitting }) => {
@@ -154,9 +154,8 @@ const MembershipsAdmin = () => {
   // Normaliza los datos para localStorage/backend (creación y edición)
   const handlePlanFormSubmit = (values) => {
     // Si es edición, solo enviar campos modificados (PATCH)
-    if (editingPlan) {
-      const patch = { id: editingPlan.id };
-      // Solo incluir campos que cambiaron o están presentes
+    if (editingPlan && (editingPlan.id || editingPlan._id)) {
+      const patch = { id: editingPlan.id || editingPlan._id };
       ["nombre", "precio", "duracionEnDias", "descripcion", "activo"].forEach((key) => {
         if (values[key] !== undefined && values[key] !== editingPlan[key]) {
           patch[key] = values[key];
@@ -164,7 +163,6 @@ const MembershipsAdmin = () => {
       });
       updateMembershipPlan(patch);
     } else {
-      // Para creación, enviar todos los campos requeridos
       const nuevoPlan = {
         nombre: values.nombre,
         precio: Number(values.precio),
@@ -179,8 +177,8 @@ const MembershipsAdmin = () => {
   };
 
   const handleEditPlan = (plan) => {
-    setEditingPlan(plan);
-    setIsPlanFormVisible(true);
+  setEditingPlan({ ...plan, id: plan.id || plan._id });
+  setIsPlanFormVisible(true);
   };
 
   const handleDeletePlan = (planId, planName) => {
@@ -188,7 +186,19 @@ const MembershipsAdmin = () => {
       `¿Eliminar Plan "${planName}"?`,
       "Esta acción es irreversible. Los clientes con este plan podrían necesitar una actualización manual.",
       "Sí, eliminar",
-      () => deleteMembershipPlan(planId)
+      async () => {
+        // Buscar el plan por id o _id
+        const plan = (contextMembershipPlans || []).find(p => p.id === planId || p._id === planId);
+        const realId = plan ? (plan.id || plan._id) : planId;
+        if (!realId) {
+          showError('No se encontró el ID del plan a eliminar.');
+          return;
+        }
+        const result = await deleteMembershipPlan(realId);
+        if (!result) {
+          showError('No se pudo eliminar el plan. Verifica que no esté asignado a usuarios o revisa el backend.');
+        }
+      }
     );
   };
 
@@ -270,7 +280,7 @@ const MembershipsAdmin = () => {
         ) : (
           <div className="space-y-4">
             {(contextMembershipPlans || []).map(plan => (
-              <div key={plan.id} className="bg-gray-800 p-4 rounded-lg shadow-md flex justify-between items-start">
+              <div key={plan.id || plan._id} className="bg-gray-800 p-4 rounded-lg shadow-md flex justify-between items-start">
                 <div>
                   <p className="font-semibold text-xl text-orange-400">{plan.nombre || plan.name}</p>
                   <p className="text-gray-300">Precio: ${parseFloat(plan.precio ?? plan.price).toFixed(2)}</p>
@@ -282,7 +292,8 @@ const MembershipsAdmin = () => {
                 </div>
                 <div className="flex space-x-2 flex-shrink-0 mt-1">
                   <button onClick={() => handleEditPlan(plan)} className="p-2 text-blue-400 hover:text-blue-300" title="Editar Plan"><PencilIcon className="w-5 h-5" /></button>
-                  <button onClick={() => handleDeletePlan(plan.id, plan.nombre || plan.name)} className="p-2 text-red-500 hover:text-red-400" title="Eliminar Plan"><TrashIcon className="w-5 h-5" /></button>
+                  {/* <button onClick={() => handleDeletePlan(plan.id, plan.nombre || plan.name)} className="p-2 text-red-500 hover:text-red-400" title="Eliminar Plan"><TrashIcon className="w-5 h-5" /></button> */}
+                <button onClick={() => handleDeletePlan(plan.id || plan._id, plan.nombre || plan.name)} className="p-2 text-red-500 hover:text-red-400" title="Eliminar Plan"><TrashIcon className="w-5 h-5" /></button>
                 </div>
               </div>
             ))}
