@@ -1,7 +1,8 @@
-import React, { useContext } from 'react';
-import { SharedDataContext } from '../contexts/SharedDataContext';
-import { UsersIcon, RectangleStackIcon, CurrencyDollarIcon, DocumentChartBarIcon, CalendarDaysIcon, ArrowTrendingUpIcon } from '@heroicons/react/24/outline';
+import React, { useEffect, useState, useContext } from 'react';
+import { UsersIcon, RectangleStackIcon, CalendarDaysIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
+import { getDashboardMetrics } from '../api/metrics';
+import { SharedDataContext } from '../contexts/SharedDataContext';
 
 const StatCard = ({ title, value, icon, color, linkTo }) => (
   <Link to={linkTo || '#'} className={`bg-gray-800 p-6 rounded-xl shadow-lg hover:shadow-orange-400/30 transition-shadow duration-300 flex items-center space-x-4 border-l-4 ${color}`}>
@@ -14,33 +15,40 @@ const StatCard = ({ title, value, icon, color, linkTo }) => (
 );
 
 const HomePage = () => {
-  const { clients, gymClasses, teachers, attendanceRecords, isLoading } = useContext(SharedDataContext);
-  // Log para depuración: verificar si los datos cambian y si el render se dispara
-  console.log("[HomePage render] clients:", clients);
-  console.log("[HomePage render] gymClasses:", gymClasses);
-  console.log("[HomePage render] teachers:", teachers);
-  console.log("[HomePage render] attendanceRecords:", attendanceRecords);
-  console.log("[HomePage render] isLoading:", isLoading);
+  const { attendanceRecords } = useContext(SharedDataContext);
+  const [metrics, setMetrics] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  if (isLoading) {
+  useEffect(() => {
+    async function fetchMetrics() {
+      try {
+        const data = await getDashboardMetrics();
+        setMetrics(data);
+      } catch (error) {
+        setMetrics(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchMetrics();
+  }, []);
+
+  if (loading) {
     return <div className="text-center py-10"><p className="text-white">Cargando dashboard...</p></div>;
   }
 
-  // Considera clientes activos según fechas de membresía (sin modificar el DTO ni el formulario)
-  function isMembershipActive(membership) {
-    if (!membership || !membership.membershipStartDate || !membership.membershipDurationDays) return false;
-    const start = new Date(membership.membershipStartDate);
-    const end = new Date(start);
-    end.setDate(start.getDate() + Number(membership.membershipDurationDays));
-    const now = new Date();
-    return now >= start && now <= end;
+  // Si no hay métricas, mostrar mensaje de error
+  if (!metrics) {
+    return <div className="text-center py-10"><p className="text-red-400">No se pudieron cargar las métricas.</p></div>;
   }
-  const activeClients = clients?.filter(c => isMembershipActive(c.membership)).length || 0;
-  const totalClassesToday = gymClasses?.filter(c => c.day === new Date().toLocaleDateString('es-ES', { weekday: 'long' })).length || 0;
-  const recentCheckIns = attendanceRecords?.slice(-5).reverse() || []; // Últimos 5 check-ins
 
-  // Si `HomePage` también sirve como página de Check-in, se debe incluir esa funcionalidad aquí.
-  // Por ahora, este es un Dashboard de Admin. La `CheckInPage.jsx` es la dedicada para check-in.
+  // Extraer los valores del objeto de métricas
+  // Ahora la card de clientes activos solo muestra el valor del backend (campo activo)
+  const activeClients = metrics.usuarios?.activos ?? 0;
+  const totalClassesToday = 0; // Si quieres mostrar clases de hoy, necesitarías adaptar el backend
+  const totalTeachers = metrics.profesores?.total ?? 0;
+  const totalClasses = metrics.clases?.total ?? 0;
+  const recentCheckIns = attendanceRecords?.slice(-5).reverse() || [];
 
   return (
     <div className="p-6">
@@ -50,9 +58,8 @@ const HomePage = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-10">
         <StatCard title="Clientes Activos" value={activeClients} icon={UsersIcon} color="border-green-500" linkTo="/admin/clients" />
         <StatCard title="Clases Hoy" value={totalClassesToday} icon={CalendarDaysIcon} color="border-blue-500" linkTo="/admin/classes" />
-        <StatCard title="Total Profesores" value={teachers?.length || 0} icon={UsersIcon} color="border-purple-500" linkTo="/admin/classes" />
-        {/* El linkTo para profesores debería ser a ManageTeachersView, pero ClassesAdmin lo maneja internamente */}
-        <StatCard title="Clases Totales" value={gymClasses?.length || 0} icon={RectangleStackIcon} color="border-yellow-500" linkTo="/admin/classes" />
+        <StatCard title="Total Profesores" value={totalTeachers} icon={UsersIcon} color="border-purple-500" linkTo="/admin/classes" />
+        <StatCard title="Clases Totales" value={totalClasses} icon={RectangleStackIcon} color="border-yellow-500" linkTo="/admin/classes" />
       </div>
 
       {/* Accesos Rápidos */}
@@ -80,10 +87,9 @@ const HomePage = () => {
                     {record.className && <span className="ml-2 text-orange-300">({record.className})</span>}
                   </p>
                 </div>
-                <span className={`px-2 py-1 text-xs rounded-full ${
-                    clients.find(c=>c.id === record.clientId)?.membershipStatusDetails?.status === "Active" ? "bg-green-500 text-white" : "bg-red-500 text-white"
-                }`}>
-                  {clients.find(c=>c.id === record.clientId)?.membershipStatusDetails?.status || 'N/A'}
+                <span className={`px-2 py-1 text-xs rounded-full ${clients.find(c => c.id === record.clientId)?.membershipStatusDetails?.status === "Active" ? "bg-green-500 text-white" : "bg-red-500 text-white"
+                  }`}>
+                  {clients.find(c => c.id === record.clientId)?.membershipStatusDetails?.status || 'N/A'}
                 </span>
               </li>
             ))}

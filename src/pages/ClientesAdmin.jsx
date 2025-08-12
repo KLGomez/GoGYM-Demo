@@ -27,7 +27,7 @@ const ClientsAdmin = () => {
     updateClient: contextUpdateClient,
     deleteClient: contextDeleteClient,
     isLoading,
-  membershipPlans: contextMembershipPlans = [],
+    membershipPlans: contextMembershipPlans = [],
     // ...existing code...
   } = useContext(SharedDataContext);
 
@@ -36,19 +36,21 @@ const ClientsAdmin = () => {
   const [selectedClientForQR, setSelectedClientForQR] = useState(null);
 
   const handleEditClient = (clientToEdit) => {
+    console.log('[handleEditClient] Editando cliente:', clientToEdit);
     setEditingClient(clientToEdit);
     setView("edit");
   };
 
   const handleDeleteClient = (clientId, clientFirstName, clientLastName) => {
     const fullName = `${clientFirstName || ""} ${clientLastName || ""}`.trim();
+    console.log('[handleDeleteClient] clientId recibido:', clientId);
     confirmAction(
       `¿Eliminar Cliente "${fullName}"?`,
       `Esta acción es irreversible.`,
       "Sí, eliminar",
       () => {
         contextDeleteClient(clientId);
-        if (editingClient && editingClient.id === clientId) {
+        if (editingClient && (editingClient._id || editingClient.id) === clientId) {
           setEditingClient(null);
         }
       }
@@ -114,34 +116,51 @@ const ClientsAdmin = () => {
         ) : (
           <div className="space-y-3">
             {contextClients.map((client) => {
-              const { daysRemaining, status } = calculateMembershipDetails(
-                client.membership?.membershipStartDate,
-                client.membership?.membershipDurationDays
-              );
-              const clientName = `${client.firstName || ""} ${client.lastName || ""}`.trim();
+              const plan = contextMembershipPlans.find(p => p._id === client.planAsignadoId);
+              const planName = plan ? (plan.nombre || plan.name || plan.planName) : "N/A";
+              let daysRemaining = 0;
+              let status = "Sin Membresía";
+              if (client.fechaInicioMembresia && client.fechaFinMembresia) {
+                const today = new Date();
+                const endDate = new Date(client.fechaFinMembresia);
+                daysRemaining = Math.ceil((endDate - today) / (1000 * 3600 * 24));
+                status = daysRemaining > 0 ? "Activa" : "Vencida";
+              }
+              const clientName = `${client.nombre || ""} ${client.apellido || ""}`.trim();
+              const clientId = client._id || client.id;
               return (
-                <div key={client.id} className="bg-gray-800 p-4 rounded-lg shadow">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-grow">
-                      <p className="font-semibold text-white">{clientName}</p>
-                      <p className="text-sm text-gray-300">Email: {client.email}</p>
-                      <p className="text-sm text-gray-300">DNI: {client.dni}</p>
-                      <p className="text-sm text-gray-300">Plan: {client.membership?.planName || "N/A"}</p>
-                      <p className={`text-sm ${status === "Active" ? "text-green-400" : "text-red-400"}`}>
-                        Estado Membresía: {status} ({daysRemaining} días restantes)
-                      </p>
+                <div key={clientId} className="bg-gray-800 p-4 rounded-lg shadow flex gap-4 items-center">
+                  {/* Foto del cliente si existe */}
+                  {client.fotoUrl ? (
+                    <img
+                      src={client.fotoUrl}
+                      alt={clientName}
+                      className="w-20 h-20 object-cover rounded-full border-2 border-orange-400"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-gray-700 flex items-center justify-center text-gray-400 text-xl font-bold border-2 border-gray-600">
+                      <span>{clientName.charAt(0)}</span>
                     </div>
-                    <div className="flex space-x-2">
-                      <button onClick={() => handleEditClient(client)} title="Editar Cliente" className="text-blue-400 hover:text-blue-600">
-                        <PencilIcon className="w-5 h-5" />
-                      </button>
-                      <button onClick={() => handleShowQR(client)} title="QR" className="text-teal-400 hover:text-teal-600">
-                        <MenuQrCodeIcon className="w-5 h-5" />
-                      </button>
-                      <button onClick={() => handleDeleteClient(client.id, client.firstName, client.lastName)} title="Eliminar" className="text-red-500 hover:text-red-700">
-                        <TrashIcon className="w-5 h-5" />
-                      </button>
-                    </div>
+                  )}
+                  <div className="flex-grow">
+                    <p className="font-semibold text-white">{clientName}</p>
+                    <p className="text-sm text-gray-300">Email: {client.email}</p>
+                    <p className="text-sm text-gray-300">DNI: {client.dni}</p>
+                    <p className="text-sm text-gray-300">Plan: {planName}</p>
+                    <p className={`text-sm ${status === "Activa" ? "text-green-400" : "text-red-400"}`}>
+                      Estado Membresía: {status} ({daysRemaining} días restantes)
+                    </p>
+                  </div>
+                  <div className="flex flex-col space-y-2">
+                    <button onClick={() => handleEditClient(client)} title="Editar Cliente" className="text-blue-400 hover:text-blue-600">
+                      <PencilIcon className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => handleShowQR(client)} title="QR" className="text-teal-400 hover:text-teal-600">
+                      <MenuQrCodeIcon className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => handleDeleteClient(clientId, client.nombre, client.apellido)} title="Eliminar" className="text-red-500 hover:text-red-700">
+                      <TrashIcon className="w-5 h-5" />
+                    </button>
                   </div>
                 </div>
               );
@@ -153,7 +172,7 @@ const ClientsAdmin = () => {
   }
 
   if (view === "qr" && selectedClientForQR) {
-    const clientName = `${selectedClientForQR.firstName || ""} ${selectedClientForQR.lastName || ""}`.trim();
+    const clientName = `${selectedClientForQR.nombre || ""} ${selectedClientForQR.apellido || ""}`.trim();
     const membership = selectedClientForQR.membership || {};
     const { membershipEndDate, daysRemaining, status } = calculateMembershipDetails(
       membership.membershipStartDate,

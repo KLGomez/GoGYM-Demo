@@ -1,7 +1,18 @@
+
 import api from './api';
 
+export const deactivateClass = async (id) => {
+  const response = await api.patch(`/gym-classes/${id}/deactivate`);
+  return response.data;
+};
+
+export const reactivateClass = async (id) => {
+  const response = await api.patch(`/gym-classes/${id}/reactivate`);
+  return response.data;
+};
+
 export const getClasses = async () => {
-  const response = await api.get('/gym-classes');
+  const response = await api.get('/gym-classes?includeInactive=true');
   return response.data;
 };
 

@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeftIcon, PlusIcon, TrashIcon, PencilIcon } from '@heroicons/react/24/outline';
-import { getTeachers, saveTeachers } from '../utils/storage'; // Importar desde utils
+import {
+  getTeachers,
+  createTeacher,
+  updateTeacher,
+  deleteTeacher,
+  deactivateTeacher,
+  reactivateTeacher
+} from '../api/teachers';
 // Suponiendo que las alertas reales se importarán de utils/alerts
 import { showSuccess, showError, confirmAction } from '../utils/alerts';
 
@@ -21,12 +28,21 @@ const ManageTeachersView = ({ onBack }) => {
   });
 
   useEffect(() => {
-    setTeachers(getTeachers()); // Usar la función importada de utils/storage.js
+    const fetchTeachers = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        // Pedir todos los profesores, incluyendo los inactivos
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/teachers?includeInactive=true`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        setTeachers(data);
+      } catch (error) {
+        showError('error', { message: 'No se pudieron cargar los profesores.' });
+      }
+    };
+    fetchTeachers();
   }, []);
-
-  useEffect(() => {
-    saveTeachers(teachers);
-  }, [teachers]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -72,17 +88,24 @@ const ManageTeachersView = ({ onBack }) => {
       return;
     }
 
+    const token = localStorage.getItem('token');
     if (editingTeacher) {
-      // Lógica de actualización (solo campos enviados)
-      setTeachers(teachers.map(t => t.id === editingTeacher.id ? { ...t, ...formData } : t));
-      showSuccess('updateTeacher', formData);
+      updateTeacher(editingTeacher._id, formData, token)
+        .then(updated => {
+          setTeachers(teachers.map(t => t._id === updated._id ? updated : t));
+          showSuccess('updateTeacher', updated);
+          resetForm();
+        })
+        .catch(() => showError('error', { message: 'No se pudo actualizar el profesor.' }));
     } else {
-      // Lógica de creación
-      const newTeacher = { id: `teach_${Date.now().toString()}`, ...formData };
-      setTeachers(prevTeachers => [...prevTeachers, newTeacher]);
-      showSuccess('addTeacher', newTeacher);
+      createTeacher(formData, token)
+        .then(created => {
+          setTeachers(prev => [...prev, created]);
+          showSuccess('addTeacher', created);
+          resetForm();
+        })
+        .catch(() => showError('error', { message: 'No se pudo crear el profesor.' }));
     }
-    resetForm();
   };
 
   const handleEditTeacher = (teacher) => {
@@ -102,11 +125,16 @@ const ManageTeachersView = ({ onBack }) => {
 
   const handleDeleteTeacher = (teacherId, teacherName) => {
     confirmAction('deleteTeacher', { nombre: teacherName }, "Sí, eliminar", () => {
-      setTeachers(prevTeachers => prevTeachers.filter(t => t.id !== teacherId));
-      showSuccess('deleteTeacher', { nombre: teacherName });
-      if(editingTeacher && editingTeacher.id === teacherId) { // Si se elimina el profesor que se está editando
-        resetForm();
-      }
+      const token = localStorage.getItem('token');
+      deleteTeacher(teacherId, token)
+        .then(() => {
+          setTeachers(prev => prev.filter(t => t._id !== teacherId));
+          showSuccess('deleteTeacher', { nombre: teacherName });
+          if (editingTeacher && editingTeacher._id === teacherId) {
+            resetForm();
+          }
+        })
+        .catch(() => showError('error', { message: 'No se pudo eliminar el profesor.' }));
     });
   };
 
@@ -122,7 +150,7 @@ const ManageTeachersView = ({ onBack }) => {
         <button
           onClick={() => {
             setIsFormVisible(!isFormVisible);
-            if(isFormVisible) resetForm(); // Si se cierra el form, resetearlo
+            if (isFormVisible) resetForm(); // Si se cierra el form, resetearlo
             else setEditingTeacher(null); // Asegurar que no esté en modo edición al abrir
           }}
           className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-md shadow flex items-center gap-2"
@@ -210,7 +238,7 @@ const ManageTeachersView = ({ onBack }) => {
       ) : (
         <ul className="space-y-3">
           {teachers.map(teacher => (
-            <li key={teacher.id} className="bg-gray-800 p-4 rounded-lg shadow">
+            <li key={teacher._id} className="bg-gray-800 p-4 rounded-lg shadow">
               <div className="flex justify-between items-start">
                 <div>
                   <p className="font-semibold text-white text-lg">{teacher.nombre} {teacher.apellido}</p>
@@ -230,12 +258,37 @@ const ManageTeachersView = ({ onBack }) => {
                     <PencilIcon className="w-5 h-5" />
                   </button>
                   <button
-                    onClick={() => handleDeleteTeacher(teacher.id, `${teacher.nombre} ${teacher.apellido}`)}
+                    onClick={() => handleDeleteTeacher(teacher._id, `${teacher.nombre} ${teacher.apellido}`)}
                     className="text-red-500 hover:text-red-700 p-1"
                     title="Eliminar Profesor"
                   >
                     <TrashIcon className="w-5 h-5" />
                   </button>
+                  {teacher.activo ? (
+                    <button
+                      onClick={async () => {
+                        const token = localStorage.getItem('token');
+                        await deactivateTeacher(teacher._id, token);
+                        setTeachers(prev => prev.map(t => t._id === teacher._id ? { ...t, activo: false } : t));
+                      }}
+                      className="text-yellow-400 hover:text-yellow-600 p-1"
+                      title="Desactivar Profesor"
+                    >
+                      Inactivar
+                    </button>
+                  ) : (
+                    <button
+                      onClick={async () => {
+                        const token = localStorage.getItem('token');
+                        await reactivateTeacher(teacher._id, token);
+                        setTeachers(prev => prev.map(t => t._id === teacher._id ? { ...t, activo: true } : t));
+                      }}
+                      className="text-green-400 hover:text-green-600 p-1"
+                      title="Reactivar Profesor"
+                    >
+                      Activar
+                    </button>
+                  )}
                 </div>
               </div>
             </li>

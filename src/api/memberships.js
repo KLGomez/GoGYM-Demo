@@ -31,3 +31,13 @@ export const deleteMembership = async (id) => {
   const response = await api.delete(`/planes/${id}`);
   return response.data;
 };
+
+export const deactivateMembership = async (id) => {
+  const response = await api.patch(`/planes/${id}/deactivate`);
+  return response.data;
+};
+
+export const activateMembership = async (id) => {
+  const response = await api.patch(`/planes/${id}/activate`);
+  return response.data;
+};

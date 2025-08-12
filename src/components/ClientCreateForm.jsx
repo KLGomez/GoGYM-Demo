@@ -34,22 +34,32 @@ const ClientCreateForm = ({ onCancel, onSave, editingClient, membershipPlans = [
     fechaNacimiento: Yup.date().required(
       "La fecha de nacimiento es obligatoria"
     ),
-  planAsignadoId: Yup.string().required("El plan es obligatorio"),
+    planAsignadoId: Yup.string().required("El plan es obligatorio"),
     notasInternas: Yup.string(),
     fotoUrl: Yup.string().url("La URL debe ser válida").notRequired(),
   });
 
   const handleSubmit = (values) => {
     // Buscar el plan seleccionado
-    const selectedPlan = membershipPlans.find(plan => plan.id === values.planAsignadoId);
+    const selectedPlan = membershipPlans.find(plan => plan._id === values.planAsignadoId);
+    console.log('[ClientCreateForm] planAsignadoId seleccionado:', values.planAsignadoId);
+    // Validación extra: asegúrate que todos los campos requeridos estén presentes
+    const requiredFields = ['nombre', 'apellido', 'dni', 'email', 'telefono', 'fechaNacimiento', 'planAsignadoId'];
+    for (const field of requiredFields) {
+      if (!values[field]) {
+        console.error(`[ClientCreateForm] Campo requerido faltante: ${field}`);
+        return;
+      }
+    }
+    console.log('[ClientCreateForm] planAsignadoId seleccionado:', values.planAsignadoId);
     // Crear objeto membership si hay plan seleccionado
     const membership = selectedPlan
       ? {
-          planName: selectedPlan.name || selectedPlan.nombre || selectedPlan.planName,
-          membershipStartDate: new Date().toISOString(),
-          membershipDurationDays: selectedPlan.duracionEnDias || selectedPlan.durationDays || selectedPlan.membershipDurationDays || 30,
-          autoRenew: false
-        }
+        planName: selectedPlan.name || selectedPlan.nombre || selectedPlan.planName,
+        membershipStartDate: new Date().toISOString(),
+        membershipDurationDays: selectedPlan.duracionEnDias || selectedPlan.durationDays || selectedPlan.membershipDurationDays || 30,
+        autoRenew: false
+      }
       : undefined;
 
     // Mapeo para visualización interna (no afecta envío al backend)
@@ -70,6 +80,9 @@ const ClientCreateForm = ({ onCancel, onSave, editingClient, membershipPlans = [
     }
     if (onSave) onSave();
   };
+
+  // Filtrar solo los planes activos
+  const activePlans = membershipPlans.filter(plan => plan.activo === true);
 
   return (
     <Formik
@@ -240,10 +253,10 @@ const ClientCreateForm = ({ onCancel, onSave, editingClient, membershipPlans = [
                              focus:ring-orange-500 focus:border-orange-500"
                 >
                   <option value="">Seleccionar plan</option>
-                  {membershipPlans && membershipPlans.length > 0 ? (
-                    membershipPlans.map((plan) => (
-                      <option key={plan.id} value={plan.id}>
-                        {plan.name || plan.nombre || plan.planName}
+                  {activePlans && activePlans.length > 0 ? (
+                    activePlans.map((plan) => (
+                      <option key={plan._id} value={plan._id}>
+                        {plan.nombre || plan.name || plan.planName}
                       </option>
                     ))
                   ) : (

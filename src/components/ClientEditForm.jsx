@@ -22,7 +22,7 @@ const ClientEditForm = ({ initialClient, onCancel, onSave, CameraUploader, membe
 
   const handleSubmit = (values) => {
     // Buscar el plan seleccionado
-    const selectedPlan = membershipPlans.find(plan => plan.id === values.planAsignadoId);
+    const selectedPlan = membershipPlans.find(plan => plan.id === values.planAsignadoId || plan._id === values.planAsignadoId);
     // Crear objeto membership si hay plan seleccionado
     const membership = selectedPlan
       ? {
@@ -33,7 +33,10 @@ const ClientEditForm = ({ initialClient, onCancel, onSave, CameraUploader, membe
         }
       : initialClient.membership;
     // Mantener el id y los campos no editables
-    contextUpdateClient({ ...initialClient, ...values, membership });
+    const clientId = initialClient._id || initialClient.id;
+    const payload = { ...initialClient, ...values, membership, _id: clientId };
+    console.log('[ClientEditForm] updateClient payload:', payload);
+    contextUpdateClient(payload);
     showSuccess("Cliente actualizado", "Los datos del cliente se guardaron correctamente.");
     if (onSave) onSave();
   };
@@ -51,6 +54,9 @@ const ClientEditForm = ({ initialClient, onCancel, onSave, CameraUploader, membe
       <Formik
         initialValues={{
           ...initialClient,
+          fechaNacimiento: initialClient.fechaNacimiento
+            ? new Date(initialClient.fechaNacimiento).toISOString().slice(0, 10)
+            : "",
           planAsignadoId: initialClient.membership?.planId || initialClient.planAsignadoId || ""
         }}
         validationSchema={EditSchema}
@@ -115,17 +121,18 @@ const ClientEditForm = ({ initialClient, onCancel, onSave, CameraUploader, membe
                 <ErrorMessage name="fechaNacimiento" component="div" className="text-red-500 text-xs mt-1" />
               </div>
               <div>
-                <label htmlFor="planAsignadoId" className="block text-sm font-medium text-gray-200">Plan</label>
+                <label htmlFor="planAsignadoId" className="block text-sm font-medium text-gray-200">Plan Asignado</label>
                 <Field
                   name="planAsignadoId"
                   as="select"
-                  className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-white focus:ring-orange-500 focus:border-orange-500"
+                  disabled
+                  className="mt-1 block w-full bg-gray-600 border border-gray-600 rounded-md p-2 text-gray-400 cursor-not-allowed"
                 >
-                  <option value="">Seleccionar plan</option>
+                  <option value="">Sin plan</option>
                   {membershipPlans && membershipPlans.length > 0 ? (
                     membershipPlans.map((plan) => (
-                      <option key={plan.id} value={plan.id}>
-                        {plan.name || plan.nombre || plan.planName}
+                      <option key={plan._id} value={plan._id}>
+                        {plan.nombre || plan.name || plan.planName}
                       </option>
                     ))
                   ) : (
@@ -135,6 +142,14 @@ const ClientEditForm = ({ initialClient, onCancel, onSave, CameraUploader, membe
                 <ErrorMessage name="planAsignadoId" component="div" className="text-red-500 text-xs mt-1" />
               </div>
               <div className="md:col-span-2">
+            <div className="flex flex-col items-center mt-4">
+              <label className="block text-sm font-medium text-gray-200 mb-2">Foto del cliente</label>
+              {values.fotoUrl ? (
+                <img src={values.fotoUrl} alt="Preview" className="mt-2 w-40 h-40 object-cover rounded" />
+              ) : null}
+              <CameraUploader onUploadComplete={url => setFieldValue("fotoUrl", url)} />
+              <ErrorMessage name="fotoUrl" component="div" className="text-red-500 text-xs mt-1" />
+            </div>
                 <label htmlFor="notasInternas" className="block text-sm font-medium text-gray-200">Notas Internas</label>
                 <Field
                   name="notasInternas"

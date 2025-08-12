@@ -50,24 +50,24 @@ export const SharedDataProvider = ({ children }) => {
       setIsLoading(true);
       let storedCurrentUser = null;
       try {
-  const raw = localStorage.getItem('currentUserSession');
-  storedCurrentUser = raw ? JSON.parse(raw) : null;
+        const raw = localStorage.getItem('currentUserSession');
+        storedCurrentUser = raw ? JSON.parse(raw) : null;
       } catch (error) {
-  // ...existing code...
+        // ...existing code...
         localStorage.removeItem('currentUserSession');
       }
       setCurrentUser(storedCurrentUser);
       try {
         if (storedCurrentUser && localStorage.getItem('token')) {
           const [classes, teachers, enrollments, attendance, articles, feedbacks, membershipPlans, apiClients] = await Promise.all([
-            getGymClasses().catch(e => {console.error('[SharedDataContext] Error getGymClasses:', e); return [];}),
-            getTeachers().catch(e => {console.error('[SharedDataContext] Error getTeachers:', e); return [];}),
-            getClassEnrollments().catch(e => {console.error('[SharedDataContext] Error getClassEnrollments:', e); return [];}),
-            getAttendanceRecords().catch(e => {console.error('[SharedDataContext] Error getAttendanceRecords:', e); return [];}),
-            getArticles().catch(e => {console.error('[SharedDataContext] Error getArticles:', e); return [];}),
-            getFeedbacks().catch(e => {console.error('[SharedDataContext] Error getFeedbacks:', e); return [];}),
-            getMembershipPlans().catch(e => {console.error('[SharedDataContext] Error getMembershipPlans:', e); return [];}),
-            getUsers().catch(e => {console.error('[SharedDataContext] Error getUsers:', e); return [];})
+            getGymClasses().catch(e => { console.error('[SharedDataContext] Error getGymClasses:', e); return []; }),
+            getTeachers().catch(e => { console.error('[SharedDataContext] Error getTeachers:', e); return []; }),
+            getClassEnrollments().catch(e => { console.error('[SharedDataContext] Error getClassEnrollments:', e); return []; }),
+            getAttendanceRecords().catch(e => { console.error('[SharedDataContext] Error getAttendanceRecords:', e); return []; }),
+            getArticles().catch(e => { console.error('[SharedDataContext] Error getArticles:', e); return []; }),
+            getFeedbacks().catch(e => { console.error('[SharedDataContext] Error getFeedbacks:', e); return []; }),
+            getMembershipPlans().catch(e => { console.error('[SharedDataContext] Error getMembershipPlans:', e); return []; }),
+            getUsers().catch(e => { console.error('[SharedDataContext] Error getUsers:', e); return []; })
           ]);
           console.log('[SharedDataContext] membershipPlans received:', membershipPlans);
           setGymClasses(Array.isArray(classes) ? classes : []);
@@ -89,7 +89,7 @@ export const SharedDataProvider = ({ children }) => {
           setClients([]);
         }
       } catch (error) {
-  // ...existing code...
+        // ...existing code...
       }
       setIsLoading(false);
     };
@@ -127,13 +127,13 @@ export const SharedDataProvider = ({ children }) => {
   // --- MANEJO DE CURRENTUSER (LOGIN/LOGOUT) ---
   const loginUser = useCallback(async (userData) => {
     try {
-  const result = await apiLogin(userData.email, userData.password);
+      const result = await apiLogin(userData.email, userData.password);
       if (result && result.access_token) {
         localStorage.setItem('token', result.access_token);
         // Esperar a que el token esté realmente en localStorage antes de pedir el perfil
         await new Promise(res => setTimeout(res, 150));
         const tokenCheck = localStorage.getItem('token');
-  if (!tokenCheck) {
+        if (!tokenCheck) {
           setCurrentUser(null);
           localStorage.removeItem('currentUserSession');
           localStorage.removeItem('token');
@@ -157,7 +157,7 @@ export const SharedDataProvider = ({ children }) => {
       }
     } catch (error) {
       showError('errorLogin');
-  // ...existing code...
+      // ...existing code...
       return null;
     }
   }, [addNotification]);
@@ -187,22 +187,45 @@ export const SharedDataProvider = ({ children }) => {
   // --- CRUD Clientes ---
   const addClient = useCallback(async (clientDataFromForm) => {
     try {
-      const clientWithCode = {
-        ...clientDataFromForm,
-        alphanumericCode: generateClientCode(clientDataFromForm.firstName, clientDataFromForm.lastName, clientDataFromForm.dni)
+      // Solo enviar los campos que espera el backend
+      const {
+        nombre,
+        apellido,
+        dni,
+        email,
+        telefono,
+        fechaNacimiento,
+        planAsignadoId,
+        notasInternas,
+        fotoUrl
+      } = clientDataFromForm;
+
+      const payload = {
+        nombre,
+        apellido,
+        dni,
+        email,
+        telefono,
+        fechaNacimiento,
+        planAsignadoId,
+        notasInternas,
+        fotoUrl
       };
-      const newUser = await createUser(clientWithCode);
+      console.log('[addClient] Payload enviado al backend:', payload);
+      const newUser = await createUser(payload);
+      console.log('[addClient] Respuesta recibida del backend:', newUser);
       setClients(prev => [...prev, newUser]);
       showSuccess('addClient', newUser);
       addNotification({
         title: 'Cliente Agregado exitosamente',
-        message: `El cliente ${newUser.firstName} ha sido agregado exitosamente con código ${newUser.alphanumericCode}.`,
+        message: `El cliente ${newUser.nombre} ha sido agregado exitosamente con email ${newUser.email}.`,
         type: 'success',
         forUserId: 'admin',
         isGlobal: false
       });
       return newUser;
     } catch (error) {
+      console.error('[addClient] Error al crear cliente:', error);
       showError('errorAddClient');
       return null;
     }
@@ -210,27 +233,31 @@ export const SharedDataProvider = ({ children }) => {
 
   const updateClient = useCallback(async (updatedClientData) => {
     try {
-      // Regenerar código si cambian datos clave
-      const originalClient = clients.find(c => c.id === updatedClientData.id);
+      const originalClient = clients.find(c => (c._id || c.id) === (updatedClientData._id || updatedClientData.id));
+      // Eliminar el campo 'rol' si existe
       let updated = { ...updatedClientData };
-      if (originalClient &&
-        (originalClient.firstName !== updatedClientData.firstName ||
-          originalClient.lastName !== updatedClientData.lastName ||
-          originalClient.dni !== updatedClientData.dni)) {
-        updated.alphanumericCode = generateClientCode(updatedClientData.firstName, updatedClientData.lastName, updatedClientData.dni);
+      if ('rol' in updated) {
+        delete updated.rol;
+        console.log('[updateClient] Campo "rol" eliminado del payload');
       }
-      const result = await updateUser(updated.id, updated);
-      setClients(prev => prev.map(c => c.id === result.id ? result : c));
+      console.log('[updateClient] Payload enviado:', updated);
+      const result = await updateUser(updated._id || updated.id, updated);
+      console.log('[updateClient] Respuesta recibida:', result);
+      setClients(prev => prev.map(c => (c._id || c.id) === (result._id || result.id) ? result : c));
       showSuccess('updateClient', result);
       addNotification({
         title: 'Cliente actualizado',
-        message: `Cliente ${result.firstName} actualizado exitosamente.`,
+        message: `Cliente ${result.nombre} actualizado exitosamente.`,
         type: 'success',
         forUserId: 'admin',
         isGlobal: false
       });
       return result;
     } catch (error) {
+      console.error('[updateClient] Error recibido:', error);
+      if (error?.response) {
+        console.error('[updateClient] Error response data:', error.response.data);
+      }
       showError('errorUpdateClient');
       return null;
     }
@@ -238,19 +265,25 @@ export const SharedDataProvider = ({ children }) => {
 
   const deleteClient = useCallback(async (clientId) => {
     try {
-      const clientToDelete = clients.find(c => c.id === clientId);
+      const clientToDelete = clients.find(c => (c._id || c.id) === clientId);
+      console.log('[deleteClient] ID enviado:', clientId);
       await deleteUser(clientId);
-      setClients(prev => prev.filter(c => c.id !== clientId));
+      console.log('[deleteClient] Eliminación exitosa');
+      setClients(prev => prev.filter(c => (c._id || c.id) !== clientId));
       showWarning('deleteClient', clientToDelete);
       addNotification({
         title: 'Cliente Eliminado',
-        message: `Cliente "${clientToDelete?.firstName || clientId}" eliminado.`,
+        message: `Cliente "${clientToDelete?.nombre || clientId}" eliminado.`,
         type: 'warning',
         forUserId: 'admin',
         isGlobal: false
       });
       return clientToDelete;
     } catch (error) {
+      console.error('[deleteClient] Error recibido:', error);
+      if (error?.response) {
+        console.error('[deleteClient] Error response data:', error.response.data);
+      }
       showError('errorDeleteClient');
       return null;
     }
@@ -551,7 +584,7 @@ export const SharedDataProvider = ({ children }) => {
     addMembershipPlan: async (planData) => {
       try {
         console.log('[addMembershipPlan] Enviando plan al backend:', planData);
-    const newPlan = await createMembership({ ...planData, id: planData.id || Date.now() });
+        const newPlan = await createMembership({ ...planData, id: planData.id || Date.now() });
         console.log('[addMembershipPlan] Respuesta del backend:', newPlan);
         const planName = newPlan.nombre || newPlan.name || 'Nuevo plan';
         setMembershipPlans(prev => [...prev, newPlan]);

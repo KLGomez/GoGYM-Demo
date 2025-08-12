@@ -134,7 +134,7 @@ const MembershipsAdmin = () => {
         client.effectivePlanName?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    return clients.sort((a,b) => (a.lastName || "").localeCompare(b.lastName || ""));
+    return clients.sort((a, b) => (a.lastName || "").localeCompare(b.lastName || ""));
   }, [clientsWithMembershipDetails, filterStatus, searchTerm]);
 
   const getStatusColor = (status) => {
@@ -177,8 +177,8 @@ const MembershipsAdmin = () => {
   };
 
   const handleEditPlan = (plan) => {
-  setEditingPlan({ ...plan, id: plan.id || plan._id });
-  setIsPlanFormVisible(true);
+    setEditingPlan({ ...plan, id: plan.id || plan._id });
+    setIsPlanFormVisible(true);
   };
 
   const handleDeletePlan = (planId, planName) => {
@@ -215,16 +215,16 @@ const MembershipsAdmin = () => {
       action: () => setCurrentView("statusView"),
       description: "Ver y filtrar el estado actual de todas las membresías de clientes."
     },
-/*     {
-      icon: <CurrencyDollarIcon className="w-10 h-10 text-white" />,
-      label: "Gestión de Pagos",
-      action: () => { showError("Próximamente", "La funcionalidad de Gestión de Pagos aún no está implementada."); },
-      description: "Registrar y consultar pagos de membresías (Próximamente)."
-    }, */
+    /*     {
+          icon: <CurrencyDollarIcon className="w-10 h-10 text-white" />,
+          label: "Gestión de Pagos",
+          action: () => { showError("Próximamente", "La funcionalidad de Gestión de Pagos aún no está implementada."); },
+          description: "Registrar y consultar pagos de membresías (Próximamente)."
+        }, */
   ];
 
   if (isLoading && currentView !== "menu") {
-      return <p className="text-gray-300 text-center py-10">Cargando datos...</p>;
+    return <p className="text-gray-300 text-center py-10">Cargando datos...</p>;
   }
 
   // --- VISTA DE MENÚ PRINCIPAL ---
@@ -258,8 +258,8 @@ const MembershipsAdmin = () => {
         </button>
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-3xl font-bold text-orange-400">Gestionar Tipos de Plan</h2>
-          <button onClick={() => { setEditingPlan(null); setIsPlanFormVisible(!isPlanFormVisible);}}
-                  className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md shadow flex items-center gap-2">
+          <button onClick={() => { setEditingPlan(null); setIsPlanFormVisible(!isPlanFormVisible); }}
+            className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md shadow flex items-center gap-2">
             <PlusIcon className="w-5 h-5" /> {isPlanFormVisible && !editingPlan ? 'Cancelar' : 'Crear Nuevo Plan'}
           </button>
         </div>
@@ -292,8 +292,40 @@ const MembershipsAdmin = () => {
                 </div>
                 <div className="flex space-x-2 flex-shrink-0 mt-1">
                   <button onClick={() => handleEditPlan(plan)} className="p-2 text-blue-400 hover:text-blue-300" title="Editar Plan"><PencilIcon className="w-5 h-5" /></button>
-                  {/* <button onClick={() => handleDeletePlan(plan.id, plan.nombre || plan.name)} className="p-2 text-red-500 hover:text-red-400" title="Eliminar Plan"><TrashIcon className="w-5 h-5" /></button> */}
-                <button onClick={() => handleDeletePlan(plan.id || plan._id, plan.nombre || plan.name)} className="p-2 text-red-500 hover:text-red-400" title="Eliminar Plan"><TrashIcon className="w-5 h-5" /></button>
+                  <button onClick={() => handleDeletePlan(plan.id || plan._id, plan.nombre || plan.name)} className="p-2 text-red-500 hover:text-red-400" title="Eliminar Plan"><TrashIcon className="w-5 h-5" /></button>
+                  {plan.activo !== false ? (
+                    <button
+                      onClick={async () => {
+                        const { deactivateMembership } = await import('../api/memberships');
+                        const updated = await deactivateMembership(plan.id || plan._id);
+                        if (updated) {
+                          if (typeof plan.id !== 'undefined') {
+                            updateMembershipPlan({ ...plan, activo: false });
+                          } else {
+                            updateMembershipPlan({ ...plan, activo: false, _id: plan._id });
+                          }
+                        }
+                      }}
+                      className="p-2 text-yellow-400 hover:text-yellow-600" title="Desactivar Plan">
+                      Inactivar
+                    </button>
+                  ) : (
+                    <button
+                      onClick={async () => {
+                        const { activateMembership } = await import('../api/memberships');
+                        const updated = await activateMembership(plan.id || plan._id);
+                        if (updated) {
+                          if (typeof plan.id !== 'undefined') {
+                            updateMembershipPlan({ ...plan, activo: true });
+                          } else {
+                            updateMembershipPlan({ ...plan, activo: true, _id: plan._id });
+                          }
+                        }
+                      }}
+                      className="p-2 text-green-400 hover:text-green-600" title="Activar Plan">
+                      Activar
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -329,7 +361,7 @@ const MembershipsAdmin = () => {
           <div>
             <label htmlFor="statusFilter" className="sr-only">Filtrar por estado</label>
             <select id="statusFilter" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
-                    className="p-2 bg-gray-700 border border-gray-600 text-white rounded-md focus:ring-orange-500 focus:border-orange-500">
+              className="p-2 bg-gray-700 border border-gray-600 text-white rounded-md focus:ring-orange-500 focus:border-orange-500">
               <option value="Todos">Todos los Estados</option>
               <option value="Active">Activas</option>
               <option value="Expired">Vencidas</option>
@@ -339,61 +371,60 @@ const MembershipsAdmin = () => {
         </div>
 
         {filteredClients.length === 0 && !isLoading ? (
-            <p className="text-gray-400 text-center py-8">No hay clientes que coincidan con los filtros seleccionados.</p>
+          <p className="text-gray-400 text-center py-8">No hay clientes que coincidan con los filtros seleccionados.</p>
         ) : (
-        <div className="overflow-x-auto bg-gray-800 rounded-lg shadow-md">
-          <table className="min-w-full divide-y divide-gray-700">
-            <thead className="bg-gray-750">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-orange-400 uppercase tracking-wider">Cliente</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-orange-400 uppercase tracking-wider">Plan</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-orange-400 uppercase tracking-wider">Estado</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-orange-400 uppercase tracking-wider">Inicio</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-orange-400 uppercase tracking-wider">Fin</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-orange-400 uppercase tracking-wider">Días Rest.</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-orange-400 uppercase tracking-wider">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="bg-gray-800 divide-y divide-gray-700">
-              {filteredClients.map(client => (
-                <tr key={client.id} className="hover:bg-gray-700 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <UserCircleIcon className="h-8 w-8 text-gray-500 mr-3 flex-shrink-0" />
-                      <div>
-                        <div className="text-sm font-medium text-white">{client.firstName} {client.lastName}</div>
-                        <div className="text-xs text-gray-400">{client.email}</div>
-                        <div className="text-xs text-gray-500">DNI: {client.dni} - Cód: {client.alphanumericCode}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{client.effectivePlanName}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      client.membershipStatusDetails.status === "Active" ? 'bg-green-800 text-green-300' :
-                      client.membershipStatusDetails.status === "Expired" ? 'bg-red-800 text-red-300' :
-                      client.membershipStatusDetails.status === "SoonToExpire" ? 'bg-yellow-800 text-yellow-300' : 'bg-gray-700 text-gray-300'
-                    }`}>
-                      {client.membershipStatusDetails.status === "SoonToExpire" ? "Por Vencer" : client.membershipStatusDetails.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{formatDate(client.membership?.membershipStartDate)}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{formatDate(client.membershipStatusDetails.endDate)}</td>
-                  <td className={`px-6 py-4 whitespace-nowrap text-sm text-center font-medium ${getStatusColor(client.membershipStatusDetails.status)}`}>
-                    {client.membershipStatusDetails.daysRemaining < 0 && client.membershipStatusDetails.status === "Expired" ? "Vencida" :
-                     client.membershipStatusDetails.daysRemaining >= 0 ? client.membershipStatusDetails.daysRemaining : "-"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <Link to={`/admin/clients?edit=${client.id}&from=memberships`}
-                          className="text-orange-400 hover:text-orange-300 hover:underline">
-                      Ver/Editar Ficha
-                    </Link>
-                  </td>
+          <div className="overflow-x-auto bg-gray-800 rounded-lg shadow-md">
+            <table className="min-w-full divide-y divide-gray-700">
+              <thead className="bg-gray-750">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-orange-400 uppercase tracking-wider">Cliente</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-orange-400 uppercase tracking-wider">Plan</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-orange-400 uppercase tracking-wider">Estado</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-orange-400 uppercase tracking-wider">Inicio</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-orange-400 uppercase tracking-wider">Fin</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-orange-400 uppercase tracking-wider">Días Rest.</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-orange-400 uppercase tracking-wider">Acciones</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="bg-gray-800 divide-y divide-gray-700">
+                {filteredClients.map(client => (
+                  <tr key={client.id} className="hover:bg-gray-700 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <UserCircleIcon className="h-8 w-8 text-gray-500 mr-3 flex-shrink-0" />
+                        <div>
+                          <div className="text-sm font-medium text-white">{client.firstName} {client.lastName}</div>
+                          <div className="text-xs text-gray-400">{client.email}</div>
+                          <div className="text-xs text-gray-500">DNI: {client.dni} - Cód: {client.alphanumericCode}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{client.effectivePlanName}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${client.membershipStatusDetails.status === "Active" ? 'bg-green-800 text-green-300' :
+                        client.membershipStatusDetails.status === "Expired" ? 'bg-red-800 text-red-300' :
+                          client.membershipStatusDetails.status === "SoonToExpire" ? 'bg-yellow-800 text-yellow-300' : 'bg-gray-700 text-gray-300'
+                        }`}>
+                        {client.membershipStatusDetails.status === "SoonToExpire" ? "Por Vencer" : client.membershipStatusDetails.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{formatDate(client.membership?.membershipStartDate)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{formatDate(client.membershipStatusDetails.endDate)}</td>
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm text-center font-medium ${getStatusColor(client.membershipStatusDetails.status)}`}>
+                      {client.membershipStatusDetails.daysRemaining < 0 && client.membershipStatusDetails.status === "Expired" ? "Vencida" :
+                        client.membershipStatusDetails.daysRemaining >= 0 ? client.membershipStatusDetails.daysRemaining : "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <Link to={`/admin/clients?edit=${client.id}&from=memberships`}
+                        className="text-orange-400 hover:text-orange-300 hover:underline">
+                        Ver/Editar Ficha
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     );
