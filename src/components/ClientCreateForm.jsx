@@ -239,15 +239,18 @@ const ClientCreateForm = ({ onCancel, onSave, editingClient, membershipPlans = [
                   className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm p-2 
                              focus:ring-orange-500 focus:border-orange-500"
                 >
-                  <option value="">Seleccionar plan</option>
+                  <option key="select-plan" value="">Seleccionar plan</option>
                   {membershipPlans && membershipPlans.length > 0 ? (
-                    membershipPlans.map((plan) => (
-                      <option key={plan.id} value={plan.id}>
-                        {plan.name || plan.nombre || plan.planName}
-                      </option>
-                    ))
+                    membershipPlans.map((plan) => {
+                      const planId = plan.id || plan._id;
+                      return (
+                        <option key={planId} value={planId}>
+                          {plan.name || plan.nombre || plan.planName}
+                        </option>
+                      );
+                    })
                   ) : (
-                    <option value="" disabled>No hay planes disponibles</option>
+                    <option key="no-plans" value="" disabled>No hay planes disponibles</option>
                   )}
                 </Field>
                 <ErrorMessage
