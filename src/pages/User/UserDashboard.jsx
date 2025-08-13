@@ -6,34 +6,58 @@ import {
   CalendarDaysIcon,
   SparklesIcon,
 } from '@heroicons/react/24/outline';
+
 import { SharedDataContext } from '../../contexts/SharedDataContext';
 import { calculateMembershipDetails } from '../../utils/calculateMembershipDetails';
 import { useNavigate } from 'react-router-dom';
+import { getMembershipById } from '../../api/memberships';
 
 
 const UserDashboard = () => {
+
   const { currentUser, isLoading } = useContext(SharedDataContext);
   const [userData, setUserData] = useState(null);
+  const [loadingMembership, setLoadingMembership] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (currentUser) {
-      const fullName = `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim();
+    const fetchMembershipData = async () => {
+      if (!currentUser) return;
+      setLoadingMembership(true);
+      // El backend guarda nombre y apellido como 'nombre' y 'apellido'
+      const fullName = `${currentUser.nombre || ''} ${currentUser.apellido || ''}`.trim();
+
+      let planName = 'Sin plan';
+      let membershipDurationDays = null;
+      // Buscar el plan asignado
+      if (currentUser.planAsignadoId) {
+        try {
+          const plan = await getMembershipById(currentUser.planAsignadoId);
+          if (plan) {
+            planName = plan.nombre;
+            membershipDurationDays = plan.duracionEnDias;
+          }
+        } catch (e) {
+          // Si falla, dejar valores por defecto
+        }
+      }
 
       const membershipInfo = calculateMembershipDetails(
-        currentUser.membership?.membershipStartDate,
-        currentUser.membership?.membershipDurationDays
+        currentUser.fechaInicioMembresia,
+        membershipDurationDays
       );
 
       setUserData({
         name: fullName,
         email: currentUser.email,
-        plan: currentUser.membership?.planName || 'Sin plan',
+        plan: planName,
         membershipStatus: membershipInfo.status,
-        memberSince: currentUser.membership?.membershipStartDate || null,
+        memberSince: currentUser.fechaInicioMembresia || null,
         remainingDays: membershipInfo.remainingDays,
       });
-    }
+      setLoadingMembership(false);
+    };
+    fetchMembershipData();
   }, [currentUser]);
 
   const getMembershipStatusColor = (status) => {
@@ -46,7 +70,7 @@ const UserDashboard = () => {
     navigate('/user/mis-clases');
   };
 
-  if (isLoading || !userData) {
+  if (isLoading || loadingMembership || !userData) {
     return <div className="text-center text-white mt-8">Cargando datos del usuario...</div>;
   }
 
@@ -84,10 +108,26 @@ const UserDashboard = () => {
               <strong>Días restantes:</strong> {userData.remainingDays} día{userData.remainingDays !== 1 ? 's' : ''}
             </p>
           )}
-
+          {userData.membershipStatus === 'Activa' && userData.memberSince && (
+            <p className="mb-2">
+              <strong>Expira el día: </strong> {
+                (() => {
+                  const start = new Date(userData.memberSince);
+                  const end = new Date(start);
+                  if (userData.remainingDays !== null) {
+                    end.setDate(start.getDate() + userData.remainingDays);
+                  }
+                  return end.toLocaleDateString();
+                })()
+              }
+            </p>
+          )}
           {userData.membershipStatus === 'Vencida' && (
-            <button className="mt-2 w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
-              Renovar Membresía
+            <button
+              className="mt-2 w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+              onClick={() => navigate('/membresias')}
+            >
+              Ver Planes
             </button>
           )}
         </div>
