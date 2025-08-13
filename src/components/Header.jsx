@@ -9,9 +9,9 @@ const Header = () => {
   const navigate = useNavigate();
   const { currentUser, logoutUser } = useContext(SharedDataContext);
 
-  const isAdmin = currentUser?.role === 'admin';
+  const isAdmin = currentUser?.role === 'admin' || currentUser?.rol === 'admin' || currentUser?.rol === 'administrador';
   const displayName = currentUser
-    ? `${currentUser.firstName} ${currentUser.lastName}`.trim()
+    ? `${currentUser.nombre || currentUser.firstName || ''} ${currentUser.apellido || currentUser.lastName || ''}`.trim()
     : isAdmin
       ? 'Admin'
       : 'Usuario';
