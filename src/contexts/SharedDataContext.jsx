@@ -53,15 +53,18 @@ export const SharedDataProvider = ({ children }) => {
         const raw = localStorage.getItem('currentUserSession');
         storedCurrentUser = raw ? JSON.parse(raw) : null;
       } catch (error) {
-        // ...existing code...
         localStorage.removeItem('currentUserSession');
       }
       setCurrentUser(storedCurrentUser);
       try {
         if (storedCurrentUser && localStorage.getItem('token')) {
+          // Usar API real del backend para clases y profesores
+          // Importar la función getTeachers del API real
+          const { getTeachers: getTeachersApi } = await import('../api/teachers');
+          const token = localStorage.getItem('token');
           const [classes, teachers, enrollments, attendance, articles, feedbacks, membershipPlans, apiClients] = await Promise.all([
-            getGymClasses().catch(e => { console.error('[SharedDataContext] Error getGymClasses:', e); return []; }),
-            getTeachers().catch(e => { console.error('[SharedDataContext] Error getTeachers:', e); return []; }),
+            getClasses().catch(e => { console.error('[SharedDataContext] Error getClasses (API):', e); return []; }),
+            getTeachersApi(token).catch(e => { console.error('[SharedDataContext] Error getTeachers (API):', e); return []; }),
             getClassEnrollments().catch(e => { console.error('[SharedDataContext] Error getClassEnrollments:', e); return []; }),
             getAttendanceRecords().catch(e => { console.error('[SharedDataContext] Error getAttendanceRecords:', e); return []; }),
             getArticles().catch(e => { console.error('[SharedDataContext] Error getArticles:', e); return []; }),
@@ -69,7 +72,8 @@ export const SharedDataProvider = ({ children }) => {
             getMembershipPlans().catch(e => { console.error('[SharedDataContext] Error getMembershipPlans:', e); return []; }),
             getUsers().catch(e => { console.error('[SharedDataContext] Error getUsers:', e); return []; })
           ]);
-          console.log('[SharedDataContext] membershipPlans received:', membershipPlans);
+          console.log('[SharedDataContext] Clases recibidas del backend:', classes);
+          console.log('[SharedDataContext] Profesores recibidos:', teachers);
           setGymClasses(Array.isArray(classes) ? classes : []);
           setTeachers(Array.isArray(teachers) ? teachers : []);
           setEnrollments(Array.isArray(enrollments) ? enrollments : []);
@@ -89,7 +93,7 @@ export const SharedDataProvider = ({ children }) => {
           setClients([]);
         }
       } catch (error) {
-        // ...existing code...
+        console.error('[SharedDataContext] Error en fetchData:', error);
       }
       setIsLoading(false);
     };
@@ -291,8 +295,14 @@ export const SharedDataProvider = ({ children }) => {
 
   const addGymClass = useCallback(async (classData) => {
     try {
+      console.log('[addGymClass] Enviando datos al backend:', classData);
       const newClass = await createClass(classData);
-      setGymClasses(prev => [...prev, newClass]);
+      console.log('[addGymClass] Respuesta del backend:', newClass);
+      setGymClasses(prev => {
+        const updated = [...prev, newClass];
+        console.log('[addGymClass] Estado actualizado de gymClasses:', updated);
+        return updated;
+      });
       showSuccess('addClass', newClass);
       addNotification({
         title: 'Clase Creada',
@@ -303,6 +313,7 @@ export const SharedDataProvider = ({ children }) => {
       });
       return newClass;
     } catch (error) {
+      console.error('[addGymClass] Error:', error);
       showError('errorAddClass');
       return null;
     }

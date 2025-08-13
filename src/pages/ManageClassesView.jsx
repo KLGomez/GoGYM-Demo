@@ -289,7 +289,7 @@ const ManageClassesView = ({ onBack }) => {
                           }));
                           showSuccess('Clase inactivada', `La clase ${cls.nombre} ha sido desactivada.`);
                         }}
-                        className="text-yellow-400 hover:text-yellow-600 p-0 font-bold cursor-pointer text-base underline"
+                        className="p-2 text-yellow-400 hover:text-yellow-600"
                         title="Inactivar Clase"
                       >
                         Inactivar
@@ -305,7 +305,7 @@ const ManageClassesView = ({ onBack }) => {
                           }));
                           showSuccess('Clase activada', `La clase ${cls.nombre} ha sido activada.`);
                         }}
-                        className="text-green-400 hover:text-green-600 p-0 font-bold cursor-pointer text-base underline"
+                        className="p-2 text-green-400 hover:text-green-600"
                         title="Activar Clase"
                       >
                         Activar
