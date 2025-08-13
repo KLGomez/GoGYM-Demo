@@ -110,24 +110,29 @@ const MembershipsAdmin = () => {
     return contextClients.map(client => {
       // Log datos originales del cliente
       console.log('[MEMBERSHIP][CLIENT] Datos cliente:', client);
-      // Buscar plan asignado por id, nombre o referencia
+      // Buscar plan asignado solo por ID
       const planId = client.planAsignadoId || client.planAsignado?._id || client.planId;
-      const planName = client.planAsignadoNombre || client.planName || client.planAsignado?.nombre;
-      const plan = (contextMembershipPlans || []).find(p => p._id === planId || p.id === planId || p.nombre === planName || p.name === planName);
+      const plan = (contextMembershipPlans || []).find(p => p._id === planId || p.id === planId);
 
       // Usar duración y fechas del plan si existen, sino del cliente
       const durationDays = client.membership?.membershipDurationDays || client.duracionEnDias || plan?.duracionEnDias || (client.fechaInicioMembresia && client.fechaFinMembresia ? Math.ceil((new Date(client.fechaFinMembresia) - new Date(client.fechaInicioMembresia)) / (1000 * 3600 * 24)) : plan?.durationDays);
       const startDate = client.membership?.membershipStartDate || client.fechaInicioMembresia || client.membershipStartDate;
       const endDate = client.membership?.membershipEndDate || client.fechaFinMembresia || client.membershipEndDate;
 
-      console.log('[MEMBERSHIP][CLIENT] Datos usados para cálculo:', { startDate, durationDays, endDate });
+      // LOGS DETALLADOS DE CAMPOS CLAVE
+      console.log('[MEMBERSHIP][DEBUG] PlanId:', planId);
+      console.log('[MEMBERSHIP][DEBUG] Plan encontrado:', plan);
+      console.log('[MEMBERSHIP][DEBUG] Fecha inicio:', startDate);
+      console.log('[MEMBERSHIP][DEBUG] Fecha fin:', endDate);
+      console.log('[MEMBERSHIP][DEBUG] Duración (días):', durationDays);
+
       const membershipDetails = calculateMembershipDetails(startDate, durationDays, endDate);
-      console.log('[MEMBERSHIP][CLIENT] Resultado cálculo membresía:', membershipDetails);
-      console.log('[MEMBERSHIP][CLIENT] Plan encontrado:', plan);
+      console.log('[MEMBERSHIP][DEBUG] Resultado cálculo membresía:', membershipDetails);
+
       return {
         ...client,
         membershipStatusDetails: membershipDetails,
-        effectivePlanName: plan ? (plan.nombre || plan.name) : (planName || 'N/A (Plan no encontrado)'),
+        effectivePlanName: plan ? (plan.nombre || plan.name) : 'N/A (Plan no encontrado)',
         planPrecio: plan ? (plan.precio || plan.price) : undefined,
         planDuracion: plan ? (plan.duracionEnDias || plan.durationDays) : undefined,
         planDescripcion: plan ? (plan.descripcion || plan.benefits) : undefined
@@ -163,7 +168,12 @@ const MembershipsAdmin = () => {
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString + 'T00:00:00Z').toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+    // Si ya es un string ISO, úsalo directamente
+    const dateObj = typeof dateString === 'string' && dateString.includes('T')
+      ? new Date(dateString)
+      : new Date(dateString + 'T00:00:00Z');
+    if (isNaN(dateObj.getTime())) return 'N/A';
+    return dateObj.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
   };
 
   // Normaliza los datos para localStorage/backend (creación y edición)
@@ -402,51 +412,57 @@ const MembershipsAdmin = () => {
                 </tr>
               </thead>
               <tbody className="bg-gray-800 divide-y divide-gray-700">
-                {filteredClients.map(client => (
-                  <tr key={client.id} className="hover:bg-gray-700 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        {/* Mostrar foto si existe, si no icono */}
-                        {client.fotoUrl ? (
-                          <img src={client.fotoUrl} alt="Foto" className="h-8 w-8 rounded-full object-cover mr-3 flex-shrink-0 border border-gray-600" />
-                        ) : (
-                          <UserCircleIcon className="h-8 w-8 text-gray-500 mr-3 flex-shrink-0" />
-                        )}
-                        <div>
-                          <div className="text-sm font-medium text-white">{client.nombre || client.firstName} {client.apellido || client.lastName}</div>
-                          <div className="text-xs text-gray-400">{client.email}</div>
-                          <div className="text-xs text-gray-500">DNI: {client.dni} - Cód: {client.alphanumericCode}</div>
-                          <div className="text-xs mt-1">
-                            <span className={`px-2 py-1 rounded ${client.activo ? 'bg-green-700 text-green-200' : 'bg-gray-600 text-gray-300'}`}>
-                              {client.activo ? 'Activo' : 'Inactivo'}
-                            </span>
+                {filteredClients.map(client => {
+                  const renderedStartDate = client.membership?.membershipStartDate || client.fechaInicioMembresia;
+                  const renderedEndDate = client.fechaFinMembresia || client.membershipStatusDetails.endDate;
+                  const renderedDaysRemaining = client.membershipStatusDetails.daysRemaining;
+                  console.log('[MEMBERSHIP][RENDER] Cliente:', client.nombre || client.firstName, client.apellido || client.lastName);
+                  console.log('[MEMBERSHIP][RENDER] Plan:', client.effectivePlanName);
+                  console.log('[MEMBERSHIP][RENDER] Fecha inicio:', renderedStartDate);
+                  console.log('[MEMBERSHIP][RENDER] Fecha fin:', renderedEndDate);
+                  console.log('[MEMBERSHIP][RENDER] Días restantes:', renderedDaysRemaining);
+                  return (
+                    <tr key={client.id} className="hover:bg-gray-700 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          {/* Mostrar foto si existe, si no icono */}
+                          {client.fotoUrl ? (
+                            <img src={client.fotoUrl} alt="Foto" className="h-8 w-8 rounded-full object-cover mr-3 flex-shrink-0 border border-gray-600" />
+                          ) : (
+                            <UserCircleIcon className="h-8 w-8 text-gray-500 mr-3 flex-shrink-0" />
+                          )}
+                          <div>
+                            <div className="text-sm font-medium text-white">{client.nombre || client.firstName} {client.apellido || client.lastName}</div>
+                            <div className="text-xs text-gray-400">{client.email}</div>
+                            <div className="text-xs text-gray-200 font-semibold ">DNI: {client.dni}</div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{client.effectivePlanName}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${client.membershipStatusDetails.status === "Active" ? 'bg-green-800 text-green-300' :
-                        client.membershipStatusDetails.status === "Expired" ? 'bg-red-800 text-red-300' :
-                          client.membershipStatusDetails.status === "SoonToExpire" ? 'bg-yellow-800 text-yellow-300' : 'bg-gray-700 text-gray-300'
-                        }`}>
-                        {client.membershipStatusDetails.status === "SoonToExpire" ? "Por Vencer" : client.membershipStatusDetails.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{formatDate(client.membership?.membershipStartDate || client.fechaInicioMembresia)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{formatDate(client.fechaFinMembresia || client.membershipStatusDetails.endDate)}</td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm text-center font-medium ${getStatusColor(client.membershipStatusDetails.status)}`}>
-                      {client.membershipStatusDetails.daysRemaining < 0 && client.membershipStatusDetails.status === "Expired" ? "Vencida" :
-                        client.membershipStatusDetails.daysRemaining >= 0 ? client.membershipStatusDetails.daysRemaining : "-"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <Link to={`/admin/clients?edit=${client.id}&from=memberships`}
-                        className="text-orange-400 hover:text-orange-300 hover:underline">
-                        Ver/Editar Ficha
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{client.effectivePlanName}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${client.membershipStatusDetails.status === "Active" ? 'bg-green-800 text-green-300' :
+                          client.membershipStatusDetails.status === "Expired" ? 'bg-red-800 text-red-300' :
+                            client.membershipStatusDetails.status === "SoonToExpire" ? 'bg-yellow-800 text-yellow-300' : 'bg-gray-700 text-gray-300'
+                          }`}>
+                          {client.membershipStatusDetails.status === "SoonToExpire" ? "Por Vencer" : client.membershipStatusDetails.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{formatDate(renderedStartDate)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{formatDate(renderedEndDate)}</td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm text-center font-medium ${getStatusColor(client.membershipStatusDetails.status)}`}>
+                        {typeof renderedDaysRemaining === 'number' && !isNaN(renderedDaysRemaining)
+                          ? renderedDaysRemaining
+                          : "-"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <Link to={`/admin/clients?edit=${client.id}&from=memberships`}
+                          className="text-orange-400 hover:text-orange-300 hover:underline">
+                          Ver/Editar Ficha
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

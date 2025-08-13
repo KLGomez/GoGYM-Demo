@@ -132,7 +132,7 @@ const HomePage = () => {
       </div>
 
       {/* Accesos Rápidos */}
-      <div className="bg-gray-800 p-6 rounded-xl shadow-lg mb-10">
+      <div className="bg-gray-800 p-6 rounded-xl shadow-lg mb-10 hidden md:block">
         <h2 className="text-xl font-semibold text-orange-400 mb-4">Accesos Rápidos</h2>
         <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
           <Link to="/admin/clients" className="w-full min-w-0 bg-orange-500 hover:bg-orange-600 text-white text-center font-medium py-3 px-2 sm:px-4 rounded-lg transition-colors break-words">Gestionar Clientes</Link>
