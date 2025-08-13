@@ -91,6 +91,7 @@ const MembershipsAdmin = () => {
   const {
     clients: contextClients,
     membershipPlans: contextMembershipPlans,
+    clientMembershipStatus,
     addMembershipPlan,
     updateMembershipPlan,
     deleteMembershipPlan,
@@ -103,19 +104,33 @@ const MembershipsAdmin = () => {
   const [isPlanFormVisible, setIsPlanFormVisible] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);
 
+  // Calcular el estado de membresía usando los datos locales
   const clientsWithMembershipDetails = useMemo(() => {
     if (isLoading || !contextClients) return [];
     return contextClients.map(client => {
-      const membershipDetails = calculateMembershipDetails(
-        client.membership?.membershipStartDate,
-        client.membership?.membershipDurationDays
-      );
-      // Asegurarse de que el planName en el cliente coincida con un plan existente, o mostrar "N/A"
-      const plan = (contextMembershipPlans || []).find(p => p.name === client.membership?.planName);
+      // Log datos originales del cliente
+      console.log('[MEMBERSHIP][CLIENT] Datos cliente:', client);
+      // Buscar plan asignado por id, nombre o referencia
+      const planId = client.planAsignadoId || client.planAsignado?._id || client.planId;
+      const planName = client.planAsignadoNombre || client.planName || client.planAsignado?.nombre;
+      const plan = (contextMembershipPlans || []).find(p => p._id === planId || p.id === planId || p.nombre === planName || p.name === planName);
+
+      // Usar duración y fechas del plan si existen, sino del cliente
+      const durationDays = client.membership?.membershipDurationDays || client.duracionEnDias || plan?.duracionEnDias || (client.fechaInicioMembresia && client.fechaFinMembresia ? Math.ceil((new Date(client.fechaFinMembresia) - new Date(client.fechaInicioMembresia)) / (1000 * 3600 * 24)) : plan?.durationDays);
+      const startDate = client.membership?.membershipStartDate || client.fechaInicioMembresia || client.membershipStartDate;
+      const endDate = client.membership?.membershipEndDate || client.fechaFinMembresia || client.membershipEndDate;
+
+      console.log('[MEMBERSHIP][CLIENT] Datos usados para cálculo:', { startDate, durationDays, endDate });
+      const membershipDetails = calculateMembershipDetails(startDate, durationDays, endDate);
+      console.log('[MEMBERSHIP][CLIENT] Resultado cálculo membresía:', membershipDetails);
+      console.log('[MEMBERSHIP][CLIENT] Plan encontrado:', plan);
       return {
         ...client,
         membershipStatusDetails: membershipDetails,
-        effectivePlanName: plan ? plan.name : (client.membership?.planName || 'N/A (Plan no encontrado)')
+        effectivePlanName: plan ? (plan.nombre || plan.name) : (planName || 'N/A (Plan no encontrado)'),
+        planPrecio: plan ? (plan.precio || plan.price) : undefined,
+        planDuracion: plan ? (plan.duracionEnDias || plan.durationDays) : undefined,
+        planDescripcion: plan ? (plan.descripcion || plan.benefits) : undefined
       };
     });
   }, [contextClients, contextMembershipPlans, isLoading]);
@@ -391,11 +406,21 @@ const MembershipsAdmin = () => {
                   <tr key={client.id} className="hover:bg-gray-700 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <UserCircleIcon className="h-8 w-8 text-gray-500 mr-3 flex-shrink-0" />
+                        {/* Mostrar foto si existe, si no icono */}
+                        {client.fotoUrl ? (
+                          <img src={client.fotoUrl} alt="Foto" className="h-8 w-8 rounded-full object-cover mr-3 flex-shrink-0 border border-gray-600" />
+                        ) : (
+                          <UserCircleIcon className="h-8 w-8 text-gray-500 mr-3 flex-shrink-0" />
+                        )}
                         <div>
-                          <div className="text-sm font-medium text-white">{client.firstName} {client.lastName}</div>
+                          <div className="text-sm font-medium text-white">{client.nombre || client.firstName} {client.apellido || client.lastName}</div>
                           <div className="text-xs text-gray-400">{client.email}</div>
                           <div className="text-xs text-gray-500">DNI: {client.dni} - Cód: {client.alphanumericCode}</div>
+                          <div className="text-xs mt-1">
+                            <span className={`px-2 py-1 rounded ${client.activo ? 'bg-green-700 text-green-200' : 'bg-gray-600 text-gray-300'}`}>
+                              {client.activo ? 'Activo' : 'Inactivo'}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -408,8 +433,8 @@ const MembershipsAdmin = () => {
                         {client.membershipStatusDetails.status === "SoonToExpire" ? "Por Vencer" : client.membershipStatusDetails.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{formatDate(client.membership?.membershipStartDate)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{formatDate(client.membershipStatusDetails.endDate)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{formatDate(client.membership?.membershipStartDate || client.fechaInicioMembresia)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{formatDate(client.fechaFinMembresia || client.membershipStatusDetails.endDate)}</td>
                     <td className={`px-6 py-4 whitespace-nowrap text-sm text-center font-medium ${getStatusColor(client.membershipStatusDetails.status)}`}>
                       {client.membershipStatusDetails.daysRemaining < 0 && client.membershipStatusDetails.status === "Expired" ? "Vencida" :
                         client.membershipStatusDetails.daysRemaining >= 0 ? client.membershipStatusDetails.daysRemaining : "-"}

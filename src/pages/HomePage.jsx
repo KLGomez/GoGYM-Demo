@@ -24,6 +24,11 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [classesToday, setClassesToday] = useState(0);
 
+  // Estados para filtros
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchDni, setSearchDni] = useState("");
+  const [searchDate, setSearchDate] = useState("");
+
   useEffect(() => {
     async function fetchMetricsAndClasses() {
       try {
@@ -96,6 +101,24 @@ const HomePage = () => {
   const totalClasses = metrics.clases?.total ?? 0;
   const recentCheckIns = todayAccessLogs || [];
 
+  // Filtrar registros según los filtros
+  const filteredCheckIns = recentCheckIns.filter(record => {
+    // Buscar cliente
+    let client = clients.find(c => c._id === record.userId || c.id === record.userId);
+    if (!client && record.dni) {
+      client = clients.find(c => c.dni === record.dni);
+    }
+    // Filtro por nombre
+    const fullName = `${client?.nombre || client?.firstName || ''} ${client?.apellido || client?.lastName || ''}`.toLowerCase();
+    const matchesName = searchTerm === '' || fullName.includes(searchTerm.toLowerCase());
+    // Filtro por DNI
+    const matchesDni = searchDni === '' || (record.dni && record.dni.includes(searchDni));
+    // Filtro por fecha
+    const recordDate = new Date(record.checkInTime).toISOString().slice(0, 10);
+    const matchesDate = searchDate === '' || recordDate === searchDate;
+    return matchesName && matchesDni && matchesDate;
+  });
+
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold text-orange-400 mb-8">Dashboard Principal</h1>
@@ -122,20 +145,45 @@ const HomePage = () => {
       {/* Sección de Últimos Check-ins (si aplica para el dashboard admin) */}
       <div className="bg-gray-800 p-6 rounded-xl shadow-lg mb-10">
         <h2 className="text-xl font-semibold text-orange-400 mb-4">Últimos Registros de Ingreso</h2>
+        {/* Filtros de búsqueda */}
+        <div className="mb-4 p-4 bg-gray-800 rounded-lg shadow-md flex flex-col sm:flex-row gap-4 items-center">
+          <div className="flex-grow w-full sm:w-auto">
+            <input
+              type="text"
+              placeholder="Buscar por nombre..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="w-full p-2 pl-3 bg-gray-700 border border-gray-600 text-white rounded-md focus:ring-orange-500 focus:border-orange-500"
+            />
+          </div>
+          <div className="flex-grow w-full sm:w-auto">
+            <input
+              type="text"
+              placeholder="Buscar por DNI..."
+              value={searchDni}
+              onChange={e => setSearchDni(e.target.value)}
+              className="w-full p-2 pl-3 bg-gray-700 border border-gray-600 text-white rounded-md focus:ring-orange-500 focus:border-orange-500"
+            />
+          </div>
+          <div>
+            <input
+              type="date"
+              value={searchDate}
+              onChange={e => setSearchDate(e.target.value)}
+              className="p-2 bg-gray-700 border border-gray-600 text-white rounded-md focus:ring-orange-500 focus:border-orange-500"
+            />
+          </div>
+        </div>
         {(!clients || clients.length === 0) ? (
           <p className="text-gray-400">Cargando datos de clientes...</p>
         ) : todayAccessLogs && todayAccessLogs.length > 0 ? (
           <>
-            {console.log('[LOG][DASHBOARD] Estado de clients al renderizar:', clients)}
             <ul className="space-y-3 max-h-60 overflow-y-auto">
-              {recentCheckIns.map(record => {
-                console.log('[LOG][DASHBOARD] Renderizando registro desde backend:', record);
-                // Buscar cliente por _id, id, o dni
+              {filteredCheckIns.map(record => {
                 let client = clients.find(c => c._id === record.userId || c.id === record.userId);
                 if (!client && record.dni) {
                   client = clients.find(c => c.dni === record.dni);
                 }
-                console.log('[LOG][DASHBOARD] Cliente resuelto:', client);
                 return (
                   <li key={record._id || record.id} className="flex justify-between items-center bg-gray-700 p-3 rounded-md">
                     <div>
@@ -144,10 +192,16 @@ const HomePage = () => {
                         {new Date(record.checkInTime).toLocaleString('es-ES')} - {record.checkInType === 'qr' ? 'QR' : 'Manual'}
                       </p>
                     </div>
+                    {/*                     <span className={`px-2 py-1 text-xs rounded-full ${client?.membershipStatusDetails?.status === "Active" ? "bg-green-500 text-white" : "bg-red-500 text-white"}`}>
+                      {client?.membershipStatusDetails?.status || 'N/A'}
+                    </span> */}
                   </li>
                 );
               })}
             </ul>
+            {filteredCheckIns.length === 0 && (
+              <p className="text-gray-400">No hay registros que coincidan con los filtros.</p>
+            )}
           </>
         ) : (
           <p className="text-gray-400">No hay registros de ingreso recientes.</p>

@@ -13,8 +13,9 @@ const SidebarAdmin = () => {
     { label: "Dashboard", icon: HomeIcon, path: "home-page" },
     { label: "Check-In QR", icon: QrCodeIcon, path: "check-in" },
     { label: "Clientes", icon: UsersIcon, path: "clients" },
-    { label: "Clases", icon: CalendarDaysIcon, path: "classes" },
     { label: "Membresías", icon: CreditCardIcon, path: "memberships" },
+    { label: "Clases", icon: CalendarDaysIcon, path: "classes" },
+    
    /*  { label: "Artículos", icon: ClipboardDocumentListIcon, path: "articles" }, */
   ];
 

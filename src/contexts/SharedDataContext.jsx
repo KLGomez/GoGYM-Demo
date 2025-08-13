@@ -12,6 +12,7 @@ import { getUsers, createUser, updateUser, deleteUser } from '../api/users';
 import { getClasses, createClass, updateClass, deleteClass } from '../api/classes';
 import { login as apiLogin, getProfile } from '../api/auth';
 import { getMemberships, createMembership, updateMembership, deleteMembership } from '../api/memberships';
+import axios from 'axios';
 import { showSuccess, showError, showWarning } from '../utils/alerts';
 import { generateClientCode } from '../utils/codeUtils';
 
@@ -42,6 +43,8 @@ export const SharedDataProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [feedbacks, setFeedbacks] = useState([]);
+  // NUEVO: Estado para el status de membresía de clientes desde backend
+  const [clientMembershipStatus, setClientMembershipStatus] = useState([]);
 
 
   // --- Carga Inicial de Datos ---
@@ -117,6 +120,22 @@ export const SharedDataProvider = ({ children }) => {
       forUserId,
       isGlobal
     };
+
+    // --- NUEVO: Obtener estado de membresía de clientes desde backend ---
+    // --- NUEVO: Obtener estado de membresía de clientes desde backend ---
+    (async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const membershipStatusResp = await axios.get('/users/memberships', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        console.log('[SharedDataContext] Estado de membresía de clientes recibido del backend:', membershipStatusResp.data);
+        setClientMembershipStatus(Array.isArray(membershipStatusResp.data) ? membershipStatusResp.data : []);
+      } catch (err) {
+        console.error('[SharedDataContext] Error al obtener estado de membresía de clientes:', err);
+        setClientMembershipStatus([]);
+      }
+    })();
     setNotifications(prev => [...prev, newNotif]);
 
     // Lógica para mostrar alerta si es para el usuario actual y está logueado
@@ -126,6 +145,7 @@ export const SharedDataProvider = ({ children }) => {
       else showSuccess(notification.actionType || 'notification', notification.data || { title, text: message }); // Default to success type for display
     }
     // Las notificaciones globales o para otros usuarios/admin se gestionarán en sus respectivos paneles.
+    setClientMembershipStatus([]);
   }, [currentUser]);
 
   // --- MANEJO DE CURRENTUSER (LOGIN/LOGOUT) ---
@@ -518,6 +538,7 @@ export const SharedDataProvider = ({ children }) => {
     currentUser,
     notifications,
     isLoading,
+    clientMembershipStatus,
     loginUser,
     logoutUser,
     addNotification,
