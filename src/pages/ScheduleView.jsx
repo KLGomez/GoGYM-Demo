@@ -71,7 +71,7 @@ const ScheduleView = ({ onBack }) => {
   };
 
   const isEmptySchedule = Object.keys(scheduledClasses).length === 0 ||
-                          daysOrder.every(day => !scheduledClasses[day] || scheduledClasses[day].length === 0);
+    daysOrder.every(day => !scheduledClasses[day] || scheduledClasses[day].length === 0);
 
   if (isLoading && (!contextGymClasses || !contextTeachers)) {
     return <p className="text-gray-300 text-center py-10">Cargando cronograma...</p>;
@@ -125,6 +125,11 @@ const ScheduleView = ({ onBack }) => {
                         {cls.capacidad || cls.capacity ? (
                           <p className="text-xs text-gray-400">Cupos: {cls.enrolled || 0}/{cls.capacidad || cls.capacity}</p>
                         ) : null}
+                        <p className="text-xs mt-1">
+                          <span className={`px-2 py-1 rounded-full ${cls.activo === true ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
+                            {cls.activo === true ? 'Activa' : 'Inactiva'}
+                          </span>
+                        </p>
                       </li>
                     );
                   })}

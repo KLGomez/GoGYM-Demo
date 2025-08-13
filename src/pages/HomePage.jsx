@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import { UsersIcon, RectangleStackIcon, CalendarDaysIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 import { getDashboardMetrics } from '../api/metrics';
+import { getClasses } from '../api/classes';
 import { SharedDataContext } from '../contexts/SharedDataContext';
 
 const StatCard = ({ title, value, icon, color, linkTo }) => (
@@ -14,23 +15,53 @@ const StatCard = ({ title, value, icon, color, linkTo }) => (
   </Link>
 );
 
+
 const HomePage = () => {
-  const { attendanceRecords } = useContext(SharedDataContext);
+  const { attendanceRecords, clients } = useContext(SharedDataContext);
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [classesToday, setClassesToday] = useState(0);
 
   useEffect(() => {
-    async function fetchMetrics() {
+    async function fetchMetricsAndClasses() {
       try {
-        const data = await getDashboardMetrics();
-        setMetrics(data);
+        const metricsData = await getDashboardMetrics();
+        setMetrics(metricsData);
+
+        // Obtener todas las clases
+        const classes = await getClasses();
+        console.log('[LOG] Todas las clases recibidas:', classes);
+
+        // Obtener la fecha actual (solo día, mes, año)
+        // Obtener el día actual en español (Ej: 'Miércoles')
+        const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        const today = new Date();
+        const todayName = diasSemana[today.getDay()];
+
+        // Filtrar clases que sean para hoy usando el campo 'dia'
+        const classesForToday = classes.filter(clase => {
+          if (!clase.dia) {
+            console.log('[LOG] Clase sin campo dia:', clase);
+            return false;
+          }
+          const isToday = clase.dia.trim().toLowerCase() === todayName.toLowerCase();
+          const isActive = clase.activo === true;
+          if (isToday && isActive) {
+            console.log(`[LOG] Clase activa para hoy encontrada:`, clase);
+          }
+          return isToday && isActive;
+        });
+        setClassesToday(classesForToday.length);
+        console.log(`[LOG] Total clases activas para hoy (${todayName}):`, classesForToday.length);
       } catch (error) {
         setMetrics(null);
+        setClassesToday(0);
+        console.error('[ERROR] Al obtener métricas o clases:', error);
       } finally {
         setLoading(false);
       }
     }
-    fetchMetrics();
+    fetchMetricsAndClasses();
   }, []);
 
   if (loading) {
@@ -43,9 +74,7 @@ const HomePage = () => {
   }
 
   // Extraer los valores del objeto de métricas
-  // Ahora la card de clientes activos solo muestra el valor del backend (campo activo)
   const activeClients = metrics.usuarios?.activos ?? 0;
-  const totalClassesToday = 0; // Si quieres mostrar clases de hoy, necesitarías adaptar el backend
   const totalTeachers = metrics.profesores?.total ?? 0;
   const totalClasses = metrics.clases?.total ?? 0;
   const recentCheckIns = attendanceRecords?.slice(-5).reverse() || [];
@@ -57,7 +86,7 @@ const HomePage = () => {
       {/* Sección de Estadísticas Rápidas .*/}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-10">
         <StatCard title="Clientes Activos" value={activeClients} icon={UsersIcon} color="border-green-500" linkTo="/admin/clients" />
-        <StatCard title="Clases Hoy" value={totalClassesToday} icon={CalendarDaysIcon} color="border-blue-500" linkTo="/admin/classes" />
+        <StatCard title="Clases Hoy" value={classesToday} icon={CalendarDaysIcon} color="border-blue-500" linkTo="/admin/classes" />
         <StatCard title="Total Profesores" value={totalTeachers} icon={UsersIcon} color="border-purple-500" linkTo="/admin/classes" />
         <StatCard title="Clases Totales" value={totalClasses} icon={RectangleStackIcon} color="border-yellow-500" linkTo="/admin/classes" />
       </div>
@@ -98,8 +127,6 @@ const HomePage = () => {
           <p className="text-gray-400">No hay registros de ingreso recientes.</p>
         )}
       </div>
-
-
 
     </div>
   );
