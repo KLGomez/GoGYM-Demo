@@ -15,7 +15,7 @@ const SidebarAdmin = () => {
     { label: "Clientes", icon: UsersIcon, path: "clients" },
     { label: "Clases", icon: CalendarDaysIcon, path: "classes" },
     { label: "Membresías", icon: CreditCardIcon, path: "memberships" },
-    { label: "Artículos", icon: ClipboardDocumentListIcon, path: "articles" },
+   /*  { label: "Artículos", icon: ClipboardDocumentListIcon, path: "articles" }, */
   ];
 
   return (

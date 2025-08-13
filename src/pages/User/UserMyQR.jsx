@@ -25,11 +25,12 @@ const UserMyQRPage = () => {
   const clientNameForDisplay = `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim();
 
   const qrDataToEncode = {
-    clientId: currentUser.id,
+    clientId: currentUser.id || currentUser._id,
     name: clientNameForDisplay,
     email: currentUser.email,
     plan: currentUser.membership?.planName,
     alphanumericCode: currentUser.alphanumericCode,
+    dni: currentUser.dni,
   };
 
   const qrDataString = JSON.stringify(qrDataToEncode);

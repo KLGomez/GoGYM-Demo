@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { startQRScanner } from '../utils/readQr.js';
 import { processManualEntry } from '../utils/manualEntry';
+import { registerAccessLog } from '../api/accessLogs';
 
 
 
@@ -33,15 +34,16 @@ const CheckInPage = () => {
         const qrData = JSON.parse(identifier);
         // Asumimos que el QR contiene clientId o alphanumericCode
         if (qrData.clientId) {
-          foundClient = clients.find(c => c.id === qrData.clientId);
+          foundClient = clients.find(c => c.id === qrData.clientId || c._id === qrData.clientId);
         } else if (qrData.alphanumericCode) {
           foundClient = clients.find(c => c.alphanumericCode === qrData.alphanumericCode);
         } else {
+          console.warn('[CHECKIN][QR] El QR no contiene clientId ni alphanumericCode:', qrData);
           showError("QR Inválido", "El código QR no contiene la información necesaria.");
           setProcessing(false);
           return;
         }
-      } catch {
+      } catch (err) {
         showError("Error de QR", "No se pudo procesar el código QR.");
         setProcessing(false);
         return;
@@ -58,9 +60,26 @@ const CheckInPage = () => {
       // Personalizar el alert para ingreso manual
       if (result.membershipStatusDetails?.status === 'Active') {
         showSuccess('checkinSuccess', {
-          title: `¡Acceso concedido a ${result.firstName} ${result.lastName}!`,
-          text: `Bienvenido/a, ${result.firstName} ${result.lastName}. Tu membresía está activa.`
+          title: `¡Acceso concedido!`,
+          text: `Bienvenido/a. Tu membresía está activa.`
         });
+        try {
+          const clientId = result.id || result._id;
+          const clientName = `${result.firstName || result.nombre || ''} ${result.lastName || result.apellido || ''}`.trim();
+          const dni = result.dni;
+          await registerAccessLog({
+            clientId,
+            clientName,
+            checkInTime: new Date().toISOString(),
+            dni,
+            checkInType: 'manual'
+          });
+        } catch (error) {
+          showError('backendError', {
+            title: 'Error al registrar acceso en backend',
+            text: 'No se pudo guardar el registro de acceso. Intente nuevamente.'
+          });
+        }
       } else {
         showError('checkinDenied', {
           title: `Acceso denegado para ${result.firstName} ${result.lastName}`,
@@ -80,32 +99,52 @@ const CheckInPage = () => {
       return;
     }
 
-    const membershipInfo = calculateMembershipDetails(
-      foundClient.membership?.membershipStartDate,
-      foundClient.membership?.membershipDurationDays
-    );
+    // Sincronizar estado de membresía con backend si es posible
+    // Si tienes un endpoint para validar membresía, úsalo aquí. Por ahora, se mantiene la lógica local:
+    // Adaptar los datos para la función de membresía
+    let startDate = foundClient.membership?.membershipStartDate || foundClient.fechaInicioMembresia;
+    let durationDays = foundClient.membership?.membershipDurationDays;
+    if (!durationDays && foundClient.fechaInicioMembresia && foundClient.fechaFinMembresia) {
+      const inicio = new Date(foundClient.fechaInicioMembresia);
+      const fin = new Date(foundClient.fechaFinMembresia);
+      durationDays = Math.ceil((fin - inicio) / (1000 * 3600 * 24));
+    }
+    const membershipInfo = calculateMembershipDetails(startDate, durationDays);
 
     setClientDetails({ ...foundClient, membershipStatusDetails: membershipInfo });
 
     if (membershipInfo.status === "Active") {
-      // TODO: Lógica adicional si el check-in es para una clase específica
-      // 1. Preguntar/seleccionar clase si no viene en QR.
-      // 2. Verificar inscripción a la clase.
-      // 3. Verificar capacidad de la clase.
-
-      // Por ahora, check-in general al gimnasio
-      addAttendanceRecord({
-        clientId: foundClient.id,
-        clientName: `${foundClient.firstName} ${foundClient.lastName}`,
-        checkInTime: new Date().toISOString(),
-        type: type,
-        // classId: selectedClassId, // Si aplica
-      });
-      showSuccess('checkinSuccess', {
-        title: `¡Acceso concedido a ${foundClient.firstName} ${foundClient.lastName}!`,
-        text: `Bienvenido/a, ${foundClient.firstName} ${foundClient.lastName}. Tu membresía está ${membershipInfo.status === 'Active' ? 'activa' : membershipInfo.status.toLowerCase()}.`
-      });
+      // Registrar acceso general en backend
+      try {
+        const clientId = foundClient.id || foundClient._id;
+        const clientName = `${foundClient.firstName || foundClient.nombre || ''} ${foundClient.lastName || foundClient.apellido || ''}`.trim();
+        const dni = foundClient.dni;
+        await registerAccessLog({
+          clientId,
+          clientName,
+          checkInTime: new Date().toISOString(),
+          dni,
+          checkInType: type
+        });
+        addAttendanceRecord({
+          clientId,
+          clientName,
+          checkInTime: new Date().toISOString(),
+          type: type,
+        });
+        showSuccess('checkinSuccess', {
+          title: `¡Acceso concedido!`,
+          text: `Bienvenido/a. Tu membresía está ${membershipInfo.status === 'Active' ? 'activa' : membershipInfo.status.toLowerCase()} y el acceso fue registrado.`
+        });
+      } catch (error) {
+        console.error('[CHECKIN][QR] Error al registrar acceso en backend:', error);
+        showError('backendError', {
+          title: 'Error al registrar acceso en backend',
+          text: 'No se pudo guardar el registro de acceso. Intente nuevamente.'
+        });
+      }
     } else {
+      console.warn('[CHECKIN][QR] Membresía inactiva para cliente:', foundClient, membershipInfo);
       showError('checkinDenied', {
         title: `Acceso denegado para ${foundClient.firstName} ${foundClient.lastName}`,
         text: `Tu membresía está ${membershipInfo.status.toLowerCase()}. Por favor, regulariza tu situación para ingresar.`
@@ -242,19 +281,19 @@ const CheckInPage = () => {
                 />
               )}
               <div className="flex-1">
-                <h3 className="text-xl font-semibold mb-2">{clientDetails.firstName} {clientDetails.lastName}</h3>
+                <h3 className="text-xl font-semibold mb-2">{clientDetails.firstName || clientDetails.nombre} {clientDetails.lastName || clientDetails.apellido}</h3>
                 <p>Email: {clientDetails.email}</p>
                 <p>DNI: {clientDetails.dni}</p>
-                <p>Código: {clientDetails.alphanumericCode}</p>
-                <p>Plan: {clientDetails.membership?.planName || 'N/A'}</p>
+                <p>Código: {clientDetails.alphanumericCode || clientDetails.codigo || 'N/A'}</p>
+                <p>Plan: {clientDetails.membership?.planName || clientDetails.planAsignadoId || 'N/A'}</p>
                 <p>Estado Membresía: <span className={`font-bold ${clientDetails.membershipStatusDetails.status === "Active" ? 'text-green-400' : 'text-red-400'}`}>
                   {clientDetails.membershipStatusDetails.status}
                 </span></p>
-                {clientDetails.membershipStatusDetails.status !== "Active" && clientDetails.membership?.endDate && (
-                  <p>Venció el: {new Date(clientDetails.membership.endDate).toLocaleDateString()}</p>
+                {clientDetails.membershipStatusDetails.status !== "Active" && clientDetails.membershipStatusDetails.membershipEndDate && (
+                  <p>Venció el: {new Date(clientDetails.membershipStatusDetails.membershipEndDate).toLocaleDateString()}</p>
                 )}
-                {clientDetails.membershipStatusDetails.status === "Active" && clientDetails.membership?.endDate && (
-                  <p>Vence el: {new Date(clientDetails.membership.endDate).toLocaleDateString()} ({clientDetails.membershipStatusDetails.daysRemaining} días restantes)</p>
+                {clientDetails.membershipStatusDetails.status === "Active" && clientDetails.membershipStatusDetails.membershipEndDate && (
+                  <p>Vence el: {new Date(clientDetails.membershipStatusDetails.membershipEndDate).toLocaleDateString()} ({clientDetails.membershipStatusDetails.daysRemaining} días restantes)</p>
                 )}
               </div>
             </div>

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import { UsersIcon, RectangleStackIcon, CalendarDaysIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 import { getDashboardMetrics } from '../api/metrics';
+import { getTodayAccessLogs } from '../api/accessLogs';
 import { getClasses } from '../api/classes';
 import { SharedDataContext } from '../contexts/SharedDataContext';
 
@@ -17,7 +18,8 @@ const StatCard = ({ title, value, icon, color, linkTo }) => (
 
 
 const HomePage = () => {
-  const { attendanceRecords, clients } = useContext(SharedDataContext);
+  const { clients } = useContext(SharedDataContext);
+  const [todayAccessLogs, setTodayAccessLogs] = useState([]);
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [classesToday, setClassesToday] = useState(0);
@@ -27,6 +29,7 @@ const HomePage = () => {
       try {
         const metricsData = await getDashboardMetrics();
         setMetrics(metricsData);
+        console.log('[LOG][DASHBOARD] Métricas recibidas:', metricsData);
 
         // Obtener todas las clases
         const classes = await getClasses();
@@ -53,6 +56,19 @@ const HomePage = () => {
         });
         setClassesToday(classesForToday.length);
         console.log(`[LOG] Total clases activas para hoy (${todayName}):`, classesForToday.length);
+
+        // Obtener los registros de ingreso del día desde el backend
+        try {
+          const logs = await getTodayAccessLogs();
+          setTodayAccessLogs(logs);
+          if (logs && logs.length > 0) {
+            console.log('[LOG][DASHBOARD] Registros de ingreso del día recibidos del backend:', logs);
+          } else {
+            console.log('[LOG][DASHBOARD] No hay registros de ingreso del día en el backend.');
+          }
+        } catch (error) {
+          console.error('[ERROR][DASHBOARD] Falló la obtención de logs del día:', error);
+        }
       } catch (error) {
         setMetrics(null);
         setClassesToday(0);
@@ -60,6 +76,7 @@ const HomePage = () => {
       } finally {
         setLoading(false);
       }
+      // Ya no se usa attendanceRecords, solo logs del backend
     }
     fetchMetricsAndClasses();
   }, []);
@@ -77,7 +94,7 @@ const HomePage = () => {
   const activeClients = metrics.usuarios?.activos ?? 0;
   const totalTeachers = metrics.profesores?.total ?? 0;
   const totalClasses = metrics.clases?.total ?? 0;
-  const recentCheckIns = attendanceRecords?.slice(-5).reverse() || [];
+  const recentCheckIns = todayAccessLogs?.slice(0, 5) || [];
 
   return (
     <div className="p-6">
@@ -92,7 +109,7 @@ const HomePage = () => {
       </div>
 
       {/* Accesos Rápidos */}
-      <div className="bg-gray-800 p-6 rounded-xl shadow-lg mb-10">
+      <div className="bg-gray-800 p-6 rounded-xl shadow-lg mb-10 hidden md:block">
         <h2 className="text-xl font-semibold text-orange-400 mb-4">Accesos Rápidos</h2>
         <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
           <Link to="/admin/clients" className="w-full min-w-0 bg-orange-500 hover:bg-orange-600 text-white text-center font-medium py-3 px-2 sm:px-4 rounded-lg transition-colors break-words">Gestionar Clientes</Link>
@@ -105,23 +122,30 @@ const HomePage = () => {
       {/* Sección de Últimos Check-ins (si aplica para el dashboard admin) */}
       <div className="bg-gray-800 p-6 rounded-xl shadow-lg mb-10">
         <h2 className="text-xl font-semibold text-orange-400 mb-4">Últimos Registros de Ingreso</h2>
-        {attendanceRecords && attendanceRecords.length > 0 ? (
+        {todayAccessLogs && todayAccessLogs.length > 0 ? (
           <ul className="space-y-3 max-h-60 overflow-y-auto">
-            {recentCheckIns.map(record => (
-              <li key={record.id} className="flex justify-between items-center bg-gray-700 p-3 rounded-md">
-                <div>
-                  <p className="text-white font-medium">{record.clientName}</p>
-                  <p className="text-xs text-gray-400">
-                    {new Date(record.checkInTime).toLocaleString('es-ES')} - {record.type === 'qr' ? 'QR' : 'Manual'}
-                    {record.className && <span className="ml-2 text-orange-300">({record.className})</span>}
-                  </p>
-                </div>
-                <span className={`px-2 py-1 text-xs rounded-full ${clients.find(c => c.id === record.clientId)?.membershipStatusDetails?.status === "Active" ? "bg-green-500 text-white" : "bg-red-500 text-white"
-                  }`}>
-                  {clients.find(c => c.id === record.clientId)?.membershipStatusDetails?.status || 'N/A'}
-                </span>
-              </li>
-            ))}
+            {recentCheckIns.map(record => {
+              console.log('[LOG][DASHBOARD] Renderizando registro desde backend:', record);
+              // Buscar cliente por _id, id, o dni
+              let client = clients.find(c => c._id === record.userId || c.id === record.userId);
+              if (!client && record.dni) {
+                client = clients.find(c => c.dni === record.dni);
+              }
+              console.log('[LOG][DASHBOARD] Cliente resuelto:', client);
+              return (
+                <li key={record._id || record.id} className="flex justify-between items-center bg-gray-700 p-3 rounded-md">
+                  <div>
+                    <p className="text-white font-medium">{client ? `${client.nombre || client.firstName || ''} ${client.apellido || client.lastName || ''}` : `DNI: ${record.dni}`}</p>
+                    <p className="text-xs text-gray-400">
+                      {new Date(record.checkInTime).toLocaleString('es-ES')} - {record.checkInType === 'qr' ? 'QR' : 'Manual'}
+                    </p>
+                  </div>
+                  <span className={`px-2 py-1 text-xs rounded-full ${client?.membershipStatusDetails?.status === "Active" ? "bg-green-500 text-white" : "bg-red-500 text-white"}`}>
+                    {client?.membershipStatusDetails?.status || 'N/A'}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         ) : (
           <p className="text-gray-400">No hay registros de ingreso recientes.</p>

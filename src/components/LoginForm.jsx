@@ -80,16 +80,16 @@ export default function LoginForm({ onLogin, error: propError }) {
 
                 <button
                     type="submit"
-                    className="w-full py-2 px-4 bg-orange-600 text-black font-bold rounded-lg hover:bg-orange-500 transition duration-200"
+                    className="w-full py-2 px-4 my-4 bg-orange-600 text-black font-bold rounded-lg hover:bg-orange-500 transition duration-200"
                 >
                     Ingresar
                 </button>
             </form>
 
-            <p className="text-center text-sm text-gray-500 mt-6">
+            {/* <p className="text-center text-sm text-gray-500 mt-6">
                 ¿Olvidaste tu contraseña?
                 <a href="#" className="text-orange-600 hover:underline ml-1">Recuperala</a>
-            </p>
+            </p> */}
         </div>
     );
 }
