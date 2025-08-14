@@ -11,10 +11,8 @@ const UserMembership = () => {
     return <p className="text-center text-white text-xl py-10 bg-gray-800 min-h-screen">Cargando planes de membresía...</p>;
   }
 
-  const handlePlanClick = (plan) => {
-    showSuccess("Información del Plan", `Has seleccionado el plan: ${plan.nombre}. Precio: $${plan.precio}. Duración: ${plan.duracionEnDias} días.`);
-    // Aquí se podría redirigir a una página de compra o mostrar un modal con más detalles
-  };
+  // Página solo informativa, no se realiza ninguna acción al hacer click en un plan
+  const handlePlanClick = () => {};
 
   return (
     <div className="container mx-auto p-4 bg-gray-900 min-h-screen rounded-xl">
@@ -28,12 +26,12 @@ const UserMembership = () => {
             <CardMenuOption
               key={plan.id}
               icon={<CreditCardIcon className="w-10 h-10 text-orange-400" />}
-              label={plan.nombre}
+              label={plan.name}
               description={
                 <>
-                  <p>Precio: ${parseFloat(plan.precio).toFixed(2)}</p>
-                  <p>Duración: {plan.duracionEnDias} días</p>
-                  {plan.descripcion && <p className="text-sm text-gray-400 mt-2">{plan.descripcion}</p>}
+                  <p>Precio: ${parseFloat(plan.price).toFixed(2)}</p>
+                  <p>Duración: {plan.durationDays} días</p>
+                  {plan.description && <p className="text-sm text-gray-400 mt-2">{plan.description}</p>}
                 </>
               }
               onClick={() => handlePlanClick(plan)}

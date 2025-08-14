@@ -36,7 +36,10 @@ const HomePage = () => {
     return now >= start && now <= end;
   }
   const activeClients = clients?.filter(c => isMembershipActive(c.membership)).length || 0;
-  const totalClassesToday = gymClasses?.filter(c => c.day === new Date().toLocaleDateString('es-ES', { weekday: 'long' })).length || 0;
+  // Corregir cálculo de clases hoy: comparar el día de la clase con el día actual en español
+  const diasSemana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+  const hoy = diasSemana[new Date().getDay()];
+  const totalClassesToday = gymClasses?.filter(c => (c.dia || c.day)?.toLowerCase() === hoy).length || 0;
   const recentCheckIns = attendanceRecords?.slice(-5).reverse() || []; // Últimos 5 check-ins
 
   // Si `HomePage` también sirve como página de Check-in, se debe incluir esa funcionalidad aquí.
@@ -56,7 +59,7 @@ const HomePage = () => {
       </div>
 
       {/* Accesos Rápidos */}
-      <div className="bg-gray-800 p-6 rounded-xl shadow-lg mb-10">
+      <div className="bg-gray-800 p-6 rounded-xl shadow-lg mb-10 hidden md:block">
         <h2 className="text-xl font-semibold text-orange-400 mb-4">Accesos Rápidos</h2>
         <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
           <Link to="/admin/clients" className="w-full min-w-0 bg-orange-500 hover:bg-orange-600 text-white text-center font-medium py-3 px-2 sm:px-4 rounded-lg transition-colors break-words">Gestionar Clientes</Link>
@@ -80,11 +83,11 @@ const HomePage = () => {
                     {record.className && <span className="ml-2 text-orange-300">({record.className})</span>}
                   </p>
                 </div>
-                <span className={`px-2 py-1 text-xs rounded-full ${
+{/*                 <span className={`px-2 py-1 text-xs rounded-full ${
                     clients.find(c=>c.id === record.clientId)?.membershipStatusDetails?.status === "Active" ? "bg-green-500 text-white" : "bg-red-500 text-white"
                 }`}>
                   {clients.find(c=>c.id === record.clientId)?.membershipStatusDetails?.status || 'N/A'}
-                </span>
+                </span> */}
               </li>
             ))}
           </ul>

@@ -1,12 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowLeftIcon, PlusIcon, TrashIcon, PencilIcon } from '@heroicons/react/24/outline';
-import { getTeachers, saveTeachers } from '../utils/storage'; // Importar desde utils
-// Suponiendo que las alertas reales se importarán de utils/alerts
-import { showSuccess, showError, confirmAction } from '../utils/alerts';
 
+import React, { useState, useContext } from 'react';
+import { ArrowLeftIcon, PlusIcon, TrashIcon, PencilIcon } from '@heroicons/react/24/outline';
+import { showSuccess, showError, confirmAction } from '../utils/alerts';
+import { SharedDataContext } from '../contexts/SharedDataContext';
 
 const ManageTeachersView = ({ onBack }) => {
-  const [teachers, setTeachers] = useState([]);
+  const {
+    teachers,
+    addTeacher,
+    updateTeacher,
+    deleteTeacher
+  } = useContext(SharedDataContext);
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState(null);
   const [formData, setFormData] = useState({
@@ -19,14 +23,6 @@ const ManageTeachersView = ({ onBack }) => {
     especialidades: '',
     activo: true
   });
-
-  useEffect(() => {
-    setTeachers(getTeachers()); // Usar la función importada de utils/storage.js
-  }, []);
-
-  useEffect(() => {
-    saveTeachers(teachers);
-  }, [teachers]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -73,14 +69,11 @@ const ManageTeachersView = ({ onBack }) => {
     }
 
     if (editingTeacher) {
-      // Lógica de actualización (solo campos enviados)
-      setTeachers(teachers.map(t => t.id === editingTeacher.id ? { ...t, ...formData } : t));
+      updateTeacher({ ...editingTeacher, ...formData });
       showSuccess('updateTeacher', formData);
     } else {
-      // Lógica de creación
-      const newTeacher = { id: `teach_${Date.now().toString()}`, ...formData };
-      setTeachers(prevTeachers => [...prevTeachers, newTeacher]);
-      showSuccess('addTeacher', newTeacher);
+      addTeacher({ ...formData });
+      showSuccess('addTeacher', formData);
     }
     resetForm();
   };
@@ -102,9 +95,9 @@ const ManageTeachersView = ({ onBack }) => {
 
   const handleDeleteTeacher = (teacherId, teacherName) => {
     confirmAction('deleteTeacher', { nombre: teacherName }, "Sí, eliminar", () => {
-      setTeachers(prevTeachers => prevTeachers.filter(t => t.id !== teacherId));
+      deleteTeacher(teacherId);
       showSuccess('deleteTeacher', { nombre: teacherName });
-      if(editingTeacher && editingTeacher.id === teacherId) { // Si se elimina el profesor que se está editando
+      if(editingTeacher && editingTeacher.id === teacherId) {
         resetForm();
       }
     });

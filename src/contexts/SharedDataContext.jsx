@@ -14,14 +14,35 @@ import { generateClientCode } from '../utils/codeUtils';
 
 export const SharedDataContext = createContext(null);
 
-// Datos iniciales simulados si localStorage está vacío
+
+
+
 const initialSimulatedClasses = [
-  { id: 'class1', nombre: 'Yoga Matutino', profesor: 'teach_1', dia: 'Lunes', horaInicio: '08:00', horaFin: '09:00', capacidad: 20, activo: true },
-  { id: 'class2', nombre: 'HIIT Intenso', profesor: 'teach_2', dia: 'Martes', horaInicio: '18:00', horaFin: '18:45', capacidad: 15, activo: true },
+  { id: 'class1', nombre: 'Yoga Matutino', profesor: 'teach_1', especialidad: 'Yoga', dia: 'Lunes', horaInicio: '08:00', horaFin: '09:00', capacidad: 20, activo: true },
+  { id: 'class2', nombre: 'HIIT Intenso', profesor: 'teach_2', especialidad: 'HIIT', dia: 'Martes', horaInicio: '18:00', horaFin: '18:45', capacidad: 15, activo: true },
+  { id: 'class3', nombre: 'Pilates Suave', profesor: 'teach_3', especialidad: 'Pilates', dia: 'Miércoles', horaInicio: '10:00', horaFin: '11:00', capacidad: 18, activo: true },
+  { id: 'class4', nombre: 'Spinning Nocturno', profesor: 'teach_4', especialidad: 'Spinning', dia: 'Jueves', horaInicio: '20:00', horaFin: '21:00', capacidad: 22, activo: true },
+  { id: 'class5', nombre: 'Funcional Express', profesor: 'teach_2', especialidad: 'Funcional', dia: 'Viernes', horaInicio: '17:00', horaFin: '17:45', capacidad: 16, activo: true },
+];
+
+const initialSimulatedMembershipPlans = [
+  { id: 'plan_1', name: 'Básico', durationDays: 30, price: 25, description: 'Acceso a clases generales y zona de pesas.' },
+  { id: 'plan_2', name: 'Premium', durationDays: 365, price: 220, description: 'Acceso total, incluye clases premium y asesoría.' },
+  { id: 'plan_3', name: 'Clases Ilimitadas', durationDays: 90, price: 80, description: 'Acceso ilimitado a todas las clases grupales.' },
+];
+
+const initialSimulatedClients = [
+  { id: 'client_1', firstName: 'Ana', lastName: 'López', email: 'ana.lopez@gogym.com', password: '12345678', role: 'user', dni: '12345678', alphanumericCode: generateClientCode('Ana', 'López', '12345678'), membership: { planName: 'Básico', membershipStartDate: '2025-07-01', membershipDurationDays: 30, autoRenew: false } },
+  { id: 'client_2', firstName: 'Pedro', lastName: 'Ramírez', email: 'pedro.ramirez@gogym.com', password: '87654321', role: 'user', dni: '87654321', alphanumericCode: generateClientCode('Pedro', 'Ramírez', '87654321'), membership: { planName: 'Premium', membershipStartDate: '2025-01-15', membershipDurationDays: 365, autoRenew: true } },
+
 ];
 
 const initialSimulatedEnrollments = [
-  // { userId: 'client_17...', classId: 'class1', enrollmentDate: '2024-07-28T...' }
+  { id: 'enr_1', userId: 'client_1', classId: 'class1', enrollmentDate: '2025-08-01T08:00:00' },
+  { id: 'enr_2', userId: 'client_2', classId: 'class2', enrollmentDate: '2025-08-05T18:00:00' },
+  { id: 'enr_3', userId: 'client_3', classId: 'class3', enrollmentDate: '2025-08-06T10:00:00' },
+  { id: 'enr_4', userId: 'client_4', classId: 'class4', enrollmentDate: '2025-08-07T20:00:00' },
+  { id: 'enr_5', userId: 'client_1', classId: 'class5', enrollmentDate: '2025-08-08T17:00:00' },
 ];
 
 
@@ -42,9 +63,10 @@ export const SharedDataProvider = ({ children }) => {
 
 
   // --- Carga Inicial de Datos ---
+
   useEffect(() => {
     console.log("SharedDataContext: Cargando datos iniciales...");
-    const storedClients = getClients();
+    let storedClients = getClients();
     const storedGymClasses = getGymClasses();
     const storedTeachers = getTeachers();
     const storedEnrollments = getClassEnrollments();
@@ -62,13 +84,20 @@ export const SharedDataProvider = ({ children }) => {
       storedCurrentUser = null;
     }
 
+    // Si no hay clientes en localStorage, forzar borrado y cargar simulados
+    if (!storedClients || storedClients.length === 0) {
+      localStorage.removeItem('clients');
+      storedClients = initialSimulatedClients;
+    }
+
     setClients(storedClients);
-    setGymClasses(Array.isArray(storedGymClasses) ? storedGymClasses : initialSimulatedClasses);
-    setTeachers(Array.isArray(storedTeachers) ? storedTeachers : []);
+    setGymClasses(Array.isArray(storedGymClasses) && storedGymClasses.length > 0 ? storedGymClasses : initialSimulatedClasses);
+    setTeachers(Array.isArray(storedTeachers) && storedTeachers.length > 0 ? storedTeachers : initialSimulatedTeachers);
     setEnrollments(storedEnrollments.length > 0 ? storedEnrollments : initialSimulatedEnrollments);
     setAttendanceRecords(storedAttendance);
     setArticles(storedArticles);
     setFeedbacks(Array.isArray(storedFeedbacks) ? storedFeedbacks : []);
+    setMembershipPlans(Array.isArray(storedMembershipPlans) && storedMembershipPlans.length > 0 ? storedMembershipPlans : initialSimulatedMembershipPlans);
 
     // Asegurar usuarios por defecto si no existen
     let finalClients = [...storedClients];
@@ -354,10 +383,10 @@ export const SharedDataProvider = ({ children }) => {
     setGymClasses(prevClasses =>
       prevClasses.map(c => c.id === classId ? { ...c, enrolled: c.enrolled + 1 } : c)
     );
-    showSuccess('addEnrollment', { className: clase.name });
+    showSuccess('addEnrollment', { className: clase.nombre });
     addNotification({
       title: 'Inscripción Exitosa',
-      message: `Inscripción exitosa a "${clase.name}".`,
+      message: `Inscripción exitosa a "${clase.nombre}".`,
       type: 'success',
       forUserId: userId,
       isGlobal: false
@@ -365,7 +394,7 @@ export const SharedDataProvider = ({ children }) => {
     if (currentUser?.id !== userId) { // Si un admin inscribe a otro usuario
       addNotification({
         title: 'Inscripción de Usuario',
-        message: `Has inscrito a ${user.firstName} en "${clase.name}".`,
+        message: `Has inscrito a ${user.firstName} en "${clase.nombre}".`,
         type: 'success',
         forUserId: 'admin',
         isGlobal: false
@@ -416,30 +445,40 @@ export const SharedDataProvider = ({ children }) => {
     const client = clients.find(c => c.id === clientId);
     if (!client) {
       showError('error', { message: 'Cliente no encontrado para actualizar membresía.' });
-      return;
-    }
-    const updatedClient = {
-      ...client,
-      membership: { ...(client.membership || {}), ...membershipDetails }
-      // Asumimos que membershipDetails es un objeto como { planName, status, startDate, endDate, autoRenew }
-    };
-    updateClient(updatedClient); // Reutiliza la función de actualizar cliente
-    showSuccess('updateMembership', membershipDetails);
-    addNotification({
-      title: 'Membresía Actualizada',
-      message: `Membresía de ${client.firstName} actualizada.`,
-      type: 'success',
-      forUserId: 'admin',
-      isGlobal: false
-    });
-    if (client.id === currentUser?.id) { // Si es el usuario actual
-      addNotification({
-        title: 'Membresía actualizada',
-        message: `Tu membresía ha sido actualizada: ${membershipDetails.planName || ''} (${membershipDetails.status || ''})`,
-        type: 'info',
-        forUserId: client.id,
-        isGlobal: false
-      });
+      if (
+        (clientData.email === 'admin@gogym.com' && userData.password === 'admin123') ||
+        (clientData.email === 'user@gogym.com' && userData.password === 'user123')
+      ) {
+        setCurrentUser(clientData);
+        localStorage.setItem('currentUserSession', JSON.stringify(clientData));
+        showSuccess('successLogin', clientData);
+        addNotification({
+          title: 'Inicio de Sesión Exitoso',
+          message: `Bienvenido/a ${clientData.firstName || clientData.email}!`, 
+          type: 'success', 
+          forUserId: clientData.id, 
+          isGlobal: true
+        });
+        return clientData;
+      }
+      // Para todos los usuarios que no sean admin, permitir login con DNI
+      if (clientData.role !== 'admin') {
+        if (userData.password === String(clientData.dni)) {
+          setCurrentUser(clientData);
+          localStorage.setItem('currentUserSession', JSON.stringify(clientData));
+          showSuccess('successLogin', clientData);
+          addNotification({
+            title: 'Inicio de Sesión Exitoso',
+            message: `Bienvenido/a ${clientData.firstName || clientData.email}!`, 
+            type: 'success', 
+            forUserId: clientData.id, 
+            isGlobal: true
+          });
+          return clientData;
+        }
+      }
+
+      
     }
   }, [clients, updateClient, currentUser, addNotification]);
 

@@ -46,6 +46,10 @@ const UserDashboard = () => {
     navigate('/user/mis-clases');
   };
 
+  const handleRenewMembership = () => {
+    navigate('/user/membresia');
+  };
+
   if (isLoading || !userData) {
     return <div className="text-center text-white mt-8">Cargando datos del usuario...</div>;
   }
@@ -84,10 +88,26 @@ const UserDashboard = () => {
               <strong>Días restantes:</strong> {userData.remainingDays} día{userData.remainingDays !== 1 ? 's' : ''}
             </p>
           )}
+          {userData.remainingDays !== null && userData.membershipStatus === 'Activa' && (
+            <p className="mb-2">
+              <strong>Vence el día:</strong> {(() => {
+                const start = currentUser.membership?.membershipStartDate;
+                const duration = currentUser.membership?.membershipDurationDays;
+                if (start && duration) {
+                  const endDate = new Date(new Date(start).getTime() + duration * 24 * 60 * 60 * 1000);
+                  return endDate.toLocaleDateString();
+                }
+                return '-';
+              })()}
+            </p>
+          )}
 
           {userData.membershipStatus === 'Vencida' && (
-            <button className="mt-2 w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
-              Renovar Membresía
+            <button
+              className="mt-2 w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+              onClick={handleRenewMembership}
+            >
+              Ver Planes
             </button>
           )}
         </div>

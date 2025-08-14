@@ -109,11 +109,11 @@ const ClientsAdmin = () => {
         </button>
         <h2 className="text-2xl font-bold text-orange-400 mb-6">Lista de Clientes</h2>
         {isLoading && <p className="text-gray-400">Cargando clientes...</p>}
-        {!isLoading && contextClients.length === 0 ? (
+        {!isLoading && contextClients.filter(c => c.email !== 'admin@gogym.com' && c.email !== 'user@gogym.com').length === 0 ? (
           <p className="text-gray-400">No hay clientes registrados.</p>
         ) : (
           <div className="space-y-3">
-            {contextClients.map((client) => {
+            {contextClients.filter(c => c.email !== 'admin@gogym.com' && c.email !== 'user@gogym.com').map((client) => {
               const { daysRemaining, status } = calculateMembershipDetails(
                 client.membership?.membershipStartDate,
                 client.membership?.membershipDurationDays
@@ -121,7 +121,19 @@ const ClientsAdmin = () => {
               const clientName = `${client.firstName || ""} ${client.lastName || ""}`.trim();
               return (
                 <div key={client.id} className="bg-gray-800 p-4 rounded-lg shadow">
-                  <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-4">
+                    {/* Foto del cliente */}
+                    {client.fotoUrl ? (
+                      <img
+                        src={client.fotoUrl}
+                        alt={clientName}
+                        className="w-16 h-16 object-cover rounded-full border-2 border-orange-400"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-full bg-gray-600 flex items-center justify-center text-gray-400 text-xs">
+                        Sin foto
+                      </div>
+                    )}
                     <div className="flex-grow">
                       <p className="font-semibold text-white">{clientName}</p>
                       <p className="text-sm text-gray-300">Email: {client.email}</p>
@@ -131,7 +143,7 @@ const ClientsAdmin = () => {
                         Estado Membresía: {status} ({daysRemaining} días restantes)
                       </p>
                     </div>
-                    <div className="flex space-x-2">
+                    <div className="flex flex-col gap-2 items-end">
                       <button onClick={() => handleEditClient(client)} title="Editar Cliente" className="text-blue-400 hover:text-blue-600">
                         <PencilIcon className="w-5 h-5" />
                       </button>
