@@ -1,3 +1,19 @@
+
+// Definición mínima para evitar error en producción
+const initialSimulatedTeachers = [
+  {
+    id: 'teach_1',
+    nombre: 'María',
+    apellido: 'Pérez',
+    dni: '30011222',
+    email: 'maria.perez@gogym.com',
+    telefono: '555-1234',
+    especialidad: 'Yoga',
+    especialidades: 'Yoga, Meditación',
+    descripcion: 'Especialista en yoga y meditación con 10 años de experiencia.',
+    activo: true
+  }
+];
 import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
 import {
   getClients, saveClients,
