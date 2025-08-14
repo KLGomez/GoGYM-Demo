@@ -55,13 +55,13 @@ export default function Login() {
 
                 {/* Lado derecho: Formulario */}
                 <div className="w-1/2 bg-black flex items-center justify-center">
-                    <LoginForm onLogin={handleLoginSubmit} error={loginError} />
+                    <LoginForm onLogin={handleLoginSubmit} error={loginError} formId="Desktop" />
                 </div>
             </div>
 
             {/* Solo formulario en mobile */}
             <div className="md:hidden w-full max-w-md">
-                <LoginForm onLogin={handleLoginSubmit} error={loginError} />
+                <LoginForm onLogin={handleLoginSubmit} error={loginError} formId="Mobile" />
             </div>
         </div>
     );

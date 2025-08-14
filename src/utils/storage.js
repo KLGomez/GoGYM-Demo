@@ -1,5 +1,7 @@
 //src/utils/storage.js
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 // --- Helper para headers con token ---
 const getAuthHeaders = (extra = {}) => {
   const token = localStorage.getItem('token');
@@ -10,14 +12,14 @@ const getAuthHeaders = (extra = {}) => {
 
 // --- Feedbacks ---
 export const getFeedbacks = async () => {
-  const res = await fetch('/feedbacks', {
+  const res = await fetch(`${API_URL}/feedbacks`, {
     headers: getAuthHeaders()
   });
   if (!res.ok) throw new Error('Error fetching feedbacks');
   return await res.json();
 };
 export const saveFeedbacks = async (feedbacks) => {
-  const res = await fetch('/feedbacks', {
+  const res = await fetch(`${API_URL}/feedbacks`, {
     method: 'POST',
     headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(feedbacks),
@@ -47,14 +49,14 @@ const saveToLocalStorage = (key, data) => {
 
 // --- Clients (Alumnos) ---
 export const getClients = async () => {
-  const res = await fetch('/users', {
+  const res = await fetch(`${API_URL}/users`, {
     headers: getAuthHeaders()
   });
   if (!res.ok) throw new Error('Error fetching clients');
   return await res.json();
 };
 export const saveClients = async (client) => {
-  const res = await fetch('/users', {
+  const res = await fetch(`${API_URL}/users`, {
     method: 'POST',
     headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(client),
@@ -65,14 +67,14 @@ export const saveClients = async (client) => {
 
 // --- Gym Classes ---
 export const getGymClasses = async () => {
-  const res = await fetch('/gym-classes', {
+  const res = await fetch(`${API_URL}/gym-classes`, {
     headers: getAuthHeaders()
   });
   if (!res.ok) throw new Error('Error fetching gym classes');
   return await res.json();
 };
 export const saveGymClasses = async (gymClass) => {
-  const res = await fetch('/gym-classes', {
+  const res = await fetch(`${API_URL}/gym-classes`, {
     method: 'POST',
     headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(gymClass),
@@ -83,14 +85,14 @@ export const saveGymClasses = async (gymClass) => {
 
 // --- Teachers ---
 export const getTeachers = async () => {
-  const res = await fetch('/teachers', {
+  const res = await fetch(`${API_URL}/teachers`, {
     headers: getAuthHeaders()
   });
   if (!res.ok) throw new Error('Error fetching teachers');
   return await res.json();
 };
 export const saveTeachers = async (teacher) => {
-  const res = await fetch('/teachers', {
+  const res = await fetch(`${API_URL}/teachers`, {
     method: 'POST',
     headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(teacher),
@@ -101,14 +103,14 @@ export const saveTeachers = async (teacher) => {
 
 // --- Class Enrollments ---
 export const getClassEnrollments = async () => {
-  const res = await fetch('/gym-classes/enrollments', {
+  const res = await fetch(`${API_URL}/gym-classes/enrollments`, {
     headers: getAuthHeaders()
   });
   if (!res.ok) throw new Error('Error fetching enrollments');
   return await res.json();
 };
 export const saveClassEnrollments = async (enrollment) => {
-  const res = await fetch('/gym-classes/enrollments', {
+  const res = await fetch(`${API_URL}/gym-classes/enrollments`, {
     method: 'POST',
     headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(enrollment),
@@ -119,14 +121,14 @@ export const saveClassEnrollments = async (enrollment) => {
 
 // --- Attendance Records ---
 export const getAttendanceRecords = async () => {
-  const res = await fetch('/access-logs', {
+  const res = await fetch(`${API_URL}/access-logs`, {
     headers: getAuthHeaders()
   });
   if (!res.ok) throw new Error('Error fetching attendance records');
   return await res.json();
 };
 export const saveAttendanceRecords = async (record) => {
-  const res = await fetch('/access-logs', {
+  const res = await fetch(`${API_URL}/access-logs`, {
     method: 'POST',
     headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(record),
@@ -137,14 +139,14 @@ export const saveAttendanceRecords = async (record) => {
 
 // --- Articles ---
 export const getArticles = async () => {
-  const res = await fetch('/articles', {
+  const res = await fetch(`${API_URL}/articles`, {
     headers: getAuthHeaders()
   });
   if (!res.ok) throw new Error('Error fetching articles');
   return await res.json();
 };
 export const saveArticles = async (article) => {
-  const res = await fetch('/articles', {
+  const res = await fetch(`${API_URL}/articles`, {
     method: 'POST',
     headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(article),
@@ -156,8 +158,8 @@ export const saveArticles = async (article) => {
 // --- Membership Plans ---
 export const getMembershipPlans = async () => {
   // Cambia la ruta a /planes y agrega el parámetro para incluir inactivos
-  console.log('[getMembershipPlans] Fetching /planes?includeInactive=true');
-  const res = await fetch('/planes?includeInactive=true', {
+  console.log('[getMembershipPlans] Fetching', `${API_URL}/planes?includeInactive=true`);
+  const res = await fetch(`${API_URL}/planes?includeInactive=true`, {
     headers: getAuthHeaders()
   });
   console.log('[getMembershipPlans] Response status:', res.status);
@@ -171,7 +173,7 @@ export const getMembershipPlans = async () => {
   return data;
 };
 export const saveMembershipPlans = async (plan) => {
-  const res = await fetch('/plans', {
+  const res = await fetch(`${API_URL}/plans`, {
     method: 'POST',
     headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(plan),

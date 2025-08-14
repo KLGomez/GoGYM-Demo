@@ -5,7 +5,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 // No se usa users de data/users.js directamente, la lógica de auth está en el contexto.
 
 // Se espera que onLogin y error (opcional) vengan como props desde Login.jsx
-export default function LoginForm({ onLogin, error: propError }) {
+export default function LoginForm({ onLogin, error: propError, formId = "" }) {
     const [email, setEmail] = useState(""); // Cambiado de username a email para coincidir con el contexto
     const [password, setPassword] = useState("");
     const [localError, setLocalError] = useState("");
@@ -36,12 +36,12 @@ export default function LoginForm({ onLogin, error: propError }) {
 
             <form className="space-y-4 w-full max-w-sm" onSubmit={handleSubmit}>
                 <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-white">
+                    <label htmlFor={`email${formId}`} className="block text-sm font-medium text-white">
                         Email
                     </label>
                     <input
                         type="email"
-                        id="email"
+                        id={`email${formId}`}
                         placeholder="Ej: juan@example.com"
                         className="text-white w-full px-4 py-2 mt-1 border-2 border-gray-300 bg-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-400"
                         value={email}
@@ -51,12 +51,12 @@ export default function LoginForm({ onLogin, error: propError }) {
                 </div>
 
                 <div className="relative">
-                    <label htmlFor="password" className="block text-sm font-medium text-white">
+                    <label htmlFor={`password${formId}`} className="block text-sm font-medium text-white">
                         Contraseña
                     </label>
                     <input
                         type={showPassword ? "text" : "password"}
-                        id="password"
+                        id={`password${formId}`}
                         value={password}
                         placeholder="••••••••"
                         className="text-white w-full px-4 py-2 mt-1 border-2 border-gray-300 bg-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-400 pr-10"

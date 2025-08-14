@@ -284,8 +284,8 @@ const CheckInPage = () => {
                 <h3 className="text-xl font-semibold mb-2">{clientDetails.firstName || clientDetails.nombre} {clientDetails.lastName || clientDetails.apellido}</h3>
                 <p>Email: {clientDetails.email}</p>
                 <p>DNI: {clientDetails.dni}</p>
-                <p>Código: {clientDetails.alphanumericCode || clientDetails.codigo || 'N/A'}</p>
-                <p>Plan: {clientDetails.membership?.planName || clientDetails.planAsignadoId || 'N/A'}</p>
+                {/* <p>Código: {clientDetails.alphanumericCode || clientDetails.codigo || 'N/A'}</p> */}
+                {/* <p>Plan: {clientDetails.membership?.planName || clientDetails.planAsignadoId || 'N/A'}</p> */}
                 <p>Estado Membresía: <span className={`font-bold ${clientDetails.membershipStatusDetails.status === "Active" ? 'text-green-400' : 'text-red-400'}`}>
                   {clientDetails.membershipStatusDetails.status}
                 </span></p>
