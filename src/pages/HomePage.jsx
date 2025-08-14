@@ -30,6 +30,15 @@ const HomePage = () => {
   const [searchDate, setSearchDate] = useState("");
 
   useEffect(() => {
+    // Log de memoria al montar el componente
+    if (window && window.performance && window.performance.memory) {
+      const mem = window.performance.memory;
+      console.log(`[FRONT][MEMORY] JS Heap Size Limit: ${(mem.jsHeapSizeLimit / 1024 / 1024).toFixed(2)} MB, Total: ${(mem.totalJSHeapSize / 1024 / 1024).toFixed(2)} MB, Used: ${(mem.usedJSHeapSize / 1024 / 1024).toFixed(2)} MB`);
+    } else {
+      console.log('[FRONT][MEMORY] No performance.memory info available');
+    }
+    console.log('[FRONT][START] HomePage mounted');
+
     async function fetchMetricsAndClasses() {
       try {
         const metricsData = await getDashboardMetrics();
