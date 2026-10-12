@@ -90,6 +90,43 @@ export default function LoginForm({ onLogin, error: propError }) {
                 ¿Olvidaste tu contraseña?
                 <a href="#" className="text-orange-600 hover:underline ml-1">Recuperala</a>
             </p>
+
+            {/* Credenciales de prueba para la demo */}
+            <div className="mt-6 pt-5 border-t border-gray-800">
+                <p className="text-xs uppercase font-bold text-orange-400 tracking-wider text-center mb-3">
+                    Credenciales de prueba (Demo)
+                </p>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setEmail("admin@gogym.com");
+                            setPassword("admin123");
+                        }}
+                        className="bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-orange-500 text-left p-2.5 rounded-xl transition-all cursor-pointer group"
+                    >
+                        <p className="font-bold text-orange-400 group-hover:text-white">Admin</p>
+                        <p className="text-gray-300 font-mono text-[11px] truncate">admin@gogym.com</p>
+                        <p className="text-gray-400 font-mono text-[11px]">admin123</p>
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setEmail("user@gogym.com");
+                            setPassword("user123");
+                        }}
+                        className="bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-orange-500 text-left p-2.5 rounded-xl transition-all cursor-pointer group"
+                    >
+                        <p className="font-bold text-orange-400 group-hover:text-white">Usuario</p>
+                        <p className="text-gray-300 font-mono text-[11px] truncate">user@gogym.com</p>
+                        <p className="text-gray-400 font-mono text-[11px]">user123</p>
+                    </button>
+                </div>
+                <p className="text-[10px] text-gray-500 text-center mt-2">
+                    Haz clic en una tarjeta para autocompletar el formulario
+                </p>
+            </div>
         </div>
     );
 }
